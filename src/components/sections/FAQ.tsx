@@ -44,12 +44,12 @@ export default function FAQ() {
   }, []);
 
   return (
-    <section id="faq" ref={ref} className="relative py-28 px-6 md:px-12"
+    <section id="faq" ref={ref} className="relative py-16 px-6 md:px-12"
       style={{ background: "#0F0F1A" }}>
 
       <div className="max-w-[760px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-14 fade-up">
+        <div className="text-center mb-10 fade-up">
           <span className="section-label" style={{ display: "inline-block" }}>Dúvidas</span>
           <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#F4F4F8]" style={{ letterSpacing: "-.3px" }}>
             Perguntas frequentes

@@ -76,13 +76,13 @@ export default function Pricing() {
   }, []);
 
   return (
-    <section id="precos" ref={ref} className="relative py-28 px-6 md:px-12 overflow-hidden"
+    <section id="precos" ref={ref} className="relative py-16 px-6 md:px-12 overflow-hidden"
       style={{ background: "linear-gradient(180deg, #08080E 0%, #0F0F1A 100%)" }}>
       <div className="grid-bg" />
 
       <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header + toggle */}
-        <div className="mb-16 fade-up">
+        <div className="mb-10 fade-up">
           <span className="section-label">Planos</span>
           <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#F4F4F8]" style={{ letterSpacing: "-.3px" }}>
             Qual é o seu{" "}

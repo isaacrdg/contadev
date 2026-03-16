@@ -72,15 +72,15 @@ export default function Hero() {
       {/* Glows */}
       <div className="absolute pointer-events-none" style={{
         top: "-80px", left: "25%",
-        width: 750, height: 750,
+        width: 500, height: 500,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
       }} />
       <div className="absolute pointer-events-none" style={{
         bottom: "-80px", right: "8%",
-        width: 420, height: 420,
+        width: 300, height: 300,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)",
       }} />
 
       {/* Hero body */}

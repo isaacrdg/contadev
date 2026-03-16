@@ -22,16 +22,16 @@ export default function Contact() {
   }
 
   return (
-    <section id="contato" ref={ref} className="relative py-28 px-6 md:px-12 overflow-hidden"
+    <section id="contato" ref={ref} className="relative py-16 px-6 md:px-12 overflow-hidden"
       style={{ background: "#08080E" }}>
 
       {/* Glow */}
       <div className="absolute pointer-events-none"
         style={{
           top: "-200px", left: "15%",
-          width: 600, height: 600,
+          width: 400, height: 400,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(124,58,237,0.14) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(124,58,237,0.09) 0%, transparent 70%)",
           opacity: .6,
         }}
       />

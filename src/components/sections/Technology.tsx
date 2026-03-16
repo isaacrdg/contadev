@@ -40,15 +40,15 @@ export default function Technology() {
     <section
       id="tecnologia"
       ref={ref}
-      className="relative py-28 px-6 md:px-12 overflow-hidden"
+      className="relative py-16 px-6 md:px-12 overflow-hidden"
       style={{ background: "linear-gradient(180deg, #08080E 0%, #0F0F1A 60%, #08080E 100%)" }}
     >
       {/* Glow */}
       <div className="absolute pointer-events-none" style={{
         top: "10%", right: "2%",
-        width: 600, height: 600,
+        width: 400, height: 400,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.13) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(124,58,237,0.09) 0%, transparent 70%)",
       }} />
 
       <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">

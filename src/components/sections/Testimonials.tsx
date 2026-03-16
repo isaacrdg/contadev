@@ -73,12 +73,12 @@ export default function Testimonials() {
   }, []);
 
   return (
-    <section id="depoimentos" ref={ref} className="relative py-28 px-6 md:px-12 overflow-hidden"
+    <section id="depoimentos" ref={ref} className="relative py-16 px-6 md:px-12 overflow-hidden"
       style={{ background: "#08080E" }}>
 
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16 fade-up">
+        <div className="text-center mb-10 fade-up">
           <span className="section-label" style={{ display: "inline-block" }}>Depoimentos</span>
           <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#F4F4F8] mb-4" style={{ letterSpacing: "-.3px" }}>
             O que os devs{" "}

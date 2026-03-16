@@ -56,15 +56,15 @@ export default function Team() {
     <section
       id="equipe"
       ref={ref}
-      className="relative py-28 px-6 md:px-12 overflow-hidden"
+      className="relative py-16 px-6 md:px-12 overflow-hidden"
       style={{ background: "#0F0F1A" }}
     >
       {/* Glow */}
       <div className="absolute pointer-events-none" style={{
         bottom: "-100px", left: "10%",
-        width: 500, height: 500,
+        width: 350, height: 350,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)",
       }} />
 
       <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">

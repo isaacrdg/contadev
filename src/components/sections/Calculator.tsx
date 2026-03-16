@@ -45,16 +45,16 @@ export default function Calculator() {
     <section
       id="calculadora"
       ref={ref}
-      className="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden"
+      className="relative py-16 md:py-20 px-6 md:px-12 overflow-hidden"
     >
       {/* Background glow */}
       <div
         className="absolute pointer-events-none"
         style={{
           top: "0%", left: "50%", transform: "translateX(-50%)",
-          width: 700, height: 500,
+          width: 450, height: 350,
           borderRadius: "50%",
-          background: "radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.13) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.09) 0%, transparent 70%)",
         }}
       />
 

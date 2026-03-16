@@ -86,8 +86,8 @@ export default function Benefits() {
           return (
             <div
               key={item.step}
-              className={`grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 lg:gap-20 items-center ${
-                i === 0 ? "pt-12 md:pt-20 pb-12 md:pb-20" : "py-12 md:py-20 border-t border-white/5"
+              className={`grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 lg:gap-16 items-center ${
+                i === 0 ? "pt-8 md:pt-12 pb-8 md:pb-12" : "py-8 md:py-12 border-t border-white/5"
               }`}
             >
               {/* Text column */}
