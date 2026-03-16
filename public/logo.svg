@@ -1,0 +1,18 @@
+<svg viewBox="0 0 300 148" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="a" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6040EE"/>
+      <stop offset="100%" stop-color="#7E54F4"/>
+    </linearGradient>
+  </defs>
+  <!-- CONTA — parallelogram roxo -->
+  <polygon points="38,2 272,2 236,70 2,70" fill="url(#a)"/>
+  <text x="137" y="48" text-anchor="middle"
+    font-family="Outfit, Inter, sans-serif"
+    font-size="31" font-weight="500" fill="white" letter-spacing="10">CONTA</text>
+  <!-- DEV — parallelogram branco -->
+  <polygon points="62,78 296,78 260,146 28,146" fill="white"/>
+  <text x="162" y="124" text-anchor="middle"
+    font-family="Outfit, Inter, sans-serif"
+    font-size="31" font-weight="600" fill="#0D0B1E" letter-spacing="12">DEV</text>
+</svg>

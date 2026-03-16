@@ -1,0 +1,524 @@
+/**
+ * ============================================================
+ * CONTY DESIGN SYSTEM
+ * Fonte: https://www.appconty.com
+ * Stack: Next.js + Tailwind CSS v4 + Framer Motion
+ * ============================================================
+ *
+ * Tema: Dark-first (fundo #0A0A0A), com seções light como ilhas.
+ * Tipografia: SF Pro / SF Compact (Apple system fonts)
+ * Cor primária: #007AFF (Apple system blue)
+ * Personalidade: Moderno, startup premium, iOS/macOS aesthetic
+ * ============================================================
+ */
+
+:root {
+  /* -------------------------------------------------------
+   * TIPOGRAFIA
+   * ------------------------------------------------------- */
+  --font-sans: "SF Compact", "SF Pro Display", system-ui, sans-serif;
+  --font-mono: "SF Mono", "SF Compact", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Escala de tamanho */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px */
+  --text-6xl:  3.75rem;   /* 60px */
+  --text-7xl:  4.5rem;    /* 72px */
+
+  /* Pesos */
+  --font-weight-extralight: 200;
+  --font-weight-light:      300;
+  --font-weight-normal:     400;
+  --font-weight-medium:     500;
+  --font-weight-semibold:   600;
+  --font-weight-bold:       700;
+
+  /* Line heights */
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+
+  /* Letter spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight:   -0.025em;
+  --tracking-normal:  0em;
+  --tracking-wide:    0.025em;
+  --tracking-wider:   0.05em;
+  --tracking-widest:  0.1em;
+
+  /* -------------------------------------------------------
+   * ESPAÇAMENTO (grid de 4px)
+   * ------------------------------------------------------- */
+  --spacing: 0.25rem; /* 4px base unit */
+
+  /* Containers */
+  --container-xs:  20rem;  /* 320px  */
+  --container-sm:  24rem;  /* 384px  */
+  --container-md:  28rem;  /* 448px  */
+  --container-lg:  32rem;  /* 512px  */
+  --container-xl:  36rem;  /* 576px  */
+  --container-2xl: 42rem;  /* 672px  */
+  --container-3xl: 48rem;  /* 768px  */
+  --container-4xl: 56rem;  /* 896px  */
+  --container-5xl: 64rem;  /* 1024px */
+  --container-6xl: 72rem;  /* 1152px — usado como max-w principal */
+  --container-7xl: 80rem;  /* 1280px */
+
+  /* -------------------------------------------------------
+   * BORDER RADIUS
+   * ------------------------------------------------------- */
+  --radius-sm:  0.25rem;  /* 4px  */
+  --radius-md:  0.375rem; /* 6px  */
+  --radius-lg:  0.5rem;   /* 8px  */
+  --radius-xl:  0.75rem;  /* 12px — inputs, badges, botões padrão */
+  --radius-2xl: 1rem;     /* 16px — cards  */
+  --radius-3xl: 1.5rem;   /* 24px — cards grandes */
+  --radius-full: 9999px;  /* pill — botões principais, glassmorphism */
+
+  /* -------------------------------------------------------
+   * CORES — PALETA COMPLETA
+   * ------------------------------------------------------- */
+
+  /* Backgrounds semânticos */
+  --color-bg-dark:      #0A0A0A;  /* fundo global dark */
+  --color-bg-light:     #F8F9FB;  /* seções light */
+  --color-bg-card:      #F3F3F7;  /* cards em seções light */
+
+  /* Texto semântico */
+  --color-text-primary-dark:  #FFFFFF;           /* texto principal dark */
+  --color-text-primary-light: #15191E;           /* texto principal light */
+  --color-text-muted-dark:    rgba(255,255,255,0.60); /* texto secundário dark */
+  --color-text-subtle-dark:   rgba(255,255,255,0.80); /* texto sutil dark */
+  --color-text-muted-light:   #60646C;           /* texto secundário light */
+
+  /* Cores de marca */
+  --color-brand-blue:     #007AFF; /* azul primário (Apple blue) */
+  --color-brand-blue-alt: #2984F6; /* azul links/interativos */
+  --color-brand-green:    #25D366; /* WhatsApp / social */
+
+  /* Glassmorphism */
+  --color-glass-bg:     rgba(255,255,255,0.05);
+  --color-glass-border: rgba(255,255,255,0.10);
+  --color-glass-hover:  rgba(255,255,255,0.10);
+  --color-glass-border-hover: rgba(255,255,255,0.20);
+
+  /* Red */
+  --color-red-50:  #fef2f2;
+  --color-red-100: #ffe2e2;
+  --color-red-200: #ffcaca;
+  --color-red-400: #ff6568;
+  --color-red-500: #fb2c36;
+  --color-red-600: #e40014;
+  --color-red-700: #bf000f;
+  --color-red-800: #9f0712;
+
+  /* Orange */
+  --color-orange-50:  #fff7ed;
+  --color-orange-200: #ffd7a8;
+  --color-orange-400: #ff8b1a;
+  --color-orange-500: #fe6e00;
+  --color-orange-700: #c53c00;
+
+  /* Yellow */
+  --color-yellow-50:  #fefce8;
+  --color-yellow-200: #fff085;
+  --color-yellow-400: #fac800;
+  --color-yellow-500: #edb200;
+  --color-yellow-600: #cd8900;
+  --color-yellow-700: #a36100;
+
+  /* Green */
+  --color-green-50:  #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #b9f8cf;
+  --color-green-400: #05df72;
+  --color-green-500: #00c758;
+  --color-green-600: #00a544;
+  --color-green-700: #008138;
+  --color-green-800: #016630;
+  --color-green-900: #0d542b;
+
+  /* Emerald */
+  --color-emerald-50:  #ecfdf5;
+  --color-emerald-200: #a4f4cf;
+  --color-emerald-300: #5ee9b5;
+  --color-emerald-400: #00d294;
+  --color-emerald-500: #00bb7f;
+  --color-emerald-600: #009767;
+  --color-emerald-700: #007956;
+  --color-emerald-900: #004e3b;
+
+  /* Cyan */
+  --color-cyan-400: #00d2ef;
+
+  /* Blue */
+  --color-blue-50:  #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bedbff;
+  --color-blue-300: #90c5ff;
+  --color-blue-400: #54a2ff;
+  --color-blue-500: #3080ff;
+  --color-blue-600: #155dfc;
+  --color-blue-700: #1447e6;
+  --color-blue-800: #193cb8;
+  --color-blue-900: #1c398e;
+
+  /* Indigo */
+  --color-indigo-50:  #eef2ff;
+  --color-indigo-200: #c7d2ff;
+  --color-indigo-500: #625fff;
+  --color-indigo-600: #4f39f6;
+  --color-indigo-700: #432dd7;
+  --color-indigo-900: #312c85;
+
+  /* Purple */
+  --color-purple-50:  #faf5ff;
+  --color-purple-200: #e9d5ff;
+  --color-purple-400: #c07eff;
+  --color-purple-500: #ac4bff;
+  --color-purple-600: #9810fa;
+  --color-purple-700: #8200da;
+  --color-purple-800: #6e11b0;
+  --color-purple-900: #59168b;
+
+  /* Pink */
+  --color-pink-50:  #fdf2f8;
+  --color-pink-200: #fccee8;
+  --color-pink-400: #fb64b6;
+  --color-pink-500: #f6339a;
+  --color-pink-700: #c4005c;
+
+  /* Gray */
+  --color-gray-50:  #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5dc;
+  --color-gray-400: #99a1af;
+  --color-gray-500: #6a7282;
+  --color-gray-600: #4a5565;
+  --color-gray-700: #364153;
+  --color-gray-800: #1e2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #030712;
+
+  /* Zinc */
+  --color-zinc-50:  #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #9f9fa9;
+  --color-zinc-500: #71717b;
+  --color-zinc-600: #52525c;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+
+  /* Base */
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  /* -------------------------------------------------------
+   * SOMBRAS & BLUR
+   * ------------------------------------------------------- */
+  --drop-shadow-sm:  0 1px 2px rgba(0,0,0,0.15);
+  --drop-shadow-lg:  0 4px 4px rgba(0,0,0,0.15);
+  --drop-shadow-xl:  0 9px 7px rgba(0,0,0,0.10);
+  --drop-shadow-2xl: 0 25px 25px rgba(0,0,0,0.15);
+
+  --blur-sm:  8px;
+  --blur-md:  12px;
+  --blur-lg:  16px;
+  --blur-xl:  24px;
+  --blur-2xl: 40px;
+  --blur-3xl: 64px;
+
+  /* -------------------------------------------------------
+   * GRADIENTES
+   * ------------------------------------------------------- */
+
+  /* Azul primário com opacidade — usado sobre dark */
+  --gradient-blue-05:  rgba(0,122,255,0.05);
+  --gradient-blue-10:  rgba(0,122,255,0.10);
+  --gradient-blue-15:  rgba(0,122,255,0.15);
+  --gradient-blue-20:  rgba(0,122,255,0.20);
+  --gradient-blue-25:  rgba(0,122,255,0.25);
+
+  /* Fade do background dark */
+  --gradient-dark-fade: rgba(10,10,10,0.95);
+
+  /* -------------------------------------------------------
+   * TRANSIÇÕES & EASING
+   * ------------------------------------------------------- */
+  --default-transition-duration: 0.15s;
+  --default-transition-timing:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* -------------------------------------------------------
+   * BREAKPOINTS (referência — use via media queries)
+   * sm:  640px  (40rem)
+   * md:  768px  (48rem)
+   * lg:  1024px (64rem)
+   * xl:  1280px (80rem)
+   * 2xl: 1536px (96rem)
+   * ------------------------------------------------------- */
+}
+
+/* ================================================================
+ * ANIMAÇÕES — CONTY SIGNATURE
+ * ================================================================ */
+
+/* Aurora hero — orbe principal */
+@keyframes auroraDrift {
+  0%   { opacity: 0.22; transform: translate(-50%, -50%) scale(0.98); }
+  60%  { opacity: 0.20; transform: translate(-50%, calc(-50% - 10px)) scale(1.01); }
+  100% { opacity: 0.10; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Aurora hero — orbe secundário */
+@keyframes auroraSwim {
+  0%   { opacity: 0.28; transform: translate(-50%) scale(1); }
+  60%  { opacity: 0.24; transform: translate(-50%, -14px) scale(1.02); }
+  100% { opacity: 0.12; transform: translate(-50%) scale(1); }
+}
+
+/* Sheen sweep — reflexo de luz varrendo elemento */
+@keyframes sheenSweep {
+  0%   { opacity: 0; transform: translate(-40%) skew(-10deg); }
+  20%  { opacity: 0.14; }
+  50%  { opacity: 0.18; }
+  80%  { opacity: 0.10; }
+  100% { opacity: 0; transform: translate(140%) skew(-10deg); }
+}
+
+/* Partículas — burst ao clicar em CTA (5 partículas) */
+@keyframes particle1 {
+  0%   { opacity: 0; transform: translate(0) scale(0); }
+  20%  { opacity: 1;  transform: translate(-50px, -30px) scale(1); }
+  100% { opacity: 0;  transform: translate(-100px, -60px) scale(0); }
+}
+@keyframes particle2 {
+  0%   { opacity: 0; transform: translate(0) scale(0); }
+  30%  { opacity: 1;  transform: translate(40px, -20px) scale(1); }
+  100% { opacity: 0;  transform: translate(80px, -40px) scale(0); }
+}
+@keyframes particle3 {
+  0%   { opacity: 0; transform: translate(0) scale(0); }
+  40%  { opacity: 1;  transform: translate(-20px, 30px) scale(1); }
+  100% { opacity: 0;  transform: translate(-40px, 60px) scale(0); }
+}
+@keyframes particle4 {
+  0%   { opacity: 0; transform: translate(0) scale(0); }
+  25%  { opacity: 1;  transform: translate(60px, 10px) scale(1); }
+  100% { opacity: 0;  transform: translate(120px, 20px) scale(0); }
+}
+@keyframes particle5 {
+  0%   { opacity: 0; transform: translate(0) scale(0); }
+  35%  { opacity: 1;  transform: translate(-30px, -40px) scale(1); }
+  100% { opacity: 0;  transform: translate(-60px, -80px) scale(0); }
+}
+
+/* Overlay de transição de página */
+@keyframes overlayFade  { 0% { opacity: 1; } to { opacity: 0; } }
+@keyframes vignetteFade { 0% { opacity: 1; } to { opacity: 0; } }
+
+/* Remoção de blur ao carregar página */
+@keyframes unblur {
+  0%  { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  to  { -webkit-backdrop-filter: blur(0px);  backdrop-filter: blur(0px); }
+}
+
+/* Ripple/expand circular */
+@keyframes expand {
+  0%   { width: 0; height: 0; }
+  50%  { width: 100vw; height: 100vw; }
+  100% { width: 100vw; height: 100vw; }
+}
+
+/* Fade in overlay */
+@keyframes fadeOverlay {
+  0%   { opacity: 0; }
+  50%  { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* Carrossel infinito — mobile */
+@keyframes scroll-carousel-sm {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(calc(-170px * 13 - 10px * 13)); }
+}
+@keyframes scroll-carousel {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(calc(-200px * 13 - 12px * 13)); }
+}
+
+/* ================================================================
+ * COMPONENTES BASE — PADRÕES CONTY
+ * ================================================================ */
+
+/* --- Layout padrão de seção --- */
+.conty-section {
+  width: 100%;
+  padding-top: 5rem;     /* py-20 */
+  padding-bottom: 5rem;
+  padding-left: 1rem;    /* px-4 */
+  padding-right: 1rem;
+}
+
+.conty-container {
+  max-width: var(--container-6xl); /* 72rem / 1152px */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* --- Seção dark (hero / destaque) --- */
+.conty-section-dark {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary-dark);
+}
+
+/* --- Seção light --- */
+.conty-section-light {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-primary-light);
+}
+
+/* --- Card dark (glassmorphism) --- */
+.conty-card-dark {
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem; /* p-6 */
+}
+
+/* --- Card light --- */
+.conty-card-light {
+  background-color: var(--color-bg-card);
+  border: 1px solid rgba(229,231,235,0.8); /* gray-200/80 */
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem;
+}
+
+/* --- Botão primário --- */
+.conty-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  background-color: var(--color-brand-blue);
+  color: var(--color-white);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-base);
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--default-transition-duration) var(--default-transition-timing);
+}
+.conty-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+/* --- Botão ghost/glass (dark sections) --- */
+.conty-btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-glass-bg);
+  color: rgba(255,255,255,0.60);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-base);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  cursor: pointer;
+  transition: all var(--default-transition-duration) var(--default-transition-timing);
+}
+.conty-btn-ghost-dark:hover {
+  background: var(--color-glass-hover);
+  border-color: var(--color-glass-border-hover);
+  color: rgba(255,255,255,0.80);
+}
+
+/* --- Botão outline (light sections) --- */
+.conty-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  background: transparent;
+  color: var(--color-text-primary-light);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-gray-200);
+  cursor: pointer;
+  transition: background var(--default-transition-duration) var(--default-transition-timing);
+}
+.conty-btn-outline:hover {
+  background-color: var(--color-gray-50);
+}
+
+/* --- Texto gradiente (destaque em headings) --- */
+.conty-text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(
+    to right,
+    var(--color-brand-blue),
+    rgba(0,122,255,0.70)
+  );
+}
+
+/* --- Efeito aurora (hero background) --- */
+.conty-aurora {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, rgba(0,122,255,0.25) 0%, transparent 70%);
+  filter: blur(var(--blur-3xl));
+  pointer-events: none;
+  animation: auroraDrift 1200ms var(--ease-spring) forwards;
+}
+
+/* --- Badge / tag --- */
+.conty-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: rgba(255,255,255,0.80);
+}
+
+/* --- Grid com linhas de fundo (seção de fundo) --- */
+.conty-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* --- Máscara radial (vinheta circular) --- */
+.conty-radial-mask {
+  -webkit-mask-image: radial-gradient(#000 50%, transparent 70%);
+  mask-image: radial-gradient(#000 50%, transparent 70%);
+}
