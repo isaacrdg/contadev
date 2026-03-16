@@ -92,7 +92,7 @@ export default function Hero() {
           style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "none" : "translateY(28px)" }}
         >
           <h1
-            className="font-display font-extrabold text-[40px] md:text-[52px] leading-[1.08] tracking-tight text-[#F4F4F8] mb-6"
+            className="font-display font-extrabold text-4xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-[#F4F4F8] mb-6"
             style={{ letterSpacing: "-.5px" }}
           >
             Tecnologia para a{" "}
