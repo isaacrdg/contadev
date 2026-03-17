@@ -73,7 +73,7 @@ export default function Pricing() {
   }, []);
 
   return (
-    <section id="precos" ref={ref} className="relative py-10 md:py-14 px-6 overflow-hidden"
+    <section id="precos" ref={ref} className="relative py-8 md:py-14 px-5 md:px-6 overflow-hidden"
       style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
 
       <div className="relative z-10 max-w-[1100px] mx-auto">
@@ -112,7 +112,7 @@ export default function Pricing() {
               )}
 
               {/* Content */}
-              <div className="p-7 flex flex-col flex-1">
+              <div className="p-5 md:p-7 flex flex-col flex-1">
                 <p className="font-display font-bold text-[12px] text-white/35 uppercase tracking-[.08em] mb-2">{plan.name}</p>
                 <p className="font-display font-bold leading-none mb-1"
                   style={{ fontSize: plan.period ? "38px" : "28px", color: "#fafafa" }}>

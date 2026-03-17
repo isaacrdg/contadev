@@ -10,15 +10,12 @@ const links = [
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const closeMenu = () => setMenuOpen(false);
 
   return (
     <nav
@@ -55,15 +52,15 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Direita — CTA + hamburguer */}
-        <div className="flex items-center gap-4">
+        {/* Direita — CTA */}
+        <div className="flex items-center">
           <a
             href="#contato"
-            className="hidden md:inline-flex no-underline items-center justify-center whitespace-nowrap"
+            className="inline-flex no-underline items-center justify-center whitespace-nowrap text-[11px] md:text-[14px] py-2 px-4 md:py-[9px] md:px-[22px]"
             style={{
-              fontSize: "14px", fontWeight: 600,
+              fontWeight: 600,
               color: "#0D0B1E", background: "#ffffff",
-              borderRadius: "999px", padding: "9px 22px",
+              borderRadius: "999px",
               transition: "background .2s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "#e8e4ff")}
@@ -71,67 +68,8 @@ export default function Navbar() {
           >
             FALE COM UM ESPECIALISTA
           </a>
-
-          {/* Hamburguer — mobile */}
-          <button
-            className="md:hidden flex flex-col justify-center gap-[5px] p-1"
-            aria-label="Menu"
-            onClick={() => setMenuOpen((v) => !v)}
-            style={{ background: "none", border: "none", cursor: "pointer" }}
-          >
-            {[0, 1, 2].map((i) => (
-              <span key={i} style={{
-                display: "block", width: 22, height: 2,
-                background: "#fafafa", borderRadius: 2,
-                transition: "transform .25s, opacity .25s",
-                ...(i === 0 && menuOpen ? { transform: "translateY(7px) rotate(45deg)" } : {}),
-                ...(i === 1 ? { opacity: menuOpen ? 0 : 1 } : {}),
-                ...(i === 2 && menuOpen ? { transform: "translateY(-7px) rotate(-45deg)" } : {}),
-              }} />
-            ))}
-          </button>
         </div>
 
-      </div>
-
-      {/* Mobile menu */}
-      <div
-        className="md:hidden overflow-hidden transition-all duration-300"
-        style={{
-          maxHeight: menuOpen ? "340px" : "0px",
-          borderTop: menuOpen ? "1px solid rgba(255,255,255,0.07)" : "none",
-          background: "rgba(25,25,25,0.95)",
-          backdropFilter: "blur(20px)",
-        }}
-      >
-        <div className="flex flex-col px-6 py-4 gap-1">
-          {links.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              onClick={closeMenu}
-              className="no-underline py-3"
-              style={{
-                fontSize: "15px", color: "rgba(255,255,255,0.65)",
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
-              }}
-            >
-              {l.label}
-            </a>
-          ))}
-          <a
-            href="#contato"
-            onClick={closeMenu}
-            className="no-underline text-center mt-4 py-3"
-            style={{
-              fontSize: "15px", fontWeight: 600,
-              color: "#0D0B1E", background: "#ffffff",
-              borderRadius: "999px",
-            }}
-          >
-            FALE COM UM ESPECIALISTA
-          </a>
-        </div>
       </div>
     </nav>
   );

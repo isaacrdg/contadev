@@ -44,7 +44,7 @@ export default function FAQ() {
   }, []);
 
   return (
-    <section id="faq" ref={ref} className="relative py-10 md:py-12 px-6"
+    <section id="faq" ref={ref} className="relative py-8 md:py-12 px-5 md:px-6"
       style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
 
       <div className="max-w-[760px] mx-auto">
@@ -65,7 +65,7 @@ export default function FAQ() {
               style={{ borderColor: "rgba(255,255,255,0.07)" }}
             >
               <button
-                className="w-full text-left py-6 flex items-center justify-between gap-4 transition-colors duration-200 group"
+                className="w-full text-left py-4 md:py-6 flex items-center justify-between gap-4 transition-colors duration-200 group"
                 onClick={() => setOpen(open === i ? null : i)}
                 style={{ background: "none", border: "none", cursor: "pointer" }}
               >

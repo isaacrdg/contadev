@@ -94,7 +94,7 @@ body::before {
   position: absolute;
   inset: 0;
   background: url(/grid-bg.svg) no-repeat top center;
-  background-size: 100% auto;
+  background-size: max(100%, 1700px) auto;
   pointer-events: none;
   z-index: 0;
 }
@@ -163,9 +163,9 @@ body::before {
   background: linear-gradient(135deg, #6644f2, #5129f0);
   color: #fff;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
-  padding: 16px 30px;
+  padding: 14px 24px;
   border-radius: 30px;
   border: 1px solid hsla(0, 0%, 100%, 0.2);
   cursor: pointer;
@@ -200,6 +200,10 @@ body::before {
   transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(102,68,242,0.3);
 }
+@media (min-width: 768px) {
+  .btn-primary { font-size: 14px; padding: 16px 30px; }
+  .btn-outline { font-size: 14px; padding: 16px 30px; }
+}
 
 .btn-ghost {
   display: inline-flex;
@@ -221,9 +225,9 @@ body::before {
   gap: 8px;
   color: #fff;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
-  padding: 16px 30px;
+  padding: 14px 24px;
   border-radius: 30px;
   border: 1px solid hsla(0, 0%, 100%, 0.2);
   background: transparent;

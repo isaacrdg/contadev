@@ -16,7 +16,7 @@ export default function Contact() {
   }, []);
 
   return (
-    <section id="contato" ref={ref} className="relative py-10 md:py-12 px-6 overflow-hidden"
+    <section id="contato" ref={ref} className="relative py-8 md:py-12 px-5 md:px-6 overflow-hidden"
       style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
 
       <div className="relative z-10 max-w-[580px] mx-auto text-center fade-up">

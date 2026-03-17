@@ -73,7 +73,7 @@ export default function Testimonials() {
   }, []);
 
   return (
-    <section id="depoimentos" ref={ref} className="relative py-10 md:py-14 px-6 overflow-hidden"
+    <section id="depoimentos" ref={ref} className="relative py-8 md:py-14 px-5 md:px-6 overflow-hidden"
       style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
 
       <div className="max-w-[1100px] mx-auto">

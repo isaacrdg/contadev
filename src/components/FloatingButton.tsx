@@ -9,10 +9,10 @@ export default function FloatingButton() {
       {/* Tooltip popup */}
       {open && (
         <div
-          className="fixed bottom-24 right-6 z-50 rounded-2xl p-5 w-72 shadow-2xl"
+          className="fixed bottom-24 right-4 md:right-6 z-50 rounded-2xl p-4 md:p-5 w-64 md:w-72 shadow-2xl"
           style={{
-            background: "#0F0F1A",
-            border: "1px solid rgba(124,58,237,0.30)",
+            background: "#1c1c1c",
+            border: "1px solid rgba(117,83,255,0.30)",
             boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.10)",
           }}
         >

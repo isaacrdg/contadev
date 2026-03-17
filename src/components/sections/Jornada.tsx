@@ -86,7 +86,7 @@ export default function Benefits() {
           return (
             <div
               key={item.step}
-              className={`grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 lg:gap-16 items-center ${
+              className={`grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-14 lg:gap-16 items-center ${
                 i === 0 ? "pt-8 md:pt-12 pb-8 md:pb-12" : "py-8 md:py-12 border-t border-white/5"
               }`}
             >
@@ -109,7 +109,7 @@ export default function Benefits() {
               {/* Media column */}
               <div
                 className={`relative rounded-xl overflow-hidden bg-white/[0.03] fade-up
-                  w-[calc(100%+2rem)] -mx-4 max-w-[calc(100vw-3rem)] aspect-[3/4]
+                  w-full aspect-[4/3]
                   md:mx-0 md:w-full md:max-w-none md:aspect-[4/3]
                   ${isEven ? "md:order-1" : ""}
                 `}

@@ -66,22 +66,28 @@ export default function Hero() {
   const fmt = (n: number) => "R$" + n.toLocaleString("pt-BR");
 
   return (
-    <section id="hero" className="relative flex flex-col overflow-hidden pt-20">
+    <section id="hero" className="relative min-h-[85vh] md:min-h-0 flex flex-col overflow-hidden pt-20">
       <div className="grid-bg" />
 
       {/* Blurs — original ContaDev SVGs */}
-      <img src="/grain-blur.svg" alt="" className="absolute pointer-events-none" style={{
+      <img src="/grain-blur.svg" alt="" className="absolute pointer-events-none hidden md:block" style={{
         top: "-220px", left: "50%", transform: "translateX(-50%)",
         width: 1220, height: 1138,
       }} />
-      <img src="/small-blur.svg" alt="" className="absolute pointer-events-none" style={{
+      <img src="/small-blur.svg" alt="" className="absolute pointer-events-none hidden md:block" style={{
         top: "-60px", right: "-100px",
         width: 869, height: 983,
+      }} />
+      {/* Mobile blur — simpler */}
+      <div className="absolute pointer-events-none md:hidden" style={{
+        top: "-100px", left: "50%", transform: "translateX(-50%)",
+        width: 400, height: 400, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(117,83,255,0.15) 0%, transparent 70%)",
       }} />
 
       {/* Hero body */}
       <div className="flex-1 flex items-center relative z-10">
-        <div className="max-w-[1100px] mx-auto px-6 py-10 w-full flex items-center gap-10">
+        <div className="max-w-[1100px] mx-auto px-4 md:px-6 py-8 md:py-10 w-full flex items-center gap-10">
 
         {/* ── LEFT — 70% do container ── */}
         <div
@@ -89,15 +95,14 @@ export default function Hero() {
           style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "none" : "translateY(28px)" }}
         >
           <h1
-            className="font-display font-bold text-4xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-[#fafafa] mb-6"
-            style={{ letterSpacing: "-.5px" }}
+            className="font-display font-bold text-[46px] md:text-6xl lg:text-7xl leading-[1.0] tracking-[-0.03em] text-[#fafafa] mb-4"
           >
             Tecnologia para a{" "}
             <em className="not-italic gradient-text">vida contábil</em>{" "}
             do dev
           </h1>
 
-          <p className="text-[16px] leading-[1.75] text-[#e0e0e0] font-extralight mb-10 max-w-[480px]">
+          <p className="text-[18px] md:text-[16px] leading-[1.65] text-[#e0e0e0] font-extralight mb-8 max-w-none md:max-w-[480px]">
             Centralize sua PJ, fale com especialistas que entendem de tech e comece a pagar menos imposto desde o primeiro mês.
           </p>
 
@@ -304,14 +309,14 @@ export default function Hero() {
           transform: heroVisible ? "none" : "translateY(14px)",
         }}
       >
-        <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center gap-8">
-        <span className="text-[10px] text-white/35 uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
+        <div className="max-w-[1100px] mx-auto px-5 md:px-6 py-3 md:py-4 flex items-center gap-4 md:gap-8">
+        <span className="text-[9px] md:text-[10px] text-white/35 uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
           Profissionais de
         </span>
         <div className="overflow-hidden flex-1">
-          <div className="carousel-track items-center gap-10">
+          <div className="carousel-track items-center gap-6 md:gap-10">
             {brands.map((name, i) => (
-              <span key={i} className="font-display font-bold text-[13px] text-white/20 whitespace-nowrap">
+              <span key={i} className="font-display font-bold text-[11px] md:text-[13px] text-white/20 whitespace-nowrap">
                 {name}
               </span>
             ))}
