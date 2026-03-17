@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 const faqs = [
   {
     q: "Quanto tempo leva para abrir minha empresa?",
-    a: "Em média 24 a 48 horas úteis após o envio dos documentos. Todo o processo é digital — sem cartório, sem fila.",
+    a: "Em média 24 a 48 horas úteis após o envio dos documentos. Todo o processo é digital, sem cartório e sem fila.",
   },
   {
     q: "Qual regime tributário é melhor para mim?",
@@ -44,14 +44,14 @@ export default function FAQ() {
   }, []);
 
   return (
-    <section id="faq" ref={ref} className="relative py-16 px-6 md:px-12"
-      style={{ background: "#0F0F1A" }}>
+    <section id="faq" ref={ref} className="relative py-10 md:py-12 px-6"
+      style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
 
       <div className="max-w-[760px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-10 fade-up">
+        <div className="text-center mb-8 fade-up">
           <span className="section-label" style={{ display: "inline-block" }}>Dúvidas</span>
-          <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#F4F4F8]" style={{ letterSpacing: "-.3px" }}>
+          <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa]" style={{ letterSpacing: "-.3px" }}>
             Perguntas frequentes
           </h2>
         </div>
@@ -69,14 +69,14 @@ export default function FAQ() {
                 onClick={() => setOpen(open === i ? null : i)}
                 style={{ background: "none", border: "none", cursor: "pointer" }}
               >
-                <span className={`text-[15px] font-medium transition-colors ${open === i ? "text-[#A78BFA]" : "text-[#F4F4F8]"}`}>
+                <span className={`text-[15px] font-medium transition-colors ${open === i ? "text-[#8f6fff]" : "text-[#fafafa]"}`}>
                   {item.q}
                 </span>
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[#A78BFA] font-bold text-[14px] transition-all duration-300"
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[#8f6fff] font-bold text-[14px] transition-all duration-300"
                   style={{
-                    background: "rgba(124,58,237,0.10)",
-                    border: "1px solid rgba(124,58,237,0.25)",
+                    background: "rgba(117,83,255,0.10)",
+                    border: "1px solid rgba(117,83,255,0.25)",
                     transform: open === i ? "rotate(45deg)" : "none",
                   }}
                 >

@@ -29,7 +29,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${outfit.variable}`}>
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

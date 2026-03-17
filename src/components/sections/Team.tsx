@@ -10,7 +10,7 @@ const pillars = [
       </svg>
     ),
     title: "Especialista dedicado",
-    desc: "Um contador real com foco exclusivo em tech PJ. Nenhum robô, nenhum script — uma pessoa que entende o seu caso.",
+    desc: "Um contador real com foco exclusivo em tech PJ. Nenhum robô, nenhum script. Uma pessoa que entende o seu caso.",
   },
   {
     icon: (
@@ -20,7 +20,7 @@ const pillars = [
       </svg>
     ),
     title: "Resposta em menos de 1h",
-    desc: "Sem ticket, sem fila de suporte. Você manda mensagem e um especialista real responde — direto no WhatsApp.",
+    desc: "Sem ticket, sem fila de suporte. Você manda mensagem e um especialista real responde direto no WhatsApp.",
   },
   {
     icon: (
@@ -29,7 +29,7 @@ const pillars = [
       </svg>
     ),
     title: "Do CNPJ ao IR",
-    desc: "Abertura, gestão contínua, pro-labore, guias e declarações anuais — tudo acompanhado pela mesma pessoa.",
+    desc: "Abertura, gestão contínua, pro-labore, guias e declarações anuais. Tudo acompanhado pela mesma pessoa.",
   },
 ];
 
@@ -56,36 +56,28 @@ export default function Team() {
     <section
       id="equipe"
       ref={ref}
-      className="relative py-16 px-6 md:px-12 overflow-hidden"
-      style={{ background: "#0F0F1A" }}
+      className="relative py-10 md:py-14 px-6 overflow-hidden"
+      style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.06)" }}
     >
-      {/* Glow */}
-      <div className="absolute pointer-events-none" style={{
-        bottom: "-100px", left: "10%",
-        width: 350, height: 350,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)",
-      }} />
-
-      <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
+      <div className="relative z-10 max-w-[1100px] mx-auto flex flex-col md:flex-row items-center gap-12">
 
         {/* LEFT — copy */}
         <div className="w-full md:w-[480px] flex-shrink-0 fade-up">
           <span className="section-label">Atendimento</span>
           <h2
-            className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#F4F4F8] mb-5"
+            className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
             style={{ letterSpacing: "-.3px" }}
           >
             Plataforma potente.{" "}
             <em className="not-italic gradient-text">Humano do seu lado.</em>
           </h2>
-          <p className="text-[15px] leading-[1.7] text-[#9CA3AF] mb-10 max-w-[420px]">
-            Automatizamos tudo que pode ser automatizado. Mas cada decisão importante — regime tributário,
-            abertura, declarações — tem um especialista real te guiando, de ponta a ponta.
+          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-7 max-w-[420px]">
+            Automatizamos tudo que pode ser automatizado. Mas cada decisão importante, como regime tributário,
+            abertura e declarações, tem um especialista real te guiando de ponta a ponta.
           </p>
 
           {/* Pillars */}
-          <div className="flex flex-col gap-6 mb-10">
+          <div className="flex flex-col gap-5 mb-8">
             {pillars.map((p, i) => (
               <div
                 key={p.title}
@@ -93,21 +85,21 @@ export default function Team() {
                 style={{ transitionDelay: `${(i + 1) * 100}ms` }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-[#A78BFA]"
-                  style={{ background: "rgba(124,58,237,0.10)", border: "1px solid rgba(124,58,237,0.20)" }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-[#8f6fff]"
+                  style={{ background: "rgba(117,83,255,0.10)", border: "1px solid rgba(117,83,255,0.20)" }}
                 >
                   {p.icon}
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-[15px] text-[#F4F4F8] mb-1">{p.title}</h3>
-                  <p className="text-[13px] leading-[1.6] text-[#9CA3AF]">{p.desc}</p>
+                  <h3 className="font-display font-bold text-[15px] text-[#fafafa] mb-1">{p.title}</h3>
+                  <p className="text-[13px] leading-[1.6] text-[#e0e0e0]">{p.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
           <a href="#contato" className="btn-primary fade-up" style={{ fontSize: "14px", transitionDelay: "400ms" }}>
-            Falar com um especialista →
+            FALE COM UM ESPECIALISTA
           </a>
         </div>
 
@@ -116,12 +108,7 @@ export default function Team() {
 
           {/* Specialist availability card */}
           <div
-            className="rounded-2xl p-6 border"
-            style={{
-              background: "#141420",
-              borderColor: "rgba(124,58,237,0.22)",
-              boxShadow: "0 0 40px rgba(124,58,237,0.08)",
-            }}
+            className="glass-card-featured p-6"
           >
             {/* Online status */}
             <div className="flex items-center gap-2 mb-5">
@@ -132,44 +119,40 @@ export default function Team() {
             <div className="flex items-center gap-4 mb-5">
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-extrabold text-xl text-white flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #7C3AED, #5B21B6)" }}
+                style={{ background: "linear-gradient(135deg, #7553ff, #5a3de6)" }}
               >
                 RS
               </div>
               <div>
-                <p className="font-display font-bold text-[16px] text-[#F4F4F8]">Rafael Santos</p>
-                <p className="text-[12px] text-[#A78BFA]">Contador · CRC Ativo · Especialista em tech PJ</p>
+                <p className="font-display font-bold text-[16px] text-[#fafafa]">Rafael Santos</p>
+                <p className="text-[12px] text-[#8f6fff]">Contador · CRC Ativo · Especialista em tech PJ</p>
               </div>
             </div>
 
             <blockquote
-              className="text-[14px] leading-[1.7] text-[#9CA3AF] mb-5 pl-4"
-              style={{ borderLeft: "2px solid rgba(124,58,237,0.40)" }}
+              className="text-[14px] leading-[1.7] text-[#e0e0e0] mb-5 pl-4"
+              style={{ borderLeft: "2px solid rgba(117,83,255,0.40)" }}
             >
-              "Cada cliente é único. Você tem acesso direto a mim — sem intermediários, sem robô."
+              "Cada cliente é único. Você tem acesso direto a mim, sem intermediários e sem robô."
             </blockquote>
 
             <div
               className="flex items-center justify-between rounded-xl px-4 py-3"
-              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)" }}
+              style={{ background: "rgba(117,83,255,0.08)", border: "1px solid rgba(117,83,255,0.15)" }}
             >
-              <span className="text-[12px] text-[#9CA3AF]">Tempo médio de resposta</span>
-              <span className="font-display font-bold text-[14px] text-[#A78BFA]">&lt; 47 min</span>
+              <span className="text-[12px] text-[#e0e0e0]">Tempo médio de resposta</span>
+              <span className="font-display font-bold text-[14px] text-[#8f6fff]">&lt; 47 min</span>
             </div>
           </div>
 
           {/* Mini chat snippet */}
           <div
-            className="rounded-2xl border overflow-hidden"
-            style={{
-              background: "#141420",
-              borderColor: "rgba(255,255,255,0.07)",
-            }}
+            className="glass-card overflow-hidden"
           >
             {/* Chat header */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">
-              <div className="w-6 h-6 rounded-full bg-[#7C3AED] flex items-center justify-center font-display font-bold text-[9px] text-white">C</div>
-              <span className="text-[12px] text-[#F4F4F8] font-medium">ContaDev</span>
+              <div className="w-6 h-6 rounded-full bg-[#7553ff] flex items-center justify-center font-display font-bold text-[9px] text-white">C</div>
+              <span className="text-[12px] text-[#fafafa] font-medium">ContaDev</span>
               <div className="ml-auto flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span className="text-[10px] text-emerald-400">online</span>
@@ -183,8 +166,8 @@ export default function Team() {
                   <span
                     className="text-[12px] leading-[1.5] px-3.5 py-2 max-w-[260px]"
                     style={{
-                      background: m.dir === "out" ? "#7C3AED" : "rgba(255,255,255,0.06)",
-                      color: m.dir === "out" ? "#fff" : "#9CA3AF",
+                      background: m.dir === "out" ? "#7553ff" : "rgba(255,255,255,0.06)",
+                      color: m.dir === "out" ? "#fff" : "rgba(250,250,250,0.6)",
                       borderRadius: m.dir === "out" ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
                     }}
                   >

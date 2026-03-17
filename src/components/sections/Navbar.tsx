@@ -24,14 +24,14 @@ export default function Navbar() {
     <nav
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
-        background: scrolled ? "rgba(8,8,14,0.95)" : "transparent",
+        background: scrolled ? "rgba(25,25,25,0.85)" : "transparent",
         borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "none",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(20px)" : "none",
       }}
     >
       {/* Flex: logo + links à esquerda | cta à direita */}
-      <div className="h-[68px] px-6 md:px-14 max-w-7xl mx-auto flex items-center justify-between">
+      <div className="h-[68px] px-6 max-w-[1100px] mx-auto flex items-center justify-between">
 
         {/* Esquerda — Logo + Links */}
         <div className="flex items-center gap-10">
@@ -69,7 +69,7 @@ export default function Navbar() {
             onMouseEnter={(e) => (e.currentTarget.style.background = "#e8e4ff")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "#ffffff")}
           >
-            Falar com Vendas
+            FALE COM UM ESPECIALISTA
           </a>
 
           {/* Hamburguer — mobile */}
@@ -82,7 +82,7 @@ export default function Navbar() {
             {[0, 1, 2].map((i) => (
               <span key={i} style={{
                 display: "block", width: 22, height: 2,
-                background: "#F4F4F8", borderRadius: 2,
+                background: "#fafafa", borderRadius: 2,
                 transition: "transform .25s, opacity .25s",
                 ...(i === 0 && menuOpen ? { transform: "translateY(7px) rotate(45deg)" } : {}),
                 ...(i === 1 ? { opacity: menuOpen ? 0 : 1 } : {}),
@@ -100,7 +100,7 @@ export default function Navbar() {
         style={{
           maxHeight: menuOpen ? "340px" : "0px",
           borderTop: menuOpen ? "1px solid rgba(255,255,255,0.07)" : "none",
-          background: "rgba(8,8,14,0.98)",
+          background: "rgba(25,25,25,0.95)",
           backdropFilter: "blur(20px)",
         }}
       >
@@ -129,7 +129,7 @@ export default function Navbar() {
               borderRadius: "999px",
             }}
           >
-            Falar com Vendas
+            FALE COM UM ESPECIALISTA
           </a>
         </div>
       </div>

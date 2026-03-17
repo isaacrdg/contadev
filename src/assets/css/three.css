@@ -1,0 +1,725 @@
+.StoryCard_container__ourWg {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4rem;
+    padding: 3rem;
+    background: #1c1c1c;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid hsla(0,0%,100%,.1);
+    box-sizing: border-box
+}
+
+.StoryCard_content__v_QU0 {
+    flex: 1;
+    max-width: 600px;
+    grid-area: content;
+    padding: 1rem
+}
+
+.StoryCard_title__r8DNn {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #fff
+}
+
+.StoryCard_description__rrobP {
+    font-size: 1.2rem;
+    font-weight: 200;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: #e0e0e0
+}
+
+.StoryCard_features__WKf29 {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem
+}
+
+.StoryCard_feature__ccjCo {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: hsla(0,0%,100%,.8);
+    font-size: 1.1rem
+}
+
+.StoryCard_checkmark__8cWsV {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: hsla(0,0%,100%,.1);
+    border-radius: 50%;
+    color: #fff
+}
+
+.StoryCard_preview__BzZ5D {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 300px;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: url(/assets/background/grain-bg.svg) no-repeat 50%
+}
+
+.StoryCard_message_container__g08_X {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 80%
+}
+
+.StoryCard_message_container__g08_X:nth-child(odd) {
+    align-self: flex-end
+}
+
+.StoryCard_message_container__g08_X:nth-child(2n) {
+    align-self: flex-start
+}
+
+.StoryCard_timestamp__m1tMN {
+    font-size: .75rem;
+    color: hsla(0,0%,100%,.5);
+    margin-left: 8px
+}
+
+.StoryCard_message_container__g08_X:nth-child(odd) .StoryCard_timestamp__m1tMN {
+    text-align: right
+}
+
+.StoryCard_message_sent__eX_CS {
+    align-self: flex-end;
+    background: hsla(0,0%,100%,.1);
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 18px
+}
+
+.StoryCard_message_received__Gqjbv {
+    align-self: flex-start;
+    background: #7c3aed;
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 18px
+}
+
+.StoryCard_animation__uyANG {
+    grid-area: animation
+}
+
+@media (max-width: 1024px) {
+    .StoryCard_container__ourWg {
+        gap:2rem;
+        padding: 1rem
+    }
+
+    .StoryCard_title__r8DNn {
+        font-size: 1.7rem
+    }
+
+    .StoryCard_description__rrobP {
+        font-size: 1.1rem
+    }
+
+    .StoryCard_feature__ccjCo {
+        font-size: .9rem
+    }
+}
+
+@media (max-width: 768px) {
+    .StoryCard_container__ourWg {
+        display:grid;
+        grid-template: "animation" 1fr "content" 1fr
+    }
+
+    .StoryCard_preview__BzZ5D {
+        width: 100%
+    }
+
+    .StoryCard_title__r8DNn {
+        font-size: 1.7rem
+    }
+
+    .StoryCard_description__rrobP {
+        font-size: 1.1rem
+    }
+}
+
+.CheckCircle_circle__zTEHi {
+    border-radius: 50%;
+    border: 2px solid hsla(0,0%,100%,.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent
+}
+
+.CheckCircle_inner_circle__Aykzm {
+    border-radius: 50%;
+    background: #6000ffb0;
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
+
+.CheckCircle_circle_sm__oIpaZ {
+    width: 28px;
+    height: 28px
+}
+
+.CheckCircle_inner_circle_sm__Mz9OF {
+    width: 24px;
+    height: 24px
+}
+
+.CheckCircle_circle_md__HVAkH {
+    width: 48px;
+    height: 48px
+}
+
+.CheckCircle_inner_circle_md__Xeegd {
+    width: 32px;
+    height: 32px
+}
+
+.CheckCircle_circle_lg__sO_yf {
+    width: 64px;
+    height: 64px
+}
+
+.CheckCircle_inner_circle_lg__6966L {
+    width: 44px;
+    height: 44px
+}
+
+.CheckCircle_check_icon__kVeUb {
+    color: hsla(0,0%,100%,.8);
+    stroke-width: 2.5;
+    width: 16px;
+    height: 16px
+}
+
+.CheckCircle_circle_md__HVAkH .CheckCircle_check_icon__kVeUb {
+    width: 20px;
+    height: 20px
+}
+
+.CheckCircle_circle_lg__sO_yf .CheckCircle_check_icon__kVeUb {
+    width: 28px;
+    height: 28px
+}
+
+.TaxRevision_container__kTr2i {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4rem;
+    padding: 3rem;
+    background: #1c1c1c;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid hsla(0,0%,100%,.1);
+    overflow: hidden
+}
+
+.TaxRevision_content__NulT0 {
+    flex: 1;
+    max-width: 600px
+}
+
+.TaxRevision_title__VdstN {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #fff
+}
+
+.TaxRevision_description__4SbxX {
+    font-size: 1.2rem;
+    font-weight: 200;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: #e0e0e0
+}
+
+.TaxRevision_features__Ag4iy {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem
+}
+
+.TaxRevision_feature__Ieq72 {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: hsla(0,0%,100%,.8);
+    font-size: 1.1rem
+}
+
+.TaxRevision_checkmark__1ym0a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: hsla(0,0%,100%,.1);
+    border-radius: 50%;
+    color: #fff
+}
+
+.TaxRevision_preview__EfcPf {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 450px;
+    @media (max-width: 600px) {
+        min-width:unset
+    }
+
+    padding: 1rem;
+    border-radius: 1rem;
+    background: url(/assets/background/grain-bg.svg) no-repeat 50%;
+    min-height: 250px;
+    align-items: center;
+    justify-content: center
+}
+
+.TaxRevision_message_container__G1rwj {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 80%
+}
+
+.TaxRevision_message_container__G1rwj:nth-child(odd) {
+    align-self: flex-end
+}
+
+.TaxRevision_message_container__G1rwj:nth-child(2n) {
+    align-self: flex-start
+}
+
+.TaxRevision_timestamp__Sau1K {
+    font-size: .75rem;
+    color: hsla(0,0%,100%,.5);
+    margin-left: 8px
+}
+
+.TaxRevision_message_container__G1rwj:nth-child(odd) .TaxRevision_timestamp__Sau1K {
+    text-align: right
+}
+
+.TaxRevision_message_sent__O2x7M {
+    align-self: flex-end;
+    background: hsla(0,0%,100%,.1);
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 18px
+}
+
+.TaxRevision_message_received__Bn3Ts {
+    align-self: flex-start;
+    background: #7c3aed;
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 18px
+}
+
+@media (max-width: 1024px) {
+    .TaxRevision_container__kTr2i {
+        gap:2rem;
+        padding: 1rem
+    }
+
+    .TaxRevision_title__VdstN {
+        font-size: 1.7rem
+    }
+
+    .TaxRevision_description__4SbxX {
+        font-size: 1.1rem
+    }
+}
+
+@media (max-width: 768px) {
+    .TaxRevision_container__kTr2i {
+        flex-direction:column;
+        padding: 2rem;
+        gap: 2rem
+    }
+
+    .TaxRevision_preview__EfcPf {
+        width: 100%
+    }
+
+    .TaxRevision_title__VdstN {
+        font-size: 1.7rem
+    }
+
+    .TaxRevision_description__4SbxX {
+        font-size: 1.1rem
+    }
+}
+
+.FinalBenefitCard_container___uLFn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4rem;
+    padding: 3rem;
+    background: #1c1c1c;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid hsla(0,0%,100%,.1)
+}
+
+.FinalBenefitCard_content__1d85K {
+    flex: 1;
+    max-width: 600px
+}
+
+.FinalBenefitCard_title__GU_iJ {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #fff
+}
+
+.FinalBenefitCard_description__s26Ep {
+    font-size: 1.2rem;
+    font-weight: 200;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: #e0e0e0
+}
+
+.FinalBenefitCard_features__vj6uh {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem
+}
+
+.FinalBenefitCard_feature__sUIWQ {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: hsla(0,0%,100%,.8);
+    font-size: 1.1rem
+}
+
+.FinalBenefitCard_checkmark__hLU78 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: hsla(0,0%,100%,.1);
+    border-radius: 50%;
+    color: #fff
+}
+
+.FinalBenefitCard_preview__u3lzX {
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+    height: 320px;
+    border-radius: 1rem;
+    background: url(/assets/background/grain-bg.svg) no-repeat 50%
+}
+
+.FinalBenefitCard_message_container__KX9HQ {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 80%
+}
+
+.FinalBenefitCard_message_container__KX9HQ:nth-child(odd) {
+    align-self: flex-end
+}
+
+.FinalBenefitCard_message_container__KX9HQ:nth-child(2n) {
+    align-self: flex-start
+}
+
+.FinalBenefitCard_timestamp__v4sUa {
+    font-size: .75rem;
+    color: hsla(0,0%,100%,.5);
+    margin-left: 8px
+}
+
+.FinalBenefitCard_message_container__KX9HQ:nth-child(odd) .FinalBenefitCard_timestamp__v4sUa {
+    text-align: right
+}
+
+.FinalBenefitCard_message_sent__8KeDO {
+    align-self: flex-end;
+    background: hsla(0,0%,100%,.1);
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 18px
+}
+
+.FinalBenefitCard_message_received__bNd_h {
+    align-self: flex-start;
+    background: #7c3aed;
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 18px
+}
+
+@media (max-width: 1024px) {
+    .FinalBenefitCard_container___uLFn {
+        gap:2rem;
+        padding: 1rem
+    }
+
+    .FinalBenefitCard_title__GU_iJ {
+        font-size: 1.7rem
+    }
+
+    .FinalBenefitCard_description__s26Ep {
+        font-size: 1.1rem
+    }
+
+    .FinalBenefitCard_feature__sUIWQ {
+        font-size: .9rem
+    }
+}
+
+@media (max-width: 768px) {
+    .FinalBenefitCard_container___uLFn {
+        flex-direction:column;
+        padding: 2rem;
+        gap: 2rem
+    }
+
+    .FinalBenefitCard_preview__u3lzX {
+        width: 100%
+    }
+
+    .FinalBenefitCard_title__GU_iJ {
+        font-size: 1.7rem
+    }
+
+    .FinalBenefitCard_description__s26Ep {
+        font-size: 1.1rem
+    }
+}
+
+.CheckmarkGrid_grid__CSV7_ {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: clamp(16px,3vw,24px);
+    height: 350px;
+    padding: 1.5rem
+}
+
+.CheckmarkGrid_checkmark__hUAB0 {
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
+
+.CheckmarkGrid_circle__nGcho {
+    width: clamp(36px,6vw,48px);
+    height: clamp(36px,6vw,48px);
+    border-radius: 50%;
+    border: 2px solid hsla(0,0%,100%,.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent
+}
+
+.CheckmarkGrid_inner_circle__ejdI7 {
+    width: clamp(24px,4vw,32px);
+    height: clamp(24px,4vw,32px);
+    border-radius: 50%;
+    background: #6000ffb0;
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
+
+.CheckmarkGrid_check_icon__t2qHX {
+    color: hsla(0,0%,100%,.8);
+    width: clamp(16px,3vw,20px);
+    height: clamp(16px,3vw,20px);
+    stroke-width: 2.5
+}
+
+@media (max-width: 768px) {
+    .CheckmarkGrid_grid__CSV7_ {
+        gap:16px;
+        padding: 16px
+    }
+
+    .CheckmarkGrid_circle__nGcho {
+        width: 36px;
+        height: 36px
+    }
+
+    .CheckmarkGrid_inner_circle__ejdI7 {
+        width: 24px;
+        height: 24px
+    }
+
+    .CheckmarkGrid_check_icon__t2qHX {
+        width: 16px;
+        height: 16px
+    }
+}
+
+.toast_toast-container__i2Cyp {
+    position: fixed;
+    right: 20px;
+    min-height: 72px;
+    background: rgba(229,231,235,.75);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);
+    z-index: 9999;
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    -webkit-backdrop-filter: blur(8px) brightness(100%) contrast(100%) grayscale(0) hue-rotate(0deg) invert(0) opacity(100%) saturate(100%) sepia(0);
+    backdrop-filter: blur(8px) brightness(100%) contrast(100%) grayscale(0) hue-rotate(0deg) invert(0) opacity(100%) saturate(100%) sepia(0)
+}
+
+.toast_toast-container__i2Cyp:after,.toast_toast-container__i2Cyp:before {
+    border: 0 solid #e5e7eb
+}
+
+@media screen and (max-width: 640px) {
+    .toast_toast-container__i2Cyp {
+        width:80vw
+    }
+}
+
+@font-face {
+    font-family: __Gabarito_2d3e63;
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url(/_next/static/media/7d28de41f17e98f2-s.woff2) format("woff2");
+    unicode-range: u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c0,u+2113,u+2c60-2c7f,u+a720-a7ff
+}
+
+@font-face {
+    font-family: __Gabarito_2d3e63;
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url(/_next/static/media/48d80869c8866503-s.p.woff2) format("woff2");
+    unicode-range: u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd
+}
+
+@font-face {
+    font-family: __Gabarito_Fallback_2d3e63;
+    src: local("Arial");
+    ascent-override:94.81%;descent-override:26.22%;line-gap-override:0.00%;size-adjust:99.15%}
+
+.__className_2d3e63 {
+    font-family: __Gabarito_2d3e63,__Gabarito_Fallback_2d3e63;
+    font-style: normal
+}
+
+.input_input__container__a_suT {
+    display: flex;
+    flex-direction: column
+}
+
+.input_input__container__a_suT label {
+    position: relative;
+    text-align: left;
+    font-size: 16px;
+    color: #71717a;
+    box-sizing: border-box;
+    text-rendering: optimizeLegibility;
+    transition: transform .3s ease,font-size .3s ease
+}
+
+.input_input__container__a_suT input {
+    position: relative;
+    font-size: 16px;
+    color: #30455c;
+    background-color: #f4f4f5;
+    border-radius: 12px;
+    border: 1px solid #a6b8cb;
+    box-sizing: border-box;
+    margin-top: 10px;
+    padding: 18px;
+    margin-bottom: 22px;
+    transition: border-color .3s ease,box-shadow .3s ease
+}
+
+.input_input__container__a_suT input:focus {
+    outline-color: #a4bef9;
+    border-color: #487aee;
+    box-shadow: 0 0 0 3px rgba(72,122,238,.2)
+}
+
+.input_input__container__a_suT input:not(:-moz-placeholder-shown)+label {
+    transform: translateY(-20px);
+    font-size: 12px;
+    color: #487aee
+}
+
+.input_input__container__a_suT input:focus+label,.input_input__container__a_suT input:not(:placeholder-shown)+label {
+    transform: translateY(-20px);
+    font-size: 12px;
+    color: #487aee
+}
+
+.input_input__field__3Kc7P {
+    width: 100%;
+    padding: 16px 0;
+    font-size: 14px;
+    color: #4a5568;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #cbd5e0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    transition: border-color .3s ease,box-shadow .3s ease
+}
+
+.input_input__field__3Kc7P:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(66,153,225,.5)
+}
+
+.input_input__label__cBDjd {
+    position: absolute;
+    font-size: 8px;
+    color: #272727;
+    transition: transform .3s ease,font-size .3s ease;
+    transform-origin: 0 0;
+    background-color: transparent;
+    padding: 0 4px;
+    top: -60px;
+    left: 8px
+}
+
+.input_input__field__3Kc7P:not(:-moz-placeholder-shown)+.input_input__label__cBDjd {
+    transform: translateY(-12px) scale(.9);
+    color: #323232
+}
+
+.input_input__field__3Kc7P:focus+.input_input__label__cBDjd,.input_input__field__3Kc7P:not(:placeholder-shown)+.input_input__label__cBDjd {
+    transform: translateY(-12px) scale(.9);
+    color: #323232
+}

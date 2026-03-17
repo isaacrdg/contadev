@@ -6,7 +6,7 @@ const tweets = [
     initials: "RB",
     name: "Rafael Brito",
     handle: "@rafaelbrito_dev",
-    color: "#7C3AED",
+    color: "#7553ff",
     body: "migrei pra ContaDev há 6 meses e economizei mais de 12k em imposto. absurdo como eu tava pagando a mais antes disso. atendimento é outro nível",
     role: "Senior Dev @ Nubank",
   },
@@ -73,18 +73,18 @@ export default function Testimonials() {
   }, []);
 
   return (
-    <section id="depoimentos" ref={ref} className="relative py-16 px-6 md:px-12 overflow-hidden"
-      style={{ background: "#08080E" }}>
+    <section id="depoimentos" ref={ref} className="relative py-10 md:py-14 px-6 overflow-hidden"
+      style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1100px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-10 fade-up">
+        <div className="text-center mb-8 fade-up">
           <span className="section-label" style={{ display: "inline-block" }}>Depoimentos</span>
-          <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#F4F4F8] mb-4" style={{ letterSpacing: "-.3px" }}>
+          <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa] mb-4" style={{ letterSpacing: "-.3px" }}>
             O que os devs{" "}
             <em className="not-italic gradient-text">estão falando</em>
           </h2>
-          <p className="text-[15px] text-[#9CA3AF]">+500 devs já confiam na ContaDev.</p>
+          <p className="text-[15px] text-[#e0e0e0]">+500 devs já confiam na ContaDev.</p>
         </div>
 
         {/* Tweet grid */}
@@ -92,11 +92,9 @@ export default function Testimonials() {
           {tweets.map((t, i) => (
             <div
               key={t.handle}
-              className="fade-up rounded-2xl p-6 border transition-all duration-200 hover:border-[rgba(124,58,237,0.30)] hover:-translate-y-[3px]"
+              className="fade-up glass-card p-6 transition-all duration-200 hover:border-[rgba(117,83,255,0.28)] hover:-translate-y-[2px]"
               style={{
                 transitionDelay: `${i * 60}ms`,
-                background: "#0F0F1A",
-                borderColor: "rgba(255,255,255,0.07)",
               }}
             >
               {/* Header */}
@@ -108,19 +106,19 @@ export default function Testimonials() {
                   {t.initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-[13px] text-[#F4F4F8] truncate">{t.name}</p>
-                  <p className="text-[11px] text-[#6B7280] truncate">{t.handle}</p>
+                  <p className="font-medium text-[13px] text-[#fafafa] truncate">{t.name}</p>
+                  <p className="text-[11px] text-white/35 truncate">{t.handle}</p>
                 </div>
-                <div className="text-[#9CA3AF]/25 flex-shrink-0">
+                <div className="text-white/25 flex-shrink-0">
                   <XIcon />
                 </div>
               </div>
 
               {/* Body */}
-              <p className="text-[13px] leading-[1.65] text-[#9CA3AF] mb-3">
+              <p className="text-[13px] leading-[1.65] text-[#e0e0e0] mb-3">
                 {t.body}
               </p>
-              <p className="text-[11px] text-[#A78BFA] font-medium">{t.role}</p>
+              <p className="text-[11px] text-[#8f6fff] font-medium">{t.role}</p>
             </div>
           ))}
         </div>

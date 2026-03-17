@@ -66,26 +66,28 @@ export default function Hero() {
   const fmt = (n: number) => "R$" + n.toLocaleString("pt-BR");
 
   return (
-    <section id="hero" className="relative min-h-screen flex flex-col overflow-hidden pt-16">
+    <section id="hero" className="relative flex flex-col overflow-hidden pt-20">
       <div className="grid-bg" />
 
-      {/* Glows */}
+      {/* Large blur — original ContaDev */}
       <div className="absolute pointer-events-none" style={{
-        top: "-80px", left: "25%",
-        width: 500, height: 500,
+        top: "-200px", left: "10%",
+        width: 750, height: 750,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
+        opacity: 0.2,
+        background: "radial-gradient(70.71% 70.71% at 50% 50%, rgba(117,83,255,0.3) 0%, rgba(60,13,255,0.1) 70%, rgba(60,13,255,0) 100%)",
       }} />
       <div className="absolute pointer-events-none" style={{
-        bottom: "-80px", right: "8%",
-        width: 300, height: 300,
+        bottom: "-100px", right: "5%",
+        width: 400, height: 400,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)",
+        opacity: 0.15,
+        background: "radial-gradient(70.71% 70.71% at 50% 50%, rgba(117,83,255,0.3) 0%, rgba(60,13,255,0.1) 70%, rgba(60,13,255,0) 100%)",
       }} />
 
       {/* Hero body */}
       <div className="flex-1 flex items-center relative z-10">
-        <div className="max-w-7xl mx-auto px-6 md:px-14 py-16 w-full flex items-center gap-8 md:gap-16">
+        <div className="max-w-[1100px] mx-auto px-6 py-10 w-full flex items-center gap-8 md:gap-12">
 
         {/* ── LEFT ── */}
         <div
@@ -93,7 +95,7 @@ export default function Hero() {
           style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "none" : "translateY(28px)" }}
         >
           <h1
-            className="font-display font-extrabold text-4xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-[#F4F4F8] mb-6"
+            className="font-display font-extrabold text-4xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-[#fafafa] mb-6"
             style={{ letterSpacing: "-.5px" }}
           >
             Tecnologia para a{" "}
@@ -101,13 +103,13 @@ export default function Hero() {
             do dev
           </h1>
 
-          <p className="text-[16px] leading-[1.75] text-[#9CA3AF] mb-10 max-w-[400px]">
+          <p className="text-[16px] leading-[1.75] text-[#e0e0e0] mb-10 max-w-[400px]">
             Centralize sua PJ, fale com especialistas que entendem de tech e comece a pagar menos imposto desde o primeiro mês.
           </p>
 
           <div className="flex items-center gap-4 flex-wrap">
             <a href="#contato" className="btn-primary" style={{ fontSize: "14px" }}>
-              Falar com um especialista →
+              FALE COM UM ESPECIALISTA
             </a>
           </div>
         </div>
@@ -122,7 +124,7 @@ export default function Hero() {
           }}
         >
           {/* Media block — dashboard + phone as a single anchored unit */}
-          <div className="relative ml-auto" style={{ width: "min(100%, 620px)", height: 540 }}>
+          <div className="relative ml-auto" style={{ width: "min(100%, 560px)", height: 480 }}>
 
             {/* Dashboard — spans from 60px left to right edge of media block */}
             <div
@@ -130,33 +132,33 @@ export default function Hero() {
               className="absolute top-0 right-0 rounded-[20px] overflow-hidden"
               style={{
                 left: 60,
-                height: 430,
-                background: "#0C0C18",
-                border: "1px solid rgba(124,58,237,0.22)",
-                boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.12)",
+                height: 380,
+                background: "#1c1c1c",
+                border: "1px solid rgba(117,83,255,0.22)",
+                boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(117,83,255,0.12)",
               }}
             >
               {/* Fade right + bottom */}
               <div className="absolute top-0 right-0 bottom-0 w-20 z-10 pointer-events-none"
-                style={{ background: "linear-gradient(to left, #08080E, transparent)" }} />
+                style={{ background: "linear-gradient(to left, #191919, transparent)" }} />
               <div className="absolute left-0 right-0 bottom-0 h-36 z-10 pointer-events-none"
-                style={{ background: "linear-gradient(to top, #08080E, transparent)" }} />
+                style={{ background: "linear-gradient(to top, #191919, transparent)" }} />
 
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
-                <span className="font-display font-bold text-sm text-[#F4F4F8]">Dashboard</span>
-                <button className="bg-[#7C3AED] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg tracking-wide">EMITIR NOTA</button>
+                <span className="font-display font-bold text-sm text-[#fafafa]">Dashboard</span>
+                <button className="bg-[#7553ff] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg tracking-wide">EMITIR NOTA</button>
               </div>
 
               {/* Body */}
               <div className="flex h-[calc(100%-49px)]">
                 {/* Sidebar */}
-                <div className="w-24 bg-[#090912] border-r border-white/[0.04] py-4 flex flex-col gap-1">
-                  <div className="w-7 h-7 bg-[#7C3AED] rounded-lg flex items-center justify-center font-display font-bold text-[11px] text-white mx-auto mb-4">C</div>
+                <div className="w-24 bg-[#1f1f1f] border-r border-white/[0.04] py-4 flex flex-col gap-1">
+                  <div className="w-7 h-7 bg-[#7553ff] rounded-lg flex items-center justify-center font-display font-bold text-[11px] text-white mx-auto mb-4">C</div>
                   {["Home", "Docs", "Contrato", "Pag.", "Suporte"].map((item, i) => (
-                    <div key={item} className={`flex items-center gap-2 px-3.5 py-2 ${i === 0 ? "bg-[#7C3AED]/15" : ""}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "bg-[#A78BFA]" : "bg-[#6B7280]"}`} />
-                      <span className={`text-[9px] ${i === 0 ? "text-[#A78BFA]" : "text-[#6B7280]"}`}>{item}</span>
+                    <div key={item} className={`flex items-center gap-2 px-3.5 py-2 ${i === 0 ? "bg-[#7553ff]/15" : ""}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "bg-[#8f6fff]" : "bg-white/35"}`} />
+                      <span className={`text-[9px] ${i === 0 ? "text-[#8f6fff]" : "text-white/35"}`}>{item}</span>
                     </div>
                   ))}
                 </div>
@@ -170,25 +172,25 @@ export default function Hero() {
                       { label: "NFs Emitidas",    value: notas.toString(), sub: "Notas Fiscais",  green: false },
                       { label: "Saldo Líquido",   value: fmt(liquido),  sub: "Disponível",        green: true },
                     ].map((c) => (
-                      <div key={c.label} className="bg-[#13131E] rounded-xl p-2.5 border border-white/5">
-                        <p className="text-[7px] text-[#6B7280] uppercase tracking-wider mb-1">{c.label}</p>
-                        <p className="font-display font-bold text-[12px] text-[#F4F4F8]">{c.value}</p>
-                        <p className={`text-[7px] mt-0.5 ${c.green ? "text-emerald-400" : "text-[#6B7280]"}`}>{c.sub}</p>
+                      <div key={c.label} className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
+                        <p className="text-[7px] text-white/35 uppercase tracking-wider mb-1">{c.label}</p>
+                        <p className="font-display font-bold text-[12px] text-[#fafafa]">{c.value}</p>
+                        <p className={`text-[7px] mt-0.5 ${c.green ? "text-emerald-400" : "text-white/35"}`}>{c.sub}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="bg-[#13131E] rounded-xl p-3 mb-2.5 border border-white/5">
+                  <div className="bg-[#1c1c1c] rounded-xl p-3 mb-2.5 border border-white/5">
                     <div className="flex justify-between mb-2.5">
-                      <span className="text-[8px] text-[#6B7280] uppercase tracking-wider">Faturamento mensal</span>
-                      <span className="font-display font-bold text-[14px] text-[#F4F4F8]">R$ 75.000</span>
+                      <span className="text-[8px] text-white/35 uppercase tracking-wider">Faturamento mensal</span>
+                      <span className="font-display font-bold text-[14px] text-[#fafafa]">R$ 75.000</span>
                     </div>
                     <div className="relative h-12">
                       <svg width="100%" height="100%" viewBox="0 0 220 48" preserveAspectRatio="none">
                         <defs>
                           <linearGradient id="areaGradHero" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="rgba(124,58,237,0.45)" />
-                            <stop offset="100%" stopColor="rgba(124,58,237,0)" />
+                            <stop offset="0%" stopColor="rgba(117,83,255,0.45)" />
+                            <stop offset="100%" stopColor="rgba(117,83,255,0)" />
                           </linearGradient>
                         </defs>
                         {[12, 24, 36].map((y) => (
@@ -202,20 +204,20 @@ export default function Hero() {
                         <path
                           d="M 0 30.6 C 3.33 29.65, 13.33 26.35, 20 24.88 C 26.67 23.41, 33.33 21.36, 40 21.8 C 46.67 22.24, 53.33 28.25, 60 27.52 C 66.67 26.79, 73.33 20.04, 80 17.4 C 86.67 14.76, 93.33 13.51, 100 11.68 C 106.67 9.85, 113.33 5.96, 120 6.4 C 126.67 6.84, 133.33 13.95, 140 14.32 C 146.67 14.69, 153.33 10.29, 160 8.6 C 166.67 6.91, 173.33 4.42, 180 4.2 C 186.67 3.98, 193.33 7.65, 200 7.28 C 206.67 6.91, 216.67 2.88, 220 2"
                           fill="none"
-                          stroke="#7C3AED"
+                          stroke="#7553ff"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           style={{
-                            filter: "drop-shadow(0 0 3px rgba(124,58,237,0.7))",
+                            filter: "drop-shadow(0 0 3px rgba(117,83,255,0.7))",
                             opacity: started ? 1 : 0,
                             transition: "opacity 0.9s ease 0.3s",
                           }}
                         />
                         <circle
                           cx="220" cy="2" r="2.5"
-                          fill="#A78BFA"
+                          fill="#8f6fff"
                           style={{
-                            filter: "drop-shadow(0 0 4px rgba(167,139,250,0.9))",
+                            filter: "drop-shadow(0 0 4px rgba(143,111,255,0.9))",
                             opacity: started ? 1 : 0,
                             transition: "opacity 0.5s ease 1.1s",
                           }}
@@ -223,20 +225,20 @@ export default function Hero() {
                       </svg>
                     </div>
                     <div className="flex justify-between mt-1">
-                      <span className="text-[7px] text-[#6B7280]/60">Dez/25</span>
-                      <span className="text-[7px] text-[#6B7280]/60">Abr/26</span>
+                      <span className="text-[7px] text-white/25">Dez/25</span>
+                      <span className="text-[7px] text-white/25">Abr/26</span>
                     </div>
                   </div>
 
-                  <div className="bg-[#13131E] rounded-xl p-2.5 border border-white/5">
-                    <p className="text-[9px] font-semibold text-[#F4F4F8] mb-2">Notas Fiscais Emitidas</p>
+                  <div className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
+                    <p className="text-[9px] font-semibold text-[#fafafa] mb-2">Notas Fiscais Emitidas</p>
                     {[
                       { name: "Chatigo Pixa",    val: "R$ 42.000" },
                       { name: "Remote Tech LLC", val: "R$ 33.000" },
                     ].map((row) => (
                       <div key={row.name} className="flex justify-between py-1.5 border-b border-white/[0.04] last:border-0">
-                        <span className="text-[9px] text-[#9CA3AF]">{row.name}</span>
-                        <span className="text-[9px] text-[#A78BFA] font-semibold">{row.val}</span>
+                        <span className="text-[9px] text-[#e0e0e0]">{row.name}</span>
+                        <span className="text-[9px] text-[#8f6fff] font-semibold">{row.val}</span>
                       </div>
                     ))}
                   </div>
@@ -251,17 +253,17 @@ export default function Hero() {
                 bottom: 0,
                 left: 0,
                 width: 210,
-                background: "#0D0D1A",
+                background: "#1f1f1f",
                 border: "2px solid rgba(255,255,255,0.12)",
-                boxShadow: "0 0 0 1px rgba(124,58,237,0.28), 0 32px 64px rgba(0,0,0,0.9), 0 0 50px rgba(124,58,237,0.22)",
+                boxShadow: "0 0 0 1px rgba(117,83,255,0.28), 0 32px 64px rgba(0,0,0,0.9), 0 0 50px rgba(117,83,255,0.22)",
               }}
             >
-              <div className="w-12 h-[7px] bg-[#0D0D1A] border border-white/[0.08] rounded-full mx-auto mb-2" />
-              <div className="bg-[#080810] rounded-[26px] p-3.5">
+              <div className="w-12 h-[7px] bg-[#1f1f1f] border border-white/[0.08] rounded-full mx-auto mb-2" />
+              <div className="bg-[#191919] rounded-[26px] p-3.5">
                 <div className="flex items-center gap-2 pb-2.5 border-b border-white/5 mb-2.5">
-                  <div className="w-6 h-6 rounded-full bg-[#7C3AED] flex items-center justify-center font-display font-bold text-[9px] text-white flex-shrink-0">C</div>
+                  <div className="w-6 h-6 rounded-full bg-[#7553ff] flex items-center justify-center font-display font-bold text-[9px] text-white flex-shrink-0">C</div>
                   <div>
-                    <p className="text-[9px] font-medium text-[#F4F4F8]">ContaDev</p>
+                    <p className="text-[9px] font-medium text-[#fafafa]">ContaDev</p>
                     <p className="text-[8px] text-emerald-400">● online agora</p>
                   </div>
                 </div>
@@ -279,8 +281,8 @@ export default function Hero() {
                       <span
                         className="text-[9px] leading-[1.5] px-2.5 py-2 max-w-[148px]"
                         style={{
-                          background: m.dir === "out" ? "#7C3AED" : "rgba(255,255,255,0.08)",
-                          color: m.dir === "out" ? "#fff" : "#9CA3AF",
+                          background: m.dir === "out" ? "#7553ff" : "rgba(255,255,255,0.08)",
+                          color: m.dir === "out" ? "#fff" : "rgba(250,250,250,0.6)",
                           borderRadius: m.dir === "out" ? "10px 10px 2px 10px" : "10px 10px 10px 2px",
                         }}
                       >
@@ -301,14 +303,14 @@ export default function Hero() {
       <div
         className="relative z-10 transition-all duration-700 delay-500"
         style={{
-          background: "#0F0F1A",
+          background: "#1f1f1f",
           borderTop: "1px solid rgba(255,255,255,0.07)",
           opacity: heroVisible ? 1 : 0,
           transform: heroVisible ? "none" : "translateY(14px)",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-14 py-5 flex items-center gap-8">
-        <span className="text-[10px] text-[#6B7280] uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
+        <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center gap-8">
+        <span className="text-[10px] text-white/35 uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
           Profissionais de
         </span>
         <div className="overflow-hidden flex-1">

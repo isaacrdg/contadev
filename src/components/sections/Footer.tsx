@@ -1,18 +1,13 @@
 export default function Footer() {
   return (
-    <footer
-      className="px-6 md:px-12 py-10 flex flex-col sm:flex-row items-center justify-between gap-6 flex-wrap"
-      style={{
-        background: "#0F0F1A",
-        borderTop: "1px solid rgba(255,255,255,0.07)",
-      }}
-    >
+    <footer style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="max-w-[1100px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-6 flex-wrap">
       {/* Logo */}
       <a href="#" className="no-underline">
         <img src="/logo.svg" alt="ContaDev" style={{ height: "30px" }} />
       </a>
 
-      <span className="text-[12px] text-[#6B7280]">
+      <span className="text-[12px] text-white/35">
         © 2026 ContaDev. Todos os direitos reservados.
       </span>
 
@@ -21,11 +16,12 @@ export default function Footer() {
           <a
             key={l}
             href={l === "Contato" ? "#contato" : "#"}
-            className="text-[13px] text-[#6B7280] hover:text-[#F4F4F8] transition-colors no-underline"
+            className="text-[13px] text-white/35 hover:text-[#fafafa] transition-colors no-underline"
           >
             {l}
           </a>
         ))}
+      </div>
       </div>
     </footer>
   );
