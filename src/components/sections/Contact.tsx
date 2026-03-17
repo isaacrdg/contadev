@@ -21,7 +21,7 @@ export default function Contact() {
 
       <div className="relative z-10 max-w-[580px] mx-auto text-center fade-up">
         <span className="section-label" style={{ display: "inline-block" }}>Contato</span>
-        <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa] mb-3" style={{ letterSpacing: "-.3px" }}>
+        <h2 className="font-display font-bold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa] mb-3" style={{ letterSpacing: "-.3px" }}>
           Quanto você tá deixando{" "}
           <em className="not-italic gradient-text">na mesa todo mês?</em>
         </h2>

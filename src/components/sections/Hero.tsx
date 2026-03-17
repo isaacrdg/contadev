@@ -69,33 +69,27 @@ export default function Hero() {
     <section id="hero" className="relative flex flex-col overflow-hidden pt-20">
       <div className="grid-bg" />
 
-      {/* Large blur — original ContaDev */}
-      <div className="absolute pointer-events-none" style={{
-        top: "-200px", left: "10%",
-        width: 750, height: 750,
-        borderRadius: "50%",
-        opacity: 0.2,
-        background: "radial-gradient(70.71% 70.71% at 50% 50%, rgba(117,83,255,0.3) 0%, rgba(60,13,255,0.1) 70%, rgba(60,13,255,0) 100%)",
+      {/* Blurs — original ContaDev SVGs */}
+      <img src="/grain-blur.svg" alt="" className="absolute pointer-events-none" style={{
+        top: "-220px", left: "50%", transform: "translateX(-50%)",
+        width: 1220, height: 1138,
       }} />
-      <div className="absolute pointer-events-none" style={{
-        bottom: "-100px", right: "5%",
-        width: 400, height: 400,
-        borderRadius: "50%",
-        opacity: 0.15,
-        background: "radial-gradient(70.71% 70.71% at 50% 50%, rgba(117,83,255,0.3) 0%, rgba(60,13,255,0.1) 70%, rgba(60,13,255,0) 100%)",
+      <img src="/small-blur.svg" alt="" className="absolute pointer-events-none" style={{
+        top: "-60px", right: "-100px",
+        width: 869, height: 983,
       }} />
 
       {/* Hero body */}
       <div className="flex-1 flex items-center relative z-10">
-        <div className="max-w-[1100px] mx-auto px-6 py-10 w-full flex items-center gap-8 md:gap-12">
+        <div className="max-w-[1100px] mx-auto px-6 py-10 w-full flex items-center gap-10">
 
-        {/* ── LEFT ── */}
+        {/* ── LEFT — 70% do container ── */}
         <div
-          className="w-full md:w-[460px] flex-shrink-0 transition-all duration-700"
+          className="w-full md:w-[60%] flex-shrink-0 transition-all duration-700"
           style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "none" : "translateY(28px)" }}
         >
           <h1
-            className="font-display font-extrabold text-4xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-[#fafafa] mb-6"
+            className="font-display font-bold text-4xl md:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-[#fafafa] mb-6"
             style={{ letterSpacing: "-.5px" }}
           >
             Tecnologia para a{" "}
@@ -103,7 +97,7 @@ export default function Hero() {
             do dev
           </h1>
 
-          <p className="text-[16px] leading-[1.75] text-[#e0e0e0] mb-10 max-w-[400px]">
+          <p className="text-[16px] leading-[1.75] text-[#e0e0e0] font-extralight mb-10 max-w-[480px]">
             Centralize sua PJ, fale com especialistas que entendem de tech e comece a pagar menos imposto desde o primeiro mês.
           </p>
 
@@ -114,25 +108,26 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* ── RIGHT ── */}
+        {/* ── RIGHT — vaza pra direita fora do container ── */}
         <div
           className="hidden md:block flex-1 min-w-0"
           style={{
             opacity: heroVisible ? 1 : 0,
             transform: heroVisible ? "none" : "translateY(28px)",
             transition: "opacity .7s ease .3s, transform .7s ease .3s",
+            marginRight: "-120px",
           }}
         >
-          {/* Media block — dashboard + phone as a single anchored unit */}
-          <div className="relative ml-auto" style={{ width: "min(100%, 560px)", height: 480 }}>
+          {/* Media block — dashboard + phone, overflow right */}
+          <div className="relative" style={{ width: 620, height: 480 }}>
 
             {/* Dashboard — spans from 60px left to right edge of media block */}
             <div
               ref={dashRef}
               className="absolute top-0 right-0 rounded-[20px] overflow-hidden"
               style={{
-                left: 60,
-                height: 380,
+                left: 40,
+                height: 400,
                 background: "#1c1c1c",
                 border: "1px solid rgba(117,83,255,0.22)",
                 boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(117,83,255,0.12)",

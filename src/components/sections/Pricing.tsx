@@ -79,7 +79,7 @@ export default function Pricing() {
       <div className="relative z-10 max-w-[1100px] mx-auto">
         <div className="mb-8 fade-up">
           <span className="section-label">Planos</span>
-          <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa]" style={{ letterSpacing: "-.3px" }}>
+          <h2 className="font-display font-bold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa]" style={{ letterSpacing: "-.3px" }}>
             Qual é o seu{" "}
             <em className="not-italic gradient-text">cenário?</em>
           </h2>
@@ -113,8 +113,8 @@ export default function Pricing() {
 
               {/* Content */}
               <div className="p-7 flex flex-col flex-1">
-                <p className="font-display font-extrabold text-[12px] text-white/35 uppercase tracking-[.08em] mb-2">{plan.name}</p>
-                <p className="font-display font-extrabold leading-none mb-1"
+                <p className="font-display font-bold text-[12px] text-white/35 uppercase tracking-[.08em] mb-2">{plan.name}</p>
+                <p className="font-display font-bold leading-none mb-1"
                   style={{ fontSize: plan.period ? "38px" : "28px", color: "#fafafa" }}>
                   {plan.price}
                   {plan.period && <span className="text-[15px] font-normal text-[#e0e0e0] ml-1">{plan.period}</span>}

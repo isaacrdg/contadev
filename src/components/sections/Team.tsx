@@ -65,7 +65,7 @@ export default function Team() {
         <div className="w-full md:w-[480px] flex-shrink-0 fade-up">
           <span className="section-label">Atendimento</span>
           <h2
-            className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
+            className="font-display font-bold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
             style={{ letterSpacing: "-.3px" }}
           >
             Plataforma potente.{" "}
@@ -118,7 +118,7 @@ export default function Team() {
 
             <div className="flex items-center gap-4 mb-5">
               <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-extrabold text-xl text-white flex-shrink-0"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-bold text-xl text-white flex-shrink-0"
                 style={{ background: "linear-gradient(135deg, #7553ff, #5a3de6)" }}
               >
                 RS

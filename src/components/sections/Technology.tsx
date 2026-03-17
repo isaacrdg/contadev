@@ -49,7 +49,7 @@ export default function Technology() {
         <div className="w-full md:w-[420px] flex-shrink-0 fade-up">
           <span className="section-label">Plataforma</span>
           <h2
-            className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
+            className="font-display font-bold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
             style={{ letterSpacing: "-.3px" }}
           >
             Tudo que você precisa,{" "}

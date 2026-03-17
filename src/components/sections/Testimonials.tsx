@@ -80,7 +80,7 @@ export default function Testimonials() {
         {/* Header */}
         <div className="text-center mb-8 fade-up">
           <span className="section-label" style={{ display: "inline-block" }}>Depoimentos</span>
-          <h2 className="font-display font-extrabold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa] mb-4" style={{ letterSpacing: "-.3px" }}>
+          <h2 className="font-display font-bold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa] mb-4" style={{ letterSpacing: "-.3px" }}>
             O que os devs{" "}
             <em className="not-italic gradient-text">estão falando</em>
           </h2>

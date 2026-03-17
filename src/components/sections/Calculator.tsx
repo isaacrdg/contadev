@@ -54,7 +54,7 @@ export default function Calculator() {
         <div className="fade-up">
           <span className="section-label">Calculadora de impostos</span>
           <h2
-            className="font-display font-extrabold text-4xl md:text-[42px] leading-[1.1] tracking-tight text-[#fafafa] mb-5"
+            className="font-display font-bold text-4xl md:text-[42px] leading-[1.1] tracking-tight text-[#fafafa] mb-5"
             style={{ letterSpacing: "-.3px" }}
           >
             Você pode estar pagando imposto a mais como PJ{" "}
@@ -157,7 +157,7 @@ export default function Calculator() {
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.09)",
-                  fontFamily: "var(--font-inter)",
+                  fontFamily: "var(--font-outfit)",
                 }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(117,83,255,0.50)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)")}
