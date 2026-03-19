@@ -159,12 +159,12 @@ body::before {
 
 /* Custom cursor */
 *, *::before, *::after {
-  cursor: url("/cursor-default.svg") 10 10, auto !important;
+  cursor: url("/cursor-default.svg") 17 17, auto !important;
 }
 
 a, button, [role="button"], input, select, textarea, label,
 a *, button *, [role="button"] * {
-  cursor: url("/cursor-pointer.svg") 10 10, pointer !important;
+  cursor: url("/cursor-pointer.svg") 17 17, pointer !important;
 }
 
 /* ============================================================
