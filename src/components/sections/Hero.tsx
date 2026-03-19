@@ -131,7 +131,7 @@ export default function Hero() {
             opacity: heroVisible ? 1 : 0,
             transform: heroVisible ? "none" : "translateY(28px)",
             transition: "opacity .7s ease .3s, transform .7s ease .3s",
-            marginRight: "-180px",
+            marginRight: "-40px",
           }}
         >
           {/* Media block — dashboard + phone, overflow right */}

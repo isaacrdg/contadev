@@ -104,7 +104,7 @@ export default function Team() {
         </div>
 
         {/* RIGHT — chat */}
-        <div className="hidden md:flex flex-col fade-up md:max-w-[340px] md:mx-auto" style={{ transitionDelay: "200ms" }}>
+        <div className="hidden md:flex flex-col fade-up md:max-w-[290px] md:mx-auto" style={{ transitionDelay: "200ms" }}>
 
           {/* Chat */}
           <div

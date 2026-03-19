@@ -107,6 +107,21 @@
   100% { transform: translate(700px, 350px); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spinBorder {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes subtlePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
 @keyframes driftBlob {
   0%   { transform: translate(-100px, -50px); }
   50%  { transform: translate(500px, 150px); }
@@ -447,9 +462,14 @@ a *, button *, [role="button"] * {
 .carousel-track {
   display: flex;
   width: max-content;
-  animation: scrollCarousel 22s linear infinite;
+  animation: scrollCarousel 60s linear infinite;
 }
-.carousel-track:hover { animation-play-state: paused; }
+
+.feature-carousel-track {
+  display: flex;
+  width: max-content;
+  animation: scrollCarousel 30s linear infinite;
+}
 
 /* Input focus ring — DS pattern */
 input:focus, select:focus, textarea:focus {
