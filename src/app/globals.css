@@ -462,13 +462,13 @@ a *, button *, [role="button"] * {
 .carousel-track {
   display: flex;
   width: max-content;
-  animation: scrollCarousel 60s linear infinite;
+  animation: scrollCarousel 120s linear infinite;
 }
 
 .feature-carousel-track {
   display: flex;
   width: max-content;
-  animation: scrollCarousel 30s linear infinite;
+  animation: scrollCarousel 60s linear infinite;
 }
 
 /* Input focus ring — DS pattern */

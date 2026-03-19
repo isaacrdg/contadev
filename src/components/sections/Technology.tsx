@@ -86,9 +86,9 @@ export default function Technology() {
           {/* Feature cards — 3 rows carousel */}
           <div className="flex flex-col gap-2.5 mb-6 fade-up" style={{ transitionDelay: "100ms" }}>
             {[
-              { items: row1, speed: "55s", dir: "normal" },
-              { items: row2, speed: "60s", dir: "reverse" },
-              { items: row3, speed: "58s", dir: "normal" },
+              { items: row1, speed: "110s", dir: "normal" },
+              { items: row2, speed: "120s", dir: "reverse" },
+              { items: row3, speed: "116s", dir: "normal" },
             ].map((row, ri) => (
               <div key={ri} className="relative overflow-hidden">
                 {/* Fade edges */}
