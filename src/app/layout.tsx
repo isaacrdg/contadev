@@ -22,9 +22,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ContaDev — Contabilidade para Devs",
+  title: "Conta Dev",
   description:
     "Centralize sua operação PJ em uma plataforma, fale com especialistas que entendem seu cenário e descubra quanto você pode economizar.",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export const viewport: Viewport = {

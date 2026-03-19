@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import SectionDivider from "@/components/SectionDivider";
 
 const pillars = [
   {
@@ -34,8 +35,10 @@ const pillars = [
 ];
 
 const chatMessages = [
-  { dir: "in",  text: "Preciso emitir uma NF internacional hoje, como faço?", delay: 0 },
-  { dir: "out", text: "Já te mando o link da plataforma. Leva 2 min 👌",       delay: 0 },
+  { dir: "out", text: "Opa! Consegue me ajudar?", time: "2:34 PM" },
+  { dir: "in",  text: "Claro!", time: "2:34 PM" },
+  { dir: "out", text: "Eita, que rápido kkkk", time: "2:35 PM" },
+  { dir: "in",  text: "Pode se acostumar. Esse é o padrão Conta Dev 😊", time: "2:35 PM" },
 ];
 
 export default function Team() {
@@ -56,28 +59,28 @@ export default function Team() {
     <section
       id="equipe"
       ref={ref}
-      className="relative py-8 md:py-14 px-5 md:px-6 overflow-hidden"
-      style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+      className="relative"
     >
-      <div className="relative z-10 max-w-[1100px] mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-12">
+      <SectionDivider cross="right" />
+      <div className="relative z-10 max-w-[1100px] mx-auto" style={{ background: "#1f1f1f" }}>
+        <div className="max-w-[1020px] mx-auto px-5 md:px-6 py-10 md:py-14 flex flex-col md:flex-row items-stretch gap-5 md:gap-10">
 
         {/* LEFT — copy */}
         <div className="w-full md:w-[480px] flex-shrink-0 fade-up">
-          <span className="section-label">Atendimento</span>
           <h2
-            className="font-display font-bold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
+            className="font-display font-bold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-4"
             style={{ letterSpacing: "-.3px" }}
           >
             Plataforma potente.{" "}
             <em className="not-italic gradient-text">Humano do seu lado.</em>
           </h2>
-          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-7 max-w-[420px]">
+          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-5 max-w-[420px]">
             Automatizamos tudo que pode ser automatizado. Mas cada decisão importante, como regime tributário,
             abertura e declarações, tem um especialista real te guiando de ponta a ponta.
           </p>
 
           {/* Pillars */}
-          <div className="flex flex-col gap-5 mb-8">
+          <div className="flex flex-col gap-4 mb-6">
             {pillars.map((p, i) => (
               <div
                 key={p.title}
@@ -98,61 +101,25 @@ export default function Team() {
             ))}
           </div>
 
-          <a href="#contato" className="btn-primary fade-up" style={{ fontSize: "14px", transitionDelay: "400ms" }}>
-            FALE COM UM ESPECIALISTA
-          </a>
         </div>
 
-        {/* RIGHT — specialist card + mini chat */}
-        <div className="hidden md:flex flex-1 flex-col gap-4 fade-up" style={{ transitionDelay: "200ms" }}>
+        {/* RIGHT — chat */}
+        <div className="hidden md:flex flex-col fade-up md:max-w-[340px] md:mx-auto" style={{ transitionDelay: "200ms" }}>
 
-          {/* Specialist availability card */}
+          {/* Chat */}
           <div
-            className="glass-card-featured p-6"
-          >
-            {/* Online status */}
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 6px #34d399" }} />
-              <span className="text-[11px] text-emerald-400 font-medium">Especialista online agora</span>
-            </div>
-
-            <div className="flex items-center gap-4 mb-5">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-bold text-xl text-white flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #7553ff, #5a3de6)" }}
-              >
-                RS
-              </div>
-              <div>
-                <p className="font-display font-bold text-[16px] text-[#fafafa]">Rafael Santos</p>
-                <p className="text-[12px] text-[#8f6fff]">Contador · CRC Ativo · Especialista em tech PJ</p>
-              </div>
-            </div>
-
-            <blockquote
-              className="text-[14px] leading-[1.7] text-[#e0e0e0] mb-5 pl-4"
-              style={{ borderLeft: "2px solid rgba(117,83,255,0.40)" }}
-            >
-              "Cada cliente é único. Você tem acesso direto a mim, sem intermediários e sem robô."
-            </blockquote>
-
-            <div
-              className="flex items-center justify-between rounded-xl px-4 py-3"
-              style={{ background: "rgba(117,83,255,0.08)", border: "1px solid rgba(117,83,255,0.15)" }}
-            >
-              <span className="text-[12px] text-[#e0e0e0]">Tempo médio de resposta</span>
-              <span className="font-display font-bold text-[14px] text-[#8f6fff]">&lt; 47 min</span>
-            </div>
-          </div>
-
-          {/* Mini chat snippet */}
-          <div
-            className="glass-card overflow-hidden"
+            className="glass-card overflow-hidden flex-1 flex flex-col"
           >
             {/* Chat header */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">
-              <div className="w-6 h-6 rounded-full bg-[#7553ff] flex items-center justify-center font-display font-bold text-[9px] text-white">C</div>
-              <span className="text-[12px] text-[#fafafa] font-medium">ContaDev</span>
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-[10px] text-white flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #7553ff, #5a3de6)" }}
+              >RS</div>
+              <div className="flex flex-col">
+                <span className="text-[12px] text-[#fafafa] font-medium leading-none">Rafael Santos</span>
+                <span className="text-[10px] text-white/35 leading-none mt-1">Contador · ContaDev</span>
+              </div>
               <div className="ml-auto flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span className="text-[10px] text-emerald-400">online</span>
@@ -160,11 +127,11 @@ export default function Team() {
             </div>
 
             {/* Messages */}
-            <div className="flex flex-col gap-2.5 p-4">
+            <div className="flex flex-col gap-3 p-4 flex-1">
               {chatMessages.map((m, i) => (
-                <div key={i} className={`flex ${m.dir === "out" ? "justify-end" : "justify-start"}`}>
+                <div key={i} className={`flex flex-col ${m.dir === "out" ? "items-end" : "items-start"}`}>
                   <span
-                    className="text-[12px] leading-[1.5] px-3.5 py-2 max-w-[260px]"
+                    className="text-[12px] leading-[1.5] px-3.5 py-2.5 max-w-[280px]"
                     style={{
                       background: m.dir === "out" ? "#7553ff" : "rgba(255,255,255,0.06)",
                       color: m.dir === "out" ? "#fff" : "rgba(250,250,250,0.6)",
@@ -173,10 +140,31 @@ export default function Team() {
                   >
                     {m.text}
                   </span>
+                  <span className="text-[9px] text-white/25 mt-1">{m.time}</span>
                 </div>
               ))}
             </div>
+
+            {/* Input field */}
+            <div className="px-4 py-3 border-t border-white/5 mt-auto">
+              <div
+                className="flex items-center gap-2 rounded-xl px-4 py-3"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <span className="text-[12px] text-white/25 flex-1">Escreva uma mensagem...</span>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(117,83,255,0.20)" }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
         </div>
       </div>
     </section>

@@ -79,22 +79,20 @@ export default function Benefits() {
   }, []);
 
   return (
-    <section id="jornada" ref={ref} className="relative py-10 md:py-14 overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-      <div className="max-w-[1100px] mx-auto px-6">
+    <section id="jornada" ref={ref} className="relative py-6 md:py-10 overflow-hidden">
+      <div className="max-w-[1020px] mx-auto px-6">
         {journey.map((item, i) => {
           const isEven = i % 2 === 1;
           return (
             <div
               key={item.step}
-              className={`grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-14 lg:gap-16 items-center ${
-                i === 0 ? "pt-8 md:pt-12 pb-8 md:pb-12" : "py-8 md:py-12 border-t border-white/5"
+              className={`fade-up grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10 lg:gap-12 items-center ${
+                i === 0 ? "pt-5 md:pt-8 pb-5 md:pb-8" : "py-5 md:py-8 border-t border-white/5"
               }`}
+              style={{ transitionDelay: `${i * 80}ms` }}
             >
               {/* Text column */}
-              <div
-                className={`max-w-lg fade-up ${isEven ? "md:order-2" : ""}`}
-                style={{ transitionDelay: `${i * 60}ms` }}
-              >
+              <div className={`max-w-lg ${isEven ? "md:order-2" : ""}`}>
                 <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-medium">
                   {item.step}
                 </p>
@@ -108,15 +106,11 @@ export default function Benefits() {
 
               {/* Media column */}
               <div
-                className={`relative rounded-xl overflow-hidden bg-white/[0.03] fade-up
+                className={`relative rounded-xl overflow-hidden bg-white/[0.03]
                   w-full aspect-[4/3]
-                  md:mx-0 md:w-full md:max-w-none md:aspect-[4/3]
                   ${isEven ? "md:order-1" : ""}
                 `}
-                style={{
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  transitionDelay: `${i * 60 + 80}ms`,
-                }}
+                style={{ border: "1px solid rgba(255,255,255,0.06)" }}
               >
                 <MediaPlaceholder index={i} />
               </div>

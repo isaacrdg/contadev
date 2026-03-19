@@ -9,7 +9,7 @@ export default function FloatingButton() {
       {/* Tooltip popup */}
       {open && (
         <div
-          className="fixed bottom-24 right-4 md:right-6 z-50 rounded-2xl p-4 md:p-5 w-64 md:w-72 shadow-2xl"
+          className="fixed bottom-24 right-4 md:right-6 z-50 rounded-2xl p-4 md:p-5 w-64 md:w-72 shadow-2xl animate-pop-up"
           style={{
             background: "#1c1c1c",
             border: "1px solid rgba(117,83,255,0.30)",
@@ -43,7 +43,7 @@ export default function FloatingButton() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full overflow-hidden shadow-2xl transition-transform duration-200 hover:scale-110 active:scale-95"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full overflow-hidden shadow-2xl transition-transform duration-200 hover:scale-110 active:scale-95 animate-float-in"
         style={{
           background: "#7C3AED",
           boxShadow: "0 4px 20px rgba(124,58,237,0.50), 0 0 0 2px rgba(124,58,237,0.20)",

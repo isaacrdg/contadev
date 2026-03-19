@@ -19,12 +19,12 @@ export default function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      className="fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 animate-nav-slide"
       style={{
         background: scrolled ? "rgba(25,25,25,0.85)" : "transparent",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "none",
-        backdropFilter: scrolled ? "blur(20px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(20px)" : "none",
+        borderBottom: "none",
+        backdropFilter: scrolled ? "blur(10px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(10px)" : "none",
       }}
     >
       {/* Flex: logo + links à esquerda | cta à direita */}
@@ -56,17 +56,27 @@ export default function Navbar() {
         <div className="flex items-center">
           <a
             href="#contato"
-            className="inline-flex no-underline items-center justify-center whitespace-nowrap text-[11px] md:text-[14px] py-2 px-4 md:py-[9px] md:px-[22px]"
+            className="group inline-flex no-underline items-center gap-2 whitespace-nowrap text-[11px] md:text-[13px] py-1.5 pl-5 pr-1.5 md:py-1.5 md:pl-6 md:pr-1.5"
             style={{
-              fontWeight: 600,
-              color: "#0D0B1E", background: "#ffffff",
+              fontWeight: 500,
+              color: "#15191E",
+              background: "#ffffff",
               borderRadius: "999px",
               transition: "background .2s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#e8e4ff")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#f0ecff")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "#ffffff")}
           >
             FALE COM UM ESPECIALISTA
+            <span
+              className="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full transition-transform duration-300 group-hover:rotate-45"
+              style={{ background: "#7553ff" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg>
+            </span>
           </a>
         </div>
 

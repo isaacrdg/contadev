@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import SectionDivider from "@/components/SectionDivider";
 
 const features = [
   "Abertura de CNPJ em até 24h, 100% digital",
@@ -40,27 +41,26 @@ export default function Technology() {
     <section
       id="tecnologia"
       ref={ref}
-      className="relative py-8 md:py-14 px-5 md:px-6 overflow-hidden"
-      style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+      className="relative px-5 md:px-6"
     >
-      <div className="relative z-10 max-w-[1100px] mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-12">
+      <SectionDivider cross="left" />
+      <div className="relative z-10 max-w-[1020px] mx-auto my-8 md:my-12 flex flex-col md:flex-row-reverse items-center gap-5 md:gap-10">
 
         {/* LEFT — copy */}
         <div className="w-full md:w-[420px] flex-shrink-0 fade-up">
-          <span className="section-label">Plataforma</span>
           <h2
-            className="font-display font-bold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-5"
+            className="font-display font-bold text-4xl md:text-[38px] leading-[1.12] tracking-tight text-[#fafafa] mb-4"
             style={{ letterSpacing: "-.3px" }}
           >
             Tudo que você precisa,{" "}
             <em className="not-italic gradient-text">em uma tela.</em>
           </h2>
-          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-7">
+          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-5">
             De notas fiscais a declarações, nossa plataforma centraliza toda a sua operação.
             Simples, rápida e feita para desenvolvedores.
           </p>
 
-          <ul className="flex flex-col gap-3 mb-8">
+          <ul className="flex flex-col gap-3 mb-6">
             {features.map((f, i) => (
               <li
                 key={i}
@@ -73,9 +73,6 @@ export default function Technology() {
             ))}
           </ul>
 
-          <a href="#contato" className="btn-primary fade-up" style={{ fontSize: "14px", transitionDelay: "440ms" }}>
-            FALE COM UM ESPECIALISTA
-          </a>
         </div>
 
         {/* RIGHT — platform mockup */}
@@ -88,7 +85,7 @@ export default function Technology() {
             style={{
               background: "#1c1c1c",
               border: "1px solid rgba(117,83,255,0.22)",
-              boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(117,83,255,0.12)",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 20px 40px rgba(0,0,0,0.3)",
             }}
           >
             {/* Bottom fade */}

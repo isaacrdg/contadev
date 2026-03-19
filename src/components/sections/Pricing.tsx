@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useRef } from "react";
+import SectionDivider from "@/components/SectionDivider";
 
 const plans = [
   {
     name: "Brasil",
-    price: "R$249,99",
+    price: "R$249",
+    cents: ",99",
     period: "/mês",
     desc: "Para quem fatura em reais",
     features: [
@@ -15,10 +17,12 @@ const plans = [
       "Acesso à plataforma",
     ],
     featured: false,
+    cta: "Começar agora",
   },
   {
     name: "Internacional",
-    price: "R$349,99",
+    price: "R$349",
+    cents: ",99",
     period: "/mês",
     desc: "Para quem recebe do exterior",
     badge: "Mais popular",
@@ -31,10 +35,12 @@ const plans = [
       "Atendimento prioritário",
     ],
     featured: true,
+    cta: "Começar agora",
   },
   {
     name: "Personalizado",
     price: "Sob consulta",
+    cents: "",
     period: "",
     desc: "Para cenários mais complexos",
     features: [
@@ -46,17 +52,9 @@ const plans = [
       "SLA garantido 4h",
     ],
     featured: false,
+    cta: "Falar com especialista",
   },
 ];
-
-const CheckIcon = () => (
-  <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-    style={{ background: "rgba(117,83,255,0.15)", border: "1.5px solid rgba(117,83,255,0.40)" }}>
-    <svg width="7" height="5" viewBox="0 0 7 5" fill="none">
-      <path d="M1 2.5l1.5 1.5 3.5-3.5" stroke="#8f6fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </div>
-);
 
 export default function Pricing() {
   const ref = useRef<HTMLDivElement>(null);
@@ -73,80 +71,107 @@ export default function Pricing() {
   }, []);
 
   return (
-    <section id="precos" ref={ref} className="relative py-8 md:py-14 px-5 md:px-6 overflow-hidden"
-      style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+    <section id="precos" ref={ref} className="relative">
 
-      <div className="relative z-10 max-w-[1100px] mx-auto">
-        <div className="mb-8 fade-up">
-          <span className="section-label">Planos</span>
-          <h2 className="font-display font-bold text-4xl md:text-[38px] leading-[1.15] tracking-tight text-[#fafafa]" style={{ letterSpacing: "-.3px" }}>
-            Qual é o seu{" "}
-            <em className="not-italic gradient-text">cenário?</em>
-          </h2>
-        </div>
+      <SectionDivider cross="right" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {plans.map((plan, i) => (
-            <div
-              key={plan.name}
-              className={`fade-up relative transition-all duration-200 hover:-translate-y-[3px] ${
-                plan.featured ? "glass-card-featured" : "glass-card"
-              }`}
-              style={{
-                transitionDelay: `${i * 80}ms`,
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* Badge */}
-              {plan.badge && (
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-[#8f6fff] text-[11px] font-semibold px-4 py-1 rounded-full whitespace-nowrap"
-                  style={{
-                    background: "#191919",
-                    border: "1px solid rgba(117,83,255,0.5)",
-                  }}
-                >
-                  {plan.badge}
-                </div>
-              )}
+      {/* Light block */}
+      <div className="max-w-[1100px] mx-auto" style={{ background: "#f5f5f7" }}>
+        <div className="max-w-[1020px] mx-auto py-12 md:py-16 px-5 md:px-6">
 
-              {/* Content */}
-              <div className="p-5 md:p-7 flex flex-col flex-1">
-                <p className="font-display font-bold text-[12px] text-white/35 uppercase tracking-[.08em] mb-2">{plan.name}</p>
-                <p className="font-display font-bold leading-none mb-1"
-                  style={{ fontSize: plan.period ? "38px" : "28px", color: "#fafafa" }}>
-                  {plan.price}
-                  {plan.period && <span className="text-[15px] font-normal text-[#e0e0e0] ml-1">{plan.period}</span>}
-                </p>
-                <p className="text-[13px] text-white/35 mb-7 leading-[1.5]">{plan.desc}</p>
+          {/* Header — centered */}
+          <div className="text-center mb-10 fade-up">
+            <h2 className="font-display font-bold text-4xl md:text-[42px] leading-[1.1] tracking-tight text-[#15191E]" style={{ letterSpacing: "-.3px" }}>
+              Qual é o seu{" "}
+              <em className="not-italic" style={{ background: "linear-gradient(180deg, #3c0dff, #7553ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>cenário?</em>
+            </h2>
+            <p className="text-[15px] text-[#60646C] mt-3 max-w-[420px] mx-auto">Escolha o plano ideal para o seu momento. Sem surpresas, sem letras miúdas.</p>
+          </div>
 
-                <ul className="flex flex-col gap-2.5 mb-8">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-[13px] text-[#e0e0e0]">
-                      <CheckIcon />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Botão ancorado embaixo */}
-                <div className="mt-auto">
-                  <a
-                    href="#contato"
-                    className="btn-primary w-full justify-center text-[14px]"
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+            {plans.map((plan, i) => (
+              <div
+                key={plan.name}
+                className={`fade-up relative flex flex-col transition-all duration-300 ${plan.featured ? "md:-mt-4 md:mb-[-16px]" : ""}`}
+                style={{
+                  transitionDelay: `${i * 80}ms`,
+                  background: plan.featured ? "#15191E" : "#2a2a2f",
+                  border: plan.featured ? "1px solid rgba(117,83,255,0.25)" : "1px solid rgba(0,0,0,0.04)",
+                  borderRadius: "20px",
+                  boxShadow: plan.featured
+                    ? "0 20px 50px rgba(0,0,0,0.15), 0 0 40px rgba(117,83,255,0.06)"
+                    : "0 2px 12px rgba(0,0,0,0.04)",
+                }}
+              >
+                {/* Badge */}
+                {plan.badge && (
+                  <div
+                    className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 text-white text-[10px] font-semibold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider"
+                    style={{ background: "linear-gradient(135deg, #7553ff, #5a3de6)", boxShadow: "0 4px 12px rgba(117,83,255,0.3)" }}
                   >
-                    FALE COM UM ESPECIALISTA
-                  </a>
+                    {plan.badge}
+                  </div>
+                )}
+
+                {/* Top accent for featured */}
+                {plan.featured && (
+                  <div className="h-[2px] w-full rounded-t-[20px]" style={{ background: "linear-gradient(90deg, transparent, #7553ff, #8f6fff, transparent)" }} />
+                )}
+
+                <div className={`p-6 md:p-7 flex flex-col flex-1 ${plan.featured ? "pt-7 md:pt-8" : ""}`}>
+                  {/* Plan name */}
+                  <p className={`font-display font-semibold text-[11px] uppercase tracking-[.12em] mb-5 ${plan.featured ? "text-[#8f6fff]" : "text-white/30"}`}>
+                    {plan.name}
+                  </p>
+
+                  {/* Price */}
+                  <div className="mb-1">
+                    <span className="font-display font-bold" style={{ fontSize: plan.period ? "44px" : "30px", color: "#fafafa", lineHeight: 1 }}>
+                      {plan.price}
+                    </span>
+                    {plan.cents && <span className="font-display font-bold text-[20px]" style={{ color: "rgba(250,250,250,0.4)" }}>{plan.cents}</span>}
+                    {plan.period && <span className="text-[14px] ml-1 text-white/35">{plan.period}</span>}
+                  </div>
+                  <p className="text-[13px] mb-6 text-white/40">{plan.desc}</p>
+
+                  {/* Divider */}
+                  <div className="mb-6" style={{ height: "1px", background: "rgba(255,255,255,0.08)" }} />
+
+                  {/* Features */}
+                  <ul className="flex flex-col gap-3 mb-8">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2.5 text-[13px] text-[#e0e0e0]">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                          <path d="M20 6L9 17l-5-5" stroke="#8f6fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <div className="mt-auto">
+                    <a
+                      href="#contato"
+                      className="w-full flex items-center justify-center text-[14px] font-semibold py-3.5 rounded-xl transition-all duration-200 text-white hover:-translate-y-[2px]"
+                      style={plan.featured
+                        ? { background: "linear-gradient(135deg, #7553ff, #5a3de6)", boxShadow: "0 4px 15px rgba(117,83,255,0.3)" }
+                        : { background: "transparent", border: "1px solid rgba(255,255,255,0.12)" }
+                      }
+                    >
+                      {plan.cta}
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <p className="text-center text-[13px] text-white/35 mt-8 fade-up" style={{ transitionDelay: "240ms" }}>
-          Sem fidelidade · Sem multa · Cancele com 30 dias de aviso
-        </p>
+          <p className="text-center text-[12px] text-[#60646C]/60 mt-8 fade-up" style={{ transitionDelay: "240ms" }}>
+            Sem fidelidade · Sem multa · Cancele com 30 dias de aviso
+          </p>
+        </div>
       </div>
     </section>
   );

@@ -17,16 +17,12 @@ function useCountUp(target: number, duration: number, started: boolean) {
   return value;
 }
 
-const brands = [
-  "Spotify", "Nubank", "Toptal", "Deel", "99", "iFood", "Stone", "Creditas",
-  "Spotify", "Nubank", "Toptal", "Deel", "99", "iFood", "Stone", "Creditas",
-];
-
 const messages = [
-  { id: 1, dir: "in",  text: "Opa! Consegue me ajudar?", delay: 600 },
-  { id: 2, dir: "out", text: "Claro! 😄",                delay: 1400 },
-  { id: 3, dir: "in",  text: "Eita, que rápido kkkk",   delay: 2400 },
-  { id: 4, dir: "out", text: "Pode se acostumar 🚀",     delay: 3400 },
+  { id: 1, dir: "out", text: "Quero abrir minha PJ, como funciona?", time: "10:42", delay: 800 },
+  { id: 2, dir: "in",  text: "A gente cuida de tudo! E a abertura é gratuita, sem taxas escondidas 😉", time: "10:43", delay: 2800 },
+  { id: 3, dir: "out", text: "Sério?? Quanto tempo leva?", time: "10:43", delay: 5500 },
+  { id: 4, dir: "in",  text: "Em até 48h seu CNPJ tá pronto. 100% digital 🚀", time: "10:44", delay: 8000 },
+  { id: 5, dir: "out", text: "Não acredito!! Bora!! 🔥", time: "10:44", delay: 10500 },
 ];
 
 export default function Hero() {
@@ -69,25 +65,40 @@ export default function Hero() {
     <section id="hero" className="relative min-h-[85vh] md:min-h-0 flex flex-col overflow-hidden pt-20">
       <div className="grid-bg" />
 
-      {/* Blurs — original ContaDev SVGs */}
-      <img src="/grain-blur.svg" alt="" className="absolute pointer-events-none hidden md:block" style={{
-        top: "-220px", left: "50%", transform: "translateX(-50%)",
-        width: 1220, height: 1138,
-      }} />
-      <img src="/small-blur.svg" alt="" className="absolute pointer-events-none hidden md:block" style={{
-        top: "-60px", right: "-100px",
-        width: 869, height: 983,
-      }} />
-      {/* Mobile blur — simpler */}
-      <div className="absolute pointer-events-none md:hidden" style={{
-        top: "-100px", left: "50%", transform: "translateX(-50%)",
-        width: 400, height: 400, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(117,83,255,0.15) 0%, transparent 70%)",
+      {/* Blurs — animated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute hidden md:block hero-blur-a" style={{
+          top: "0", left: "0",
+          width: "800px", height: "800px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(117,83,255,0.20) 0%, rgba(117,83,255,0.07) 40%, transparent 70%)",
+          filter: "blur(80px)",
+        }} />
+        <div className="absolute hidden md:block hero-blur-b" style={{
+          top: "0", left: "0",
+          width: "700px", height: "700px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(168,85,247,0.16) 0%, rgba(192,60,180,0.05) 40%, transparent 70%)",
+          filter: "blur(70px)",
+        }} />
+        <div className="absolute md:hidden" style={{
+          top: "-100px", left: "50%", transform: "translateX(-50%)",
+          width: 400, height: 400, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(117,83,255,0.15) 0%, transparent 70%)",
+        }} />
+      </div>
+
+      {/* Vignette */}
+      <div className="absolute inset-0 pointer-events-none z-[1]" style={{
+        background: `
+          linear-gradient(to bottom, rgba(25,25,25,0.4) 0%, transparent 15%),
+          linear-gradient(to top, #191919 0%, transparent 25%),
+          linear-gradient(to right, rgba(25,25,25,0.6) 0%, transparent 10%),
+          linear-gradient(to left, rgba(25,25,25,0.6) 0%, transparent 10%)
+        `,
       }} />
 
       {/* Hero body */}
       <div className="flex-1 flex items-center relative z-10">
-        <div className="max-w-[1100px] mx-auto px-4 md:px-6 py-8 md:py-10 w-full flex items-center gap-10">
+        <div className="max-w-[1020px] mx-auto px-4 md:px-6 py-8 md:py-10 w-full flex items-center gap-10">
 
         {/* ── LEFT — 70% do container ── */}
         <div
@@ -107,8 +118,8 @@ export default function Hero() {
           </p>
 
           <div className="flex items-center gap-4 flex-wrap">
-            <a href="#contato" className="btn-primary" style={{ fontSize: "14px" }}>
-              FALE COM UM ESPECIALISTA
+            <a href="#tecnologia" className="btn-primary" style={{ fontSize: "14px" }}>
+              CONHECER PLATAFORMA
             </a>
           </div>
         </div>
@@ -120,19 +131,19 @@ export default function Hero() {
             opacity: heroVisible ? 1 : 0,
             transform: heroVisible ? "none" : "translateY(28px)",
             transition: "opacity .7s ease .3s, transform .7s ease .3s",
-            marginRight: "-120px",
+            marginRight: "-180px",
           }}
         >
           {/* Media block — dashboard + phone, overflow right */}
-          <div className="relative" style={{ width: 620, height: 480 }}>
+          <div className="relative" style={{ width: 720, height: 520 }}>
 
             {/* Dashboard — spans from 60px left to right edge of media block */}
             <div
               ref={dashRef}
               className="absolute top-0 right-0 rounded-[20px] overflow-hidden"
               style={{
-                left: 40,
-                height: 400,
+                left: 60,
+                height: 460,
                 background: "#1c1c1c",
                 border: "1px solid rgba(117,83,255,0.22)",
                 boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(117,83,255,0.12)",
@@ -246,84 +257,86 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Phone — anchored bottom-left, overlapping the dashboard intentionally */}
+            {/* Phone — iPhone mockup with chat inside */}
             <div
-              className="absolute z-20 rounded-[36px] p-[10px]"
+              className="absolute z-20 rounded-[36px] p-[8px]"
               style={{
                 bottom: 0,
                 left: 0,
                 width: 210,
                 background: "#1f1f1f",
                 border: "2px solid rgba(255,255,255,0.12)",
-                boxShadow: "0 0 0 1px rgba(117,83,255,0.28), 0 32px 64px rgba(0,0,0,0.9), 0 0 50px rgba(117,83,255,0.22)",
+                boxShadow: "0 32px 64px rgba(0,0,0,0.9), 0 0 40px rgba(117,83,255,0.15)",
               }}
             >
-              <div className="w-12 h-[7px] bg-[#1f1f1f] border border-white/[0.08] rounded-full mx-auto mb-2" />
-              <div className="bg-[#191919] rounded-[26px] p-3.5">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-white/5 mb-2.5">
-                  <div className="w-6 h-6 rounded-full bg-[#7553ff] flex items-center justify-center font-display font-bold text-[9px] text-white flex-shrink-0">C</div>
-                  <div>
-                    <p className="text-[9px] font-medium text-[#fafafa]">ContaDev</p>
-                    <p className="text-[8px] text-emerald-400">● online agora</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {messages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={`flex ${m.dir === "out" ? "justify-end" : "justify-start"}`}
-                      style={{
-                        opacity: visibleMsgs.includes(m.id) ? 1 : 0,
-                        transform: visibleMsgs.includes(m.id) ? "none" : "translateY(6px)",
-                        transition: "opacity .4s ease, transform .4s ease",
-                      }}
-                    >
-                      <span
-                        className="text-[9px] leading-[1.5] px-2.5 py-2 max-w-[148px]"
-                        style={{
-                          background: m.dir === "out" ? "#7553ff" : "rgba(255,255,255,0.08)",
-                          color: m.dir === "out" ? "#fff" : "rgba(250,250,250,0.6)",
-                          borderRadius: m.dir === "out" ? "10px 10px 2px 10px" : "10px 10px 10px 2px",
-                        }}
-                      >
-                        {m.text}
-                      </span>
-                    </div>
-                  ))}
+              {/* Notch */}
+              <div className="w-16 h-[6px] bg-[#1f1f1f] border border-white/[0.08] rounded-full mx-auto mb-1.5" />
+
+              {/* Screen */}
+              <div
+                className="bg-[#191919] rounded-[28px] overflow-hidden flex flex-col"
+                style={{ height: 380 }}
+              >
+              {/* Chat header */}
+              <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-white/5">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center font-display font-bold text-[8px] text-white flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg, #7553ff, #5a3de6)" }}>C</div>
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-[#fafafa] font-medium leading-none">ContaDev</span>
+                  <span className="text-[7px] text-emerald-400 leading-none mt-0.5">● online</span>
                 </div>
               </div>
-              <div className="w-10 h-[3px] bg-white/10 rounded-full mx-auto mt-2.5" />
+
+              {/* Messages */}
+              <div className="flex flex-col gap-2.5 p-3 flex-1">
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex flex-col ${m.dir === "out" ? "items-end" : "items-start"}`}
+                    style={{
+                      opacity: visibleMsgs.includes(m.id) ? 1 : 0,
+                      transform: visibleMsgs.includes(m.id) ? "none" : "translateY(6px)",
+                      transition: "opacity .4s ease, transform .4s ease",
+                    }}
+                  >
+                    <span
+                      className="text-[8.5px] leading-[1.45] px-2.5 py-1.5 max-w-[140px]"
+                      style={{
+                        background: m.dir === "out" ? "#7553ff" : "rgba(255,255,255,0.06)",
+                        color: m.dir === "out" ? "#fff" : "rgba(250,250,250,0.6)",
+                        borderRadius: m.dir === "out" ? "10px 10px 2px 10px" : "10px 10px 10px 2px",
+                      }}
+                    >
+                      {m.text}
+                    </span>
+                    <span className="text-[6px] text-white/20 mt-0.5">{m.time}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Input */}
+              <div className="px-3 py-2 border-t border-white/5 mt-auto">
+                <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span className="text-[8px] text-white/25 flex-1">Mensagem...</span>
+                  <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: "rgba(117,83,255,0.20)" }}>
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              {/* Home indicator */}
+              <div className="w-10 h-[3px] bg-white/10 rounded-full mx-auto mt-2" />
             </div>
           </div>
         </div>
         </div>
       </div>
 
-      {/* ── LOGOS STRIP — contrasting bg to visually break the hero ── */}
-      <div
-        className="relative z-10 transition-all duration-700 delay-500"
-        style={{
-          background: "#1f1f1f",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-          opacity: heroVisible ? 1 : 0,
-          transform: heroVisible ? "none" : "translateY(14px)",
-        }}
-      >
-        <div className="max-w-[1100px] mx-auto px-5 md:px-6 py-3 md:py-4 flex items-center gap-4 md:gap-8">
-        <span className="text-[9px] md:text-[10px] text-white/35 uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
-          Profissionais de
-        </span>
-        <div className="overflow-hidden flex-1">
-          <div className="carousel-track items-center gap-6 md:gap-10">
-            {brands.map((name, i) => (
-              <span key={i} className="font-display font-bold text-[11px] md:text-[13px] text-white/20 whitespace-nowrap">
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
-        </div>
-      </div>
     </section>
   );
 }
