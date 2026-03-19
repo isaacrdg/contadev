@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import SectionDivider from "@/components/SectionDivider";
 
 const pillars = [
@@ -43,12 +43,51 @@ const chatMessages = [
 
 export default function Team() {
   const ref = useRef<HTMLDivElement>(null);
+  const [visibleMsgs, setVisibleMsgs] = useState<number[]>([]);
+  const [showTyping, setShowTyping] = useState(false);
+  const chatTriggered = useRef(false);
 
   useEffect(() => {
     const els = ref.current?.querySelectorAll(".fade-up");
     if (!els) return;
     const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("visible"); }),
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("visible");
+          if (!chatTriggered.current) {
+            chatTriggered.current = true;
+            // Build timeline: user msg appears fast, then typing shows before each "in" reply
+            // msg0 (out) @ 600ms → typing @ 1100ms → msg1 (in) @ 2400ms
+            // msg2 (out) @ 3400ms → typing @ 3900ms → msg3 (in) @ 5400ms
+            const timeline: { time: number; action: "msg" | "typing-on" | "typing-off"; idx?: number }[] = [];
+            let t = 600;
+            chatMessages.forEach((m, idx) => {
+              if (m.dir === "out") {
+                timeline.push({ time: t, action: "msg", idx });
+                t += 500; // short pause after user sends
+              } else {
+                // show typing before "in" response
+                timeline.push({ time: t, action: "typing-on" });
+                t += 1300; // typing duration
+                timeline.push({ time: t, action: "typing-off" });
+                timeline.push({ time: t + 50, action: "msg", idx });
+                t += 1050; // pause before next exchange
+              }
+            });
+            timeline.forEach(({ time, action, idx }) => {
+              setTimeout(() => {
+                if (action === "msg" && idx !== undefined) {
+                  setVisibleMsgs(prev => [...prev, idx]);
+                } else if (action === "typing-on") {
+                  setShowTyping(true);
+                } else if (action === "typing-off") {
+                  setShowTyping(false);
+                }
+              }, time);
+            });
+          }
+        }
+      }),
       { threshold: 0.1 }
     );
     els.forEach((el) => obs.observe(el));
@@ -129,7 +168,15 @@ export default function Team() {
             {/* Messages */}
             <div className="flex flex-col gap-3 p-4 flex-1">
               {chatMessages.map((m, i) => (
-                <div key={i} className={`flex flex-col ${m.dir === "out" ? "items-end" : "items-start"}`}>
+                <div
+                  key={i}
+                  className={`flex flex-col ${m.dir === "out" ? "items-end" : "items-start"}`}
+                  style={{
+                    opacity: visibleMsgs.includes(i) ? 1 : 0,
+                    transform: visibleMsgs.includes(i) ? "none" : "translateY(8px)",
+                    transition: "opacity 0.4s ease, transform 0.4s ease",
+                  }}
+                >
                   <span
                     className="text-[12px] leading-[1.5] px-3.5 py-2.5 max-w-[280px]"
                     style={{
@@ -143,6 +190,25 @@ export default function Team() {
                   <span className="text-[9px] text-white/25 mt-1">{m.time}</span>
                 </div>
               ))}
+              {/* Typing indicator — only when "in" reply is being typed */}
+              {showTyping && (
+                <div
+                  className="flex flex-col items-start"
+                  style={{ animation: "fadeIn 0.25s ease" }}
+                >
+                  <span
+                    className="text-[12px] leading-[1.5] px-3.5 py-2.5 flex gap-1.5 items-center"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      borderRadius: "12px 12px 12px 3px",
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/30" style={{ animation: "pulse 1.2s ease infinite" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/30" style={{ animation: "pulse 1.2s ease 0.2s infinite" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/30" style={{ animation: "pulse 1.2s ease 0.4s infinite" }} />
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Input field */}

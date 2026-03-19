@@ -21,6 +21,8 @@ export default function Calculator() {
   const [situacao, setSituacao] = useState("brasileira");
   const [faturamento, setFaturamento] = useState("");
   const [barsVisible, setBarsVisible] = useState(false);
+  const [animatedValues, setAnimatedValues] = useState([0, 0, 0]);
+  const barsTriggered = useRef(false);
 
   useEffect(() => {
     const els = ref.current?.querySelectorAll(".fade-up");
@@ -29,7 +31,31 @@ export default function Calculator() {
       (entries) => entries.forEach((e) => {
         if (e.isIntersecting) {
           e.target.classList.add("visible");
-          setBarsVisible(true);
+          if (!barsTriggered.current) {
+            barsTriggered.current = true;
+            setBarsVisible(true);
+            // Animate numbers progressively
+            const targets = [63, 48, 22];
+            targets.forEach((target, idx) => {
+              const duration = 2000 + idx * 400;
+              const steps = 60;
+              const stepTime = duration / steps;
+              let current = 0;
+              const increment = target / steps;
+              const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                  current = target;
+                  clearInterval(timer);
+                }
+                setAnimatedValues(prev => {
+                  const next = [...prev];
+                  next[idx] = Math.round(current);
+                  return next;
+                });
+              }, stepTime);
+            });
+          }
         }
       }),
       { threshold: 0.08 }
@@ -122,24 +148,33 @@ export default function Calculator() {
             </p>
             <div className="flex flex-col gap-0">
               {[
-                { label: "Pagam a mais", value: 63, grad: "linear-gradient(90deg, #C46037, #e8956e)" },
-                { label: "Regime errado", value: 48, grad: "linear-gradient(90deg, #C4C237, #dede7a)" },
-                { label: "Sabem quanto pagam", value: 22, grad: "linear-gradient(90deg, #37C4AE, #6de0cd)" },
+                { label: "Pagam a mais", value: 63, grad: "linear-gradient(90deg, #C46037, #e8956e)", glow: "rgba(196,96,55,0.45)" },
+                { label: "Regime errado", value: 48, grad: "linear-gradient(90deg, #C4C237, #dede7a)", glow: "rgba(196,194,55,0.45)" },
+                { label: "Sabem quanto pagam", value: 22, grad: "linear-gradient(90deg, #37C4AE, #6de0cd)", glow: "rgba(55,196,174,0.45)" },
               ].map((bar, i) => (
                 <div key={bar.label}>
-                  <div className="flex items-center gap-3 py-2">
+                  <div className="flex items-center gap-3 py-2.5">
                     <span className="text-[10px] text-white/50 w-[105px] flex-shrink-0">{bar.label}</span>
-                    <div className="flex-1 h-[6px]" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="flex-1 h-[8px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                       <div
-                        className="h-full"
+                        className="h-full rounded-full relative"
                         style={{
                           width: barsVisible ? `${bar.value}%` : "0%",
                           background: bar.grad,
-                          transition: `width 1.2s cubic-bezier(0.4, 0, 0.2, 1) ${i * 0.2}s`,
+                          boxShadow: barsVisible ? `0 0 16px ${bar.glow}, 0 0 4px ${bar.glow}` : "none",
+                          transition: `width 2s cubic-bezier(0.22, 1, 0.36, 1) ${i * 0.4}s, box-shadow 2s ease ${i * 0.4}s`,
                         }}
                       />
                     </div>
-                    <span className="text-[10px] font-display font-bold text-white/40 w-[28px] text-right">{bar.value}%</span>
+                    <span
+                      className="text-[11px] font-display font-bold w-[32px] text-right transition-colors duration-500"
+                      style={{
+                        color: barsVisible ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.25)",
+                        transitionDelay: `${i * 0.4 + 1}s`,
+                      }}
+                    >
+                      {animatedValues[i]}%
+                    </span>
                   </div>
                   {i < 2 && <div style={{ height: "1px", background: "rgba(255,255,255,0.05)" }} />}
                 </div>

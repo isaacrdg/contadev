@@ -65,7 +65,7 @@ function CodeDecoration() {
           // Sparse distribution — evenly scattered
           const hash = Math.sin(col * 12.98 + row * 78.23) * 43758.5453;
           const sparse = hash - Math.floor(hash);
-          if (sparse > 0.25) continue;
+          if (sparse > 0.50) continue;
 
           const dx = x - mouseX;
           const dy = y - mouseY;
@@ -138,9 +138,9 @@ export default function Footer() {
       <div className="max-w-[1100px] mx-auto relative overflow-hidden" style={{ background: "#1f1f1f" }}>
 
         {/* Content */}
-        <div className="relative z-40 max-w-[1020px] mx-auto px-6 pt-10 md:pt-12 pb-0 pointer-events-none [&_a]:pointer-events-auto fade-up">
+        <div className="relative z-40 max-w-[1020px] mx-auto px-6 pt-6 md:pt-8 pb-0 pointer-events-none [&_a]:pointer-events-auto fade-up">
           <div>
-          <div className="flex flex-col gap-12 md:gap-16">
+          <div className="flex flex-col gap-8 md:gap-10">
             {/* Top row — socials left, copyright center, links right */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
               {/* Left — social */}
@@ -193,8 +193,8 @@ export default function Footer() {
 
         {/* Watermark — cut at ~60%, only top part visible */}
         <div
-          className="relative z-[1] pointer-events-none select-none overflow-hidden"
-          style={{ height: "clamp(50px, 7.2vw, 108px)", marginTop: "16px" }}
+          className="relative z-[35] pointer-events-none select-none overflow-hidden"
+          style={{ height: "clamp(48px, 7.2vw, 108px)", marginTop: "8px" }}
         >
           <p
             className="font-display font-bold text-center whitespace-nowrap transition-colors duration-1000 hover:text-white/[0.06]"
