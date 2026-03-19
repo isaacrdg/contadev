@@ -11,7 +11,7 @@ const brands = [
   { name: "Creditas", logo: "/logos/creditas.svg" },
 ];
 
-const allBrands = [...brands, ...brands];
+const allBrands = [...brands, ...brands, ...brands, ...brands];
 
 export default function LogosStrip() {
   return (
