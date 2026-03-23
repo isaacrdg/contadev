@@ -45,6 +45,203 @@ const iconPaths: Record<string, string> = {
 };
 
 
+function TabContent({ activeTab }: { activeTab: string }) {
+  return (
+    <div key={activeTab} style={{ animation: "fadeIn 0.3s ease" }}>
+      {activeTab === "notas" && (
+        <>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { label: "Total Emitido", val: "R$ 93.000", accent: true },
+              { label: "NFs Emitidas",  val: "3",         accent: true },
+              { label: "Pendentes",     val: "1",         accent: false },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2 border border-white/5">
+                <p className="text-[6px] text-white/35 uppercase tracking-wider mb-0.5 whitespace-nowrap">{s.label}</p>
+                <p className="font-display font-bold text-[11px] whitespace-nowrap" style={{ color: s.accent ? "#8f6fff" : "#9CA3AF" }}>{s.val}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              { num: "#0042", client: "Chatigo Pixa",    val: "R$ 42.000", status: "Paga",        ok: true },
+              { num: "#0041", client: "Remote Tech LLC", val: "R$ 33.000", status: "Paga",        ok: true },
+              { num: "#0040", client: "Startup XYZ",     val: "R$ 18.000", status: "Processando", ok: false },
+            ].map((nf) => (
+              <div key={nf.num} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: nf.ok ? "rgba(16,185,129,0.12)" : "rgba(117,83,255,0.12)", color: nf.ok ? "#34d399" : "#8f6fff" }}>NF</div>
+                  <div>
+                    <p className="text-[10px] text-[#fafafa] font-medium">{nf.client}</p>
+                    <p className="text-[8px] text-white/35">{nf.num}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-semibold text-[#8f6fff]">{nf.val}</p>
+                  <p className={`text-[8px] ${nf.ok ? "text-emerald-400" : "text-white/35"}`}>● {nf.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {activeTab === "invoices" && (
+        <>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {[
+              { label: "Total USD", val: "$12,400", accent: true },
+              { label: "Invoices Sent", val: "5", accent: true },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2 border border-white/5">
+                <p className="text-[6px] text-white/35 uppercase tracking-wider mb-0.5 whitespace-nowrap">{s.label}</p>
+                <p className="font-display font-bold text-[11px] whitespace-nowrap" style={{ color: s.accent ? "#8f6fff" : "#9CA3AF" }}>{s.val}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              { num: "INV-018", client: "Acme Corp (US)", val: "$4,200", status: "Paid", ok: true },
+              { num: "INV-017", client: "TechFlow (UK)",  val: "$5,800", status: "Paid", ok: true },
+              { num: "INV-016", client: "DevStack (DE)",  val: "$2,400", status: "Pending", ok: false },
+            ].map((inv) => (
+              <div key={inv.num} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa" }}>IN</div>
+                  <div>
+                    <p className="text-[10px] text-[#fafafa] font-medium">{inv.client}</p>
+                    <p className="text-[8px] text-white/35">{inv.num}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-semibold text-[#60a5fa]">{inv.val}</p>
+                  <p className={`text-[8px] ${inv.ok ? "text-emerald-400" : "text-amber-400"}`}>● {inv.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {activeTab === "declaracoes" && (
+        <>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { label: "IRPJ", val: "Em dia", accent: true },
+              { label: "IRPF", val: "Enviado", accent: true },
+              { label: "DAS", val: "Pago", accent: false },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
+                <p className="text-[7px] text-white/35 uppercase tracking-wider mb-1">{s.label}</p>
+                <p className="font-display font-bold text-[13px] text-emerald-400">{s.val}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              { label: "IRPF 2025", date: "Enviado em 15/03", status: "Concluído", ok: true },
+              { label: "DAS — Março", date: "Venc. 20/04", status: "Gerado", ok: true },
+              { label: "DEFIS 2025", date: "Prazo 31/03", status: "Em revisão", ok: false },
+            ].map((d) => (
+              <div key={d.label} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>DC</div>
+                  <div>
+                    <p className="text-[10px] text-[#fafafa] font-medium">{d.label}</p>
+                    <p className="text-[8px] text-white/35">{d.date}</p>
+                  </div>
+                </div>
+                <p className={`text-[9px] font-medium ${d.ok ? "text-emerald-400" : "text-amber-400"}`}>● {d.status}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {activeTab === "pagamentos" && (
+        <>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {[
+              { label: "Pró-labore", val: "R$ 5.200", accent: true },
+              { label: "Guias Pagas", val: "12", accent: false },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2 border border-white/5">
+                <p className="text-[6px] text-white/35 uppercase tracking-wider mb-0.5 whitespace-nowrap">{s.label}</p>
+                <p className="font-display font-bold text-[11px] whitespace-nowrap" style={{ color: s.accent ? "#8f6fff" : "#9CA3AF" }}>{s.val}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              { label: "DAS — Fevereiro", val: "R$ 1.247,00", status: "Pago", ok: true },
+              { label: "INSS — Fevereiro", val: "R$ 380,00", status: "Pago", ok: true },
+              { label: "ISS — Março", val: "R$ 620,00", status: "Pendente", ok: false },
+            ].map((p) => (
+              <div key={p.label} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: "rgba(117,83,255,0.12)", color: "#8f6fff" }}>PG</div>
+                  <p className="text-[10px] text-[#fafafa] font-medium">{p.label}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-semibold text-[#8f6fff]">{p.val}</p>
+                  <p className={`text-[8px] ${p.ok ? "text-emerald-400" : "text-amber-400"}`}>● {p.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {activeTab === "suporte" && (
+        <div className="flex flex-col gap-3">
+          <div className="bg-[#1c1c1c] rounded-xl p-3.5 border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-[#7553ff] flex items-center justify-center text-[9px] font-bold text-white">RS</div>
+              <div>
+                <p className="text-[10px] text-[#fafafa] font-medium">Rafael Santos</p>
+                <p className="text-[8px] text-emerald-400">● Online</p>
+              </div>
+            </div>
+            <p className="text-[9px] text-white/50 leading-relaxed">Seu especialista dedicado. Contador · CRC Ativo · Especialista em tech PJ</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              { q: "Como emitir NF internacional?", time: "Respondido em 8 min" },
+              { q: "Qual melhor regime pra $8k/mês?", time: "Respondido em 12 min" },
+              { q: "Preciso declarar crypto?", time: "Respondido em 5 min" },
+            ].map((t) => (
+              <div key={t.q} className="px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
+                <p className="text-[10px] text-[#fafafa] font-medium">{t.q}</p>
+                <p className="text-[8px] text-emerald-400 mt-1">✓ {t.time}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CtaButton() {
+  return (
+    <a
+      href="https://wa.me/5500000000000"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 px-6 py-3 rounded-[30px] text-[13px] font-semibold text-white transition-all duration-300 hover:brightness-110 hover:scale-[1.02]"
+      style={{
+        background: "linear-gradient(135deg, #7553ff, #5a3de6)",
+        boxShadow: "0 4px 15px rgba(117,83,255,0.3)",
+      }}
+    >
+      FALE COM UM ESPECIALISTA
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+      </svg>
+    </a>
+  );
+}
+
 export default function Technology() {
   const ref = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState("notas");
@@ -83,8 +280,13 @@ export default function Technology() {
             Simples, rápida e feita para desenvolvedores.
           </p>
 
-          {/* Feature cards — 3 rows carousel */}
-          <div className="flex flex-col gap-2.5 mb-6 fade-up" style={{ transitionDelay: "100ms" }}>
+          {/* CTA Button */}
+          <div className="mb-6 fade-up" style={{ transitionDelay: "50ms" }}>
+            <CtaButton />
+          </div>
+
+          {/* Feature cards — 3 rows carousel (desktop only) */}
+          <div className="hidden md:flex flex-col gap-2.5 mb-6 fade-up" style={{ transitionDelay: "100ms" }}>
             {[
               { items: row1, speed: "110s", dir: "normal" },
               { items: row2, speed: "120s", dir: "reverse" },
@@ -128,7 +330,7 @@ export default function Technology() {
 
         </div>
 
-        {/* RIGHT — platform mockup with tabs */}
+        {/* RIGHT — platform mockup with tabs (DESKTOP ONLY) */}
         <div
           className="hidden md:flex flex-col flex-1 relative fade-up gap-3"
           style={{ transitionDelay: "200ms" }}
@@ -176,178 +378,132 @@ export default function Technology() {
             </div>
 
             {/* Tab content */}
-            <div className="p-4" key={activeTab} style={{ animation: "fadeIn 0.3s ease" }}>
-              {activeTab === "notas" && (
-                <>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    {[
-                      { label: "Total Emitido", val: "R$ 93.000", accent: true },
-                      { label: "NFs Emitidas",  val: "3",         accent: true },
-                      { label: "Pendentes",     val: "1",         accent: false },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
-                        <p className="text-[7px] text-white/35 uppercase tracking-wider mb-1">{s.label}</p>
-                        <p className="font-display font-bold text-[13px]" style={{ color: s.accent ? "#8f6fff" : "#9CA3AF" }}>{s.val}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { num: "#0042", client: "Chatigo Pixa",    val: "R$ 42.000", status: "Paga",        ok: true },
-                      { num: "#0041", client: "Remote Tech LLC", val: "R$ 33.000", status: "Paga",        ok: true },
-                      { num: "#0040", client: "Startup XYZ",     val: "R$ 18.000", status: "Processando", ok: false },
-                    ].map((nf) => (
-                      <div key={nf.num} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: nf.ok ? "rgba(16,185,129,0.12)" : "rgba(117,83,255,0.12)", color: nf.ok ? "#34d399" : "#8f6fff" }}>NF</div>
-                          <div>
-                            <p className="text-[10px] text-[#fafafa] font-medium">{nf.client}</p>
-                            <p className="text-[8px] text-white/35">{nf.num}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] font-semibold text-[#8f6fff]">{nf.val}</p>
-                          <p className={`text-[8px] ${nf.ok ? "text-emerald-400" : "text-white/35"}`}>● {nf.status}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+            <div className="p-4">
+              <TabContent activeTab={activeTab} />
+            </div>
+          </div>
+        </div>
 
-              {activeTab === "invoices" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {[
-                      { label: "Total USD", val: "$12,400", accent: true },
-                      { label: "Invoices Sent", val: "5", accent: true },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
-                        <p className="text-[7px] text-white/35 uppercase tracking-wider mb-1">{s.label}</p>
-                        <p className="font-display font-bold text-[13px]" style={{ color: s.accent ? "#8f6fff" : "#9CA3AF" }}>{s.val}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { num: "INV-018", client: "Acme Corp (US)", val: "$4,200", status: "Paid", ok: true },
-                      { num: "INV-017", client: "TechFlow (UK)",  val: "$5,800", status: "Paid", ok: true },
-                      { num: "INV-016", client: "DevStack (DE)",  val: "$2,400", status: "Pending", ok: false },
-                    ].map((inv) => (
-                      <div key={inv.num} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa" }}>IN</div>
-                          <div>
-                            <p className="text-[10px] text-[#fafafa] font-medium">{inv.client}</p>
-                            <p className="text-[8px] text-white/35">{inv.num}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] font-semibold text-[#60a5fa]">{inv.val}</p>
-                          <p className={`text-[8px] ${inv.ok ? "text-emerald-400" : "text-amber-400"}`}>● {inv.status}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+        {/* MOBILE — Phone mockup with overlapping feature chips */}
+        <div className="md:hidden mt-8 fade-up overflow-visible">
+          {/* Composition area — fixed height */}
+          <div className="relative mx-auto overflow-visible" style={{ width: 300, height: 480 }}>
 
-              {activeTab === "declaracoes" && (
-                <>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    {[
-                      { label: "IRPJ", val: "Em dia", accent: true },
-                      { label: "IRPF", val: "Enviado", accent: true },
-                      { label: "DAS", val: "Pago", accent: false },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
-                        <p className="text-[7px] text-white/35 uppercase tracking-wider mb-1">{s.label}</p>
-                        <p className="font-display font-bold text-[13px] text-emerald-400">{s.val}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { label: "IRPF 2025", date: "Enviado em 15/03", status: "Concluído", ok: true },
-                      { label: "DAS — Março", date: "Venc. 20/04", status: "Gerado", ok: true },
-                      { label: "DEFIS 2025", date: "Prazo 31/03", status: "Em revisão", ok: false },
-                    ].map((d) => (
-                      <div key={d.label} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>DC</div>
-                          <div>
-                            <p className="text-[10px] text-[#fafafa] font-medium">{d.label}</p>
-                            <p className="text-[8px] text-white/35">{d.date}</p>
-                          </div>
-                        </div>
-                        <p className={`text-[9px] font-medium ${d.ok ? "text-emerald-400" : "text-amber-400"}`}>● {d.status}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+            {/* ── Floating benefit chips — clear value props ── */}
 
-              {activeTab === "pagamentos" && (
-                <>
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {[
-                      { label: "Pró-labore", val: "R$ 5.200", accent: true },
-                      { label: "Guias Pagas", val: "12", accent: false },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-[#1c1c1c] rounded-xl p-2.5 border border-white/5">
-                        <p className="text-[7px] text-white/35 uppercase tracking-wider mb-1">{s.label}</p>
-                        <p className="font-display font-bold text-[13px]" style={{ color: s.accent ? "#8f6fff" : "#9CA3AF" }}>{s.val}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { label: "DAS — Fevereiro", val: "R$ 1.247,00", status: "Pago", ok: true },
-                      { label: "INSS — Fevereiro", val: "R$ 380,00", status: "Pago", ok: true },
-                      { label: "ISS — Março", val: "R$ 620,00", status: "Pendente", ok: false },
-                    ].map((p) => (
-                      <div key={p.label} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[8px] font-bold" style={{ background: "rgba(117,83,255,0.12)", color: "#8f6fff" }}>PG</div>
-                          <p className="text-[10px] text-[#fafafa] font-medium">{p.label}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] font-semibold text-[#8f6fff]">{p.val}</p>
-                          <p className={`text-[8px] ${p.ok ? "text-emerald-400" : "text-amber-400"}`}>● {p.status}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+            {/* Top-left */}
+            <div className="absolute z-20" style={{ left: -36, top: 24 }}>
+              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.zap} /></svg>
+                <span className="text-[9px] text-white/50 font-medium">CNPJ em 24h</span>
+              </div>
+            </div>
 
-              {activeTab === "suporte" && (
-                <div className="flex flex-col gap-3">
-                  <div className="bg-[#1c1c1c] rounded-xl p-3.5 border border-white/5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#7553ff] flex items-center justify-center text-[9px] font-bold text-white">RS</div>
-                      <div>
-                        <p className="text-[10px] text-[#fafafa] font-medium">Rafael Santos</p>
-                        <p className="text-[8px] text-emerald-400">● Online</p>
-                      </div>
+            {/* Top-right */}
+            <div className="absolute z-20" style={{ right: -32, top: 60 }}>
+              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.globe} /></svg>
+                <span className="text-[9px] text-white/50 font-medium">Invoice em inglês</span>
+              </div>
+            </div>
+
+            {/* Mid-left */}
+            <div className="absolute z-20" style={{ left: -44, top: 190 }}>
+              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.file} /></svg>
+                <span className="text-[9px] text-white/50 font-medium">NF com 1 clique</span>
+              </div>
+            </div>
+
+            {/* Mid-right */}
+            <div className="absolute z-20" style={{ right: -40, top: 250 }}>
+              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.chart} /></svg>
+                <span className="text-[9px] text-white/50 font-medium">IR automático</span>
+              </div>
+            </div>
+
+            {/* Bottom-left */}
+            <div className="absolute z-20" style={{ left: -28, top: 340 }}>
+              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.chat} /></svg>
+                <span className="text-[9px] text-white/50 font-medium">Resposta em min</span>
+              </div>
+            </div>
+
+            {/* Bottom-right */}
+            <div className="absolute z-20" style={{ right: -36, top: 370 }}>
+              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.shield} /></svg>
+                <span className="text-[9px] text-white/50 font-medium">Dados protegidos</span>
+              </div>
+            </div>
+
+            {/* ── Phone mockup — fixed size, tall & narrow ── */}
+            <div className="absolute z-10 left-1/2 top-0 -translate-x-1/2" style={{ width: 220, height: 480 }}>
+              <div
+                className="w-full h-full rounded-[32px] overflow-hidden flex flex-col"
+                style={{
+                  background: "#0a0a0a",
+                  border: "3px solid #2a2a2a",
+                  boxShadow: "0 16px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+                }}
+              >
+                {/* Dynamic Island */}
+                <div className="flex justify-center pt-3 pb-1.5 flex-shrink-0">
+                  <div className="w-16 h-[5px] rounded-full" style={{ background: "#1a1a1a" }} />
+                </div>
+
+                {/* Screen area — fills remaining space, clips overflow */}
+                <div className="flex-1 mx-[3px] mb-[3px] rounded-b-[27px] overflow-hidden flex flex-col" style={{ background: "#1c1c1c" }}>
+                  {/* App header */}
+                  <div className="flex items-center justify-between px-2.5 py-2 border-b border-white/5 flex-shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-4 h-4 rounded flex items-center justify-center font-display font-bold text-[6px] text-white" style={{ background: "#7553ff" }}>C</div>
+                      <span className="font-display font-bold text-[9px] text-[#fafafa]">ContaDev</span>
                     </div>
-                    <p className="text-[9px] text-white/50 leading-relaxed">Seu especialista dedicado. Contador · CRC Ativo · Especialista em tech PJ</p>
+                    <span className="text-[7px] text-white/30">Mar 2026</span>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { q: "Como emitir NF internacional?", time: "Respondido em 8 min" },
-                      { q: "Qual melhor regime pra $8k/mês?", time: "Respondido em 12 min" },
-                      { q: "Preciso declarar crypto?", time: "Respondido em 5 min" },
-                    ].map((t) => (
-                      <div key={t.q} className="px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
-                        <p className="text-[10px] text-[#fafafa] font-medium">{t.q}</p>
-                        <p className="text-[8px] text-emerald-400 mt-1">✓ {t.time}</p>
-                      </div>
-                    ))}
+
+                  {/* Tab content — scaled to fit, clipped */}
+                  <div className="flex-1 overflow-hidden">
+                    <div className="p-2 origin-top-left" style={{ transform: "scale(0.88)", width: "114%" }}>
+                      <TabContent activeTab={activeTab} />
+                    </div>
                   </div>
                 </div>
-              )}
+
+                {/* Home indicator */}
+                <div className="flex justify-center py-2 flex-shrink-0">
+                  <div className="w-10 h-[3px] rounded-full bg-white/12" />
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* Tabs as navigation below phone */}
+          <div className="flex gap-1.5 justify-center mt-4 pb-2">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
+                style={{
+                  background: activeTab === t.key ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.03)",
+                  border: activeTab === t.key ? "1px solid rgba(117,83,255,0.35)" : "1px solid rgba(255,255,255,0.06)",
+                  color: activeTab === t.key ? "#a78bff" : "rgba(255,255,255,0.4)",
+                  fontWeight: activeTab === t.key ? 600 : 400,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>

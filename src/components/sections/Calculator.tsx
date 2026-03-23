@@ -85,39 +85,10 @@ export default function Calculator() {
       <div
         className="relative max-w-[1020px] mx-auto rounded-2xl overflow-hidden my-8 md:my-12"
         style={{
-          background: "linear-gradient(180deg, #0f0d1a 0%, #130f22 60%, #0f0d1a 100%)",
-          border: "1px solid rgba(117,83,255,0.15)",
-          boxShadow: "none",
+          background: "#1c1c1c",
+          border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        {/* Top accent line */}
-        <div
-          className="h-[1px] w-full"
-          style={{ background: "linear-gradient(90deg, transparent, rgba(117,83,255,0.4), transparent)" }}
-        />
-
-        {/* Subtle glow top */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at 50% 0%, rgba(117,83,255,0.08) 0%, transparent 70%)",
-          }}
-        />
-
-        {/* Diagonal drifting blur blob */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: "600px",
-            height: "420px",
-            top: "0",
-            left: "0",
-            background: "radial-gradient(ellipse, rgba(167,139,255,0.24) 0%, rgba(124,58,237,0.12) 40%, transparent 70%)",
-            filter: "blur(70px)",
-            animation: "driftBlob 30s cubic-bezier(0.4, 0, 0.2, 1) infinite",
-          }}
-        />
-
 
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10 items-stretch p-6 md:p-10">
 
@@ -128,7 +99,15 @@ export default function Calculator() {
             style={{ letterSpacing: "-.3px" }}
           >
             Você pode estar pagando imposto a mais{" "}
-            <em className="not-italic gradient-text">e nem percebe.</em>
+            <em
+              className="not-italic"
+              style={{
+                background: "linear-gradient(180deg, #6644f2, #a78bff)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >e nem percebe.</em>
           </h2>
           <p className="text-[15px] leading-[1.75] text-[#e0e0e0] mb-6 max-w-[420px]">
             Muitos desenvolvedores só descobrem depois que abriram o CNPJ que estavam pagando mais do que precisavam.
@@ -139,12 +118,12 @@ export default function Calculator() {
           <div
             className="rounded-xl p-5 md:p-6"
             style={{
-              background: "#1c1c1c",
+              background: "#141414",
               border: "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <p className="font-display font-bold text-[16px] md:text-[19px] leading-[1.25] text-[#fafafa] mb-4" style={{ letterSpacing: "-.3px" }}>
-              <span className="text-[#a78bff]">6 em cada 10</span> devs PJ pagam imposto a mais
+              <span style={{ color: "#a78bff" }}>6 em cada 10</span> devs PJ pagam imposto a mais
             </p>
             <div className="flex flex-col gap-0">
               {[
@@ -182,7 +161,7 @@ export default function Calculator() {
             </div>
             <div className="mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-baseline gap-1.5">
-                <span className="font-display font-bold text-[20px] text-[#a78bff]">R$847</span>
+                <span className="font-display font-bold text-[20px]" style={{ color: "#a78bff" }}>R$847</span>
                 <span className="text-[10px] text-white/40">pagos a mais por mês, em média</span>
               </div>
             </div>
@@ -191,22 +170,8 @@ export default function Calculator() {
 
         {/* Simulator card */}
         <div className="fade-up flex flex-col">
-        {/* Animated border wrapper */}
-        <div
-          className="relative rounded-2xl flex-1 flex flex-col p-[1.5px]"
-          style={{ overflow: "hidden" }}
-        >
-          {/* Spinning conic gradient border */}
           <div
-            className="absolute inset-[-50%] z-0"
-            style={{
-              background: "conic-gradient(from 0deg, transparent 0%, transparent 15%, rgba(124,58,237,0.7) 25%, rgba(167,139,255,0.8) 30%, transparent 40%, transparent 60%, rgba(90,61,230,0.6) 70%, rgba(124,58,237,0.7) 75%, transparent 85%, transparent 100%)",
-              animation: "spinBorder 12s linear infinite",
-            }}
-          />
-          {/* Inner card */}
-          <div
-            className="relative rounded-[14px] flex-1 flex flex-col z-10 overflow-hidden"
+            className="relative rounded-2xl flex-1 flex flex-col overflow-hidden"
             style={{
               background: "#e8e6ef",
             }}
@@ -215,10 +180,6 @@ export default function Calculator() {
             <div className="absolute top-0 right-0 w-[300px] h-[300px] pointer-events-none" style={{
               background: "radial-gradient(circle at 80% 20%, rgba(117,83,255,0.15) 0%, rgba(117,83,255,0.05) 40%, transparent 70%)",
               filter: "blur(40px)",
-            }} />
-            <div className="absolute bottom-0 left-0 w-[250px] h-[250px] pointer-events-none" style={{
-              background: "radial-gradient(circle at 20% 80%, rgba(90,61,230,0.10) 0%, transparent 60%)",
-              filter: "blur(30px)",
             }} />
 
           <div className="relative p-5 md:p-6 flex-1 flex flex-col">
@@ -333,7 +294,6 @@ export default function Calculator() {
               Resultado instantâneo · Sem cadastro
             </p>
           </div>
-        </div>
         </div>
         </div>
 
