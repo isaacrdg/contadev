@@ -146,70 +146,64 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer ref={footerRef} className="relative">
-      <div className="max-w-[1100px] mx-auto relative overflow-hidden" style={{ background: "#1f1f1f" }}>
+    <footer ref={footerRef} className="relative" style={{ background: "#1f1f1f" }}>
+      <div className="max-w-[1100px] mx-auto relative overflow-hidden">
 
-        {/* Content */}
-        <div className="relative z-40 max-w-[1020px] mx-auto px-6 pt-6 md:pt-8 pb-0 pointer-events-none [&_a]:pointer-events-auto fade-up">
-          <div>
-          <div className="flex flex-col gap-8 md:gap-10">
-            {/* Top row — socials left, copyright center, links right */}
-            <div className="flex flex-row justify-between items-center gap-8">
-              {/* Left — social */}
-              <div className="flex flex-col gap-3 w-1/3">
-                {[
-                  { name: "Instagram", href: "https://instagram.com/contadev" },
-                  { name: "LinkedIn", href: "https://linkedin.com/company/contadev" },
-                  { name: "YouTube", href: "https://youtube.com/@contadev" },
-                ].map((s) => (
-                  <a
-                    key={s.name}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[13px] text-white/60 hover:text-[#fafafa] transition-colors duration-200 no-underline"
-                  >
-                    {s.name}
-                  </a>
-                ))}
-              </div>
-
-              {/* Center — copyright */}
-              <div className="text-center w-1/3">
-                <p className="text-[12px] text-white/20">© 2026</p>
-                <p className="text-[12px] text-white/20">ContaDev.</p>
-              </div>
-
-              {/* Right — links */}
-              <div className="flex flex-col gap-3 items-end w-1/3">
-                {["Privacidade", "Termos", "Contato"].map((l) => (
-                  <a
-                    key={l}
-                    href={l === "Contato" ? "#contato" : "#"}
-                    className="text-[13px] text-white/60 hover:text-[#fafafa] transition-colors duration-200 no-underline"
-                  >
-                    {l}
-                  </a>
-                ))}
-              </div>
+        {/* Content — always visible */}
+        <div className="relative z-40 px-4 md:px-6 pt-6 md:pt-8 pb-4">
+          <div className="flex flex-row justify-between items-start gap-3 md:gap-8 max-w-[1020px] mx-auto">
+            {/* Left — social */}
+            <div className="flex flex-col gap-2">
+              {[
+                { name: "Instagram", href: "https://instagram.com/contadev" },
+                { name: "LinkedIn", href: "https://linkedin.com/company/contadev" },
+                { name: "YouTube", href: "https://youtube.com/@contadev" },
+              ].map((s) => (
+                <a
+                  key={s.name}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] md:text-[13px] text-white/60 hover:text-[#fafafa] transition-colors duration-200 no-underline"
+                >
+                  {s.name}
+                </a>
+              ))}
             </div>
 
-          </div>
+            {/* Center — copyright */}
+            <div className="text-center">
+              <p className="text-[10px] md:text-[12px] text-white/20">© 2026</p>
+              <p className="text-[10px] md:text-[12px] text-white/20">ContaDev.</p>
+            </div>
+
+            {/* Right — links */}
+            <div className="flex flex-col gap-2 items-end">
+              {["Privacidade", "Termos", "Contato"].map((l) => (
+                <a
+                  key={l}
+                  href={l === "Contato" ? "#contato" : "#"}
+                  className="text-[11px] md:text-[13px] text-white/60 hover:text-[#fafafa] transition-colors duration-200 no-underline"
+                >
+                  {l}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Code decoration — on top of everything for mouse */}
-        <div className="absolute inset-0 z-30">
+        {/* Code decoration */}
+        <div className="absolute inset-0 z-30 pointer-events-none md:pointer-events-auto">
           <CodeDecoration />
         </div>
 
-        {/* Watermark — cut at ~60%, only top part visible */}
+        {/* Watermark */}
         <div
           className="relative z-[35] pointer-events-none select-none overflow-hidden"
           style={{ height: "clamp(48px, 7.2vw, 108px)", marginTop: "8px" }}
         >
           <p
-            className="font-display font-bold text-center whitespace-nowrap transition-colors duration-1000 hover:text-white/[0.06]"
+            className="font-display font-bold text-center whitespace-nowrap"
             style={{
               fontSize: "clamp(80px, 12vw, 180px)",
               color: "rgba(255,255,255,0.025)",

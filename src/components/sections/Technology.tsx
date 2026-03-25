@@ -223,102 +223,6 @@ function TabContent({ activeTab }: { activeTab: string }) {
   );
 }
 
-/* All mobile chip data — cycles through these per position */
-const allChips = [
-  { icon: "zap", text: "CNPJ em 24h" },
-  { icon: "globe", text: "Invoice em inglês" },
-  { icon: "file", text: "NF com 1 clique" },
-  { icon: "chart", text: "IR automático" },
-  { icon: "chat", text: "Resposta em min" },
-  { icon: "shield", text: "Dados protegidos" },
-  { icon: "wallet", text: "Pró-labore otimizado" },
-  { icon: "clock", text: "Suporte em minutos" },
-  { icon: "code", text: "Feito pra devs" },
-  { icon: "check", text: "Guias todo mês" },
-  { icon: "screen", text: "Dashboard tempo real" },
-  { icon: "building", text: "Abertura gratuita" },
-];
-
-const chipPositions = [
-  { left: -36, top: 24 },
-  { right: -32, top: 60 },
-  { left: -44, top: 190 },
-  { right: -40, top: 250 },
-  { left: -28, top: 340 },
-  { right: -36, top: 370 },
-];
-
-/* Each chip fades in on mount staggered, then cycles slowly one at a time */
-function MobileChip({ pos, index }: { pos: React.CSSProperties; index: number }) {
-  const [chipIdx, setChipIdx] = useState(index);
-  const [visible, setVisible] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Staggered entrance — all appear one by one on mount
-  useEffect(() => {
-    const entranceDelay = 300 + index * 400; // 0.3s, 0.7s, 1.1s, 1.5s, 1.9s, 2.3s
-    const t = setTimeout(() => setVisible(true), entranceDelay);
-    return () => clearTimeout(t);
-  }, [index]);
-
-  // After all are visible, start cycling ONE chip at a time
-  useEffect(() => {
-    // Wait for all to appear + reading time before any cycling starts
-    const firstCycleDelay = 6000 + index * 8000; // 6s, 14s, 22s, 30s...
-    const interval = 30000; // 30s between each swap for this chip
-
-    const timeout = setTimeout(() => {
-      const tick = () => {
-        setVisible(false); // slow fade out
-        timerRef.current = setTimeout(() => {
-          setChipIdx(prev => (prev + chipPositions.length) % allChips.length);
-          setVisible(true); // slow fade in
-        }, 1500);
-      };
-      tick();
-      const timer = setInterval(tick, interval);
-      return () => { clearInterval(timer); if (timerRef.current) clearTimeout(timerRef.current); };
-    }, firstCycleDelay);
-
-    return () => { clearTimeout(timeout); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [index]);
-
-  const chip = allChips[chipIdx];
-
-  return (
-    <div
-      className="absolute z-20 transition-opacity duration-[1200ms] ease-in-out"
-      style={{ ...pos, opacity: visible ? 1 : 0 } as React.CSSProperties}
-    >
-      <div
-        className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-        style={{
-          background: "rgba(28,28,28,0.90)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-        }}
-      >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5">
-          <path d={iconPaths[chip.icon]} />
-        </svg>
-        <span className="text-[9px] text-white/50 font-medium whitespace-nowrap">
-          {chip.text}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function MobileChips() {
-  return (
-    <>
-      {chipPositions.map((pos, i) => (
-        <MobileChip key={i} pos={pos as React.CSSProperties} index={i} />
-      ))}
-    </>
-  );
-}
-
 function CtaButton() {
   const { openForm } = useFormModal();
   return (
@@ -371,7 +275,7 @@ export default function Technology() {
             Tudo que você precisa,{" "}
             <em className="not-italic gradient-text">em uma tela.</em>
           </h2>
-          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-5">
+          <p className="text-[15px] leading-[1.7] text-[#e0e0e0] mb-2">
             De notas fiscais a declarações, nossa plataforma centraliza toda a sua operação.
             Simples, rápida e feita para desenvolvedores.
           </p>
@@ -433,15 +337,26 @@ export default function Technology() {
         >
           {/* Tabs */}
           <div className="flex gap-1.5 overflow-x-auto">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`text-[11px] px-3.5 py-2 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer ${activeTab === t.key ? "tab-active" : "tab-inactive"}`}
-              >
-                {t.label}
-              </button>
-            ))}
+            {tabs.map((t) => {
+              const active = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className="text-[11px] px-3.5 py-2 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: active ? "rgba(117,83,255,0.18)" : "transparent",
+                    border: active ? "1.5px solid rgba(117,83,255,0.55)" : "1px solid rgba(255,255,255,0.04)",
+                    color: active ? "#a78bff" : "rgba(255,255,255,0.18)",
+                    fontWeight: active ? 600 : 400,
+                    boxShadow: active ? "0 0 14px rgba(117,83,255,0.15), 0 0 4px rgba(117,83,255,0.10)" : "none",
+                    transform: active ? "scale(1.05)" : "scale(1)",
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Mockup */}
@@ -478,29 +393,39 @@ export default function Technology() {
         <div className="md:hidden mt-8 fade-up">
 
           {/* Tabs on top */}
-          <div className="flex gap-1.5 justify-center mb-5 pb-1 overflow-x-auto">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer ${activeTab === t.key ? "tab-active" : "tab-inactive"}`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="relative z-[25] flex gap-1.5 justify-center mb-5 pb-1 overflow-x-auto">
+            {tabs.map((t) => {
+              const active = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: active ? "rgba(117,83,255,0.18)" : "transparent",
+                    border: active ? "1.5px solid rgba(117,83,255,0.55)" : "1px solid rgba(255,255,255,0.04)",
+                    color: active ? "#a78bff" : "rgba(255,255,255,0.18)",
+                    fontWeight: active ? 600 : 400,
+                    boxShadow: active ? "0 0 14px rgba(117,83,255,0.15), 0 0 4px rgba(117,83,255,0.10)" : "none",
+                    transform: active ? "scale(1.05)" : "scale(1)",
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Composition: cards behind + phone on top */}
           <div className="relative mx-auto" style={{ height: 480, maxWidth: 360 }}>
 
             {/* Cards carousel — z-0, passes BEHIND the phone */}
-            <div className="absolute inset-0 z-0 flex flex-col justify-center gap-2 overflow-hidden" style={{ opacity: 0.55 }}>
-              {/* Soft blur fade edges */}
-              <div className="absolute top-0 left-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: "linear-gradient(to right, #191919, transparent)", filter: "blur(2px)" }} />
-              <div className="absolute top-0 right-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #191919, transparent)", filter: "blur(2px)" }} />
-              {/* Top/bottom blur */}
-              <div className="absolute top-0 left-0 right-0 h-10 z-10 pointer-events-none" style={{ background: "linear-gradient(to bottom, #191919, transparent)" }} />
-              <div className="absolute bottom-0 left-0 right-0 h-10 z-10 pointer-events-none" style={{ background: "linear-gradient(to top, #191919, transparent)" }} />
+            <div className="absolute z-0 inset-0 flex flex-col justify-center gap-2 overflow-hidden" style={{ opacity: 0.55 }}>
+
+              {/* Vignette — inside the clipped area, covers card edges */}
+              <div className="absolute inset-0 z-10 pointer-events-none" style={{
+                background: "radial-gradient(ellipse 48% 58% at 50% 50%, transparent 70%, rgba(25,25,25,0.7) 82%, #191919 95%)",
+              }} />
 
               {[
                 { items: row1, speed: "80s", dir: "normal" },
@@ -511,6 +436,8 @@ export default function Technology() {
                 { items: row3, speed: "92s", dir: "reverse" },
                 { items: row1, speed: "86s", dir: "normal" },
                 { items: [...row3].reverse(), speed: "78s", dir: "reverse" },
+                { items: [...row2].reverse(), speed: "84s", dir: "normal" },
+                { items: row1, speed: "90s", dir: "reverse" },
               ].map((row, ri) => (
                 <div key={ri} className="relative overflow-hidden">
                   <div
