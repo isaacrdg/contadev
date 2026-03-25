@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import SectionDivider from "@/components/SectionDivider";
+import { useFormModal } from "@/components/FormContext";
 
 /* Hacker symbol sets that cycle */
 const symbolSets = [
@@ -89,6 +90,7 @@ function HackerRain() {
 
 export default function ConsultoriaCTA() {
   const ref = useRef<HTMLDivElement>(null);
+  const { openForm } = useFormModal();
 
   useEffect(() => {
     const els = ref.current?.querySelectorAll(".fade-up");
@@ -181,10 +183,8 @@ export default function ConsultoriaCTA() {
                   animation: "ctaPulse 2.5s ease-in-out infinite",
                 }}
               />
-              <a
-                href="https://wa.me/5500000000000"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={openForm}
                 className="relative inline-flex items-center gap-2.5 text-[14px] font-semibold rounded-full px-8 py-3.5 transition-all duration-300 cursor-pointer"
                 style={{
                   background: "linear-gradient(135deg, #7553ff, #5a3de6)",
@@ -206,7 +206,7 @@ export default function ConsultoriaCTA() {
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
-              </a>
+              </button>
             </div>
             <p className="text-[11px] text-[#8a879a] mt-3">
               Sem compromisso · Sem custo

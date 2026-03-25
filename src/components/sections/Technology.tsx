@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import SectionDivider from "@/components/SectionDivider";
+import { useFormModal } from "@/components/FormContext";
 
 const tabs = [
   { key: "notas", label: "Notas Fiscais" },
@@ -222,12 +223,107 @@ function TabContent({ activeTab }: { activeTab: string }) {
   );
 }
 
-function CtaButton() {
+/* All mobile chip data — cycles through these per position */
+const allChips = [
+  { icon: "zap", text: "CNPJ em 24h" },
+  { icon: "globe", text: "Invoice em inglês" },
+  { icon: "file", text: "NF com 1 clique" },
+  { icon: "chart", text: "IR automático" },
+  { icon: "chat", text: "Resposta em min" },
+  { icon: "shield", text: "Dados protegidos" },
+  { icon: "wallet", text: "Pró-labore otimizado" },
+  { icon: "clock", text: "Suporte em minutos" },
+  { icon: "code", text: "Feito pra devs" },
+  { icon: "check", text: "Guias todo mês" },
+  { icon: "screen", text: "Dashboard tempo real" },
+  { icon: "building", text: "Abertura gratuita" },
+];
+
+const chipPositions = [
+  { left: -36, top: 24 },
+  { right: -32, top: 60 },
+  { left: -44, top: 190 },
+  { right: -40, top: 250 },
+  { left: -28, top: 340 },
+  { right: -36, top: 370 },
+];
+
+/* Each chip fades in on mount staggered, then cycles slowly one at a time */
+function MobileChip({ pos, index }: { pos: React.CSSProperties; index: number }) {
+  const [chipIdx, setChipIdx] = useState(index);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Staggered entrance — all appear one by one on mount
+  useEffect(() => {
+    const entranceDelay = 300 + index * 400; // 0.3s, 0.7s, 1.1s, 1.5s, 1.9s, 2.3s
+    const t = setTimeout(() => setVisible(true), entranceDelay);
+    return () => clearTimeout(t);
+  }, [index]);
+
+  // After all are visible, start cycling ONE chip at a time
+  useEffect(() => {
+    // Wait for all to appear + reading time before any cycling starts
+    const firstCycleDelay = 6000 + index * 8000; // 6s, 14s, 22s, 30s...
+    const interval = 30000; // 30s between each swap for this chip
+
+    const timeout = setTimeout(() => {
+      const tick = () => {
+        setVisible(false); // slow fade out
+        timerRef.current = setTimeout(() => {
+          setChipIdx(prev => (prev + chipPositions.length) % allChips.length);
+          setVisible(true); // slow fade in
+        }, 1500);
+      };
+      tick();
+      const timer = setInterval(tick, interval);
+      return () => { clearInterval(timer); if (timerRef.current) clearTimeout(timerRef.current); };
+    }, firstCycleDelay);
+
+    return () => { clearTimeout(timeout); if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [index]);
+
+  const chip = allChips[chipIdx];
+
   return (
-    <a
-      href="https://wa.me/5500000000000"
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
+      className="absolute z-20 transition-opacity duration-[1200ms] ease-in-out"
+      style={{ ...pos, opacity: visible ? 1 : 0 } as React.CSSProperties}
+    >
+      <div
+        className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
+        style={{
+          background: "rgba(28,28,28,0.90)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5">
+          <path d={iconPaths[chip.icon]} />
+        </svg>
+        <span className="text-[9px] text-white/50 font-medium whitespace-nowrap">
+          {chip.text}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MobileChips() {
+  return (
+    <>
+      {chipPositions.map((pos, i) => (
+        <MobileChip key={i} pos={pos as React.CSSProperties} index={i} />
+      ))}
+    </>
+  );
+}
+
+function CtaButton() {
+  const { openForm } = useFormModal();
+  return (
+    <button
+      onClick={openForm}
       className="inline-flex items-center gap-2 px-6 py-3 rounded-[30px] text-[13px] font-semibold text-white transition-all duration-300 hover:brightness-110 hover:scale-[1.02]"
       style={{
         background: "linear-gradient(135deg, #7553ff, #5a3de6)",
@@ -238,7 +334,7 @@ function CtaButton() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12h14M12 5l7 7-7 7" />
       </svg>
-    </a>
+    </button>
   );
 }
 
@@ -280,11 +376,6 @@ export default function Technology() {
             Simples, rápida e feita para desenvolvedores.
           </p>
 
-          {/* CTA Button */}
-          <div className="mb-6 fade-up" style={{ transitionDelay: "50ms" }}>
-            <CtaButton />
-          </div>
-
           {/* Feature cards — 3 rows carousel (desktop only) */}
           <div className="hidden md:flex flex-col gap-2.5 mb-6 fade-up" style={{ transitionDelay: "100ms" }}>
             {[
@@ -303,7 +394,7 @@ export default function Technology() {
                     animation: `scrollCarousel ${row.speed} linear infinite ${row.dir}`,
                   }}
                 >
-                  {[...row.items, ...row.items, ...row.items].map((f, i) => (
+                  {[...row.items, ...row.items].map((f, i) => (
                     <div
                       key={i}
                       className="flex items-center gap-2.5 px-4 py-4 rounded-xl flex-shrink-0"
@@ -326,6 +417,11 @@ export default function Technology() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* CTA Button — below carousel (desktop only, mobile has its own) */}
+          <div className="hidden md:block fade-up" style={{ transitionDelay: "150ms" }}>
+            <CtaButton />
           </div>
 
         </div>
@@ -386,64 +482,31 @@ export default function Technology() {
 
         {/* MOBILE — Phone mockup with overlapping feature chips */}
         <div className="md:hidden mt-8 fade-up overflow-visible">
+
+          {/* Tabs on top */}
+          <div className="flex gap-1.5 justify-center mb-5 pb-1">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
+                style={{
+                  background: activeTab === t.key ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.03)",
+                  border: activeTab === t.key ? "1px solid rgba(117,83,255,0.35)" : "1px solid rgba(255,255,255,0.06)",
+                  color: activeTab === t.key ? "#a78bff" : "rgba(255,255,255,0.4)",
+                  fontWeight: activeTab === t.key ? 600 : 400,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           {/* Composition area — fixed height */}
           <div className="relative mx-auto overflow-visible" style={{ width: 300, height: 480 }}>
 
-            {/* ── Floating benefit chips — clear value props ── */}
-
-            {/* Top-left */}
-            <div className="absolute z-20" style={{ left: -36, top: 24 }}>
-              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.zap} /></svg>
-                <span className="text-[9px] text-white/50 font-medium">CNPJ em 24h</span>
-              </div>
-            </div>
-
-            {/* Top-right */}
-            <div className="absolute z-20" style={{ right: -32, top: 60 }}>
-              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.globe} /></svg>
-                <span className="text-[9px] text-white/50 font-medium">Invoice em inglês</span>
-              </div>
-            </div>
-
-            {/* Mid-left */}
-            <div className="absolute z-20" style={{ left: -44, top: 190 }}>
-              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.file} /></svg>
-                <span className="text-[9px] text-white/50 font-medium">NF com 1 clique</span>
-              </div>
-            </div>
-
-            {/* Mid-right */}
-            <div className="absolute z-20" style={{ right: -40, top: 250 }}>
-              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.chart} /></svg>
-                <span className="text-[9px] text-white/50 font-medium">IR automático</span>
-              </div>
-            </div>
-
-            {/* Bottom-left */}
-            <div className="absolute z-20" style={{ left: -28, top: 340 }}>
-              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.chat} /></svg>
-                <span className="text-[9px] text-white/50 font-medium">Resposta em min</span>
-              </div>
-            </div>
-
-            {/* Bottom-right */}
-            <div className="absolute z-20" style={{ right: -36, top: 370 }}>
-              <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-full"
-                style={{ background: "rgba(28,28,28,0.90)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5"><path d={iconPaths.shield} /></svg>
-                <span className="text-[9px] text-white/50 font-medium">Dados protegidos</span>
-              </div>
-            </div>
+            {/* ── Floating benefit chips — fade in/out cycling ── */}
+            <MobileChips />
 
             {/* ── Phone mockup — fixed size, tall & narrow ── */}
             <div className="absolute z-10 left-1/2 top-0 -translate-x-1/2" style={{ width: 220, height: 480 }}>
@@ -487,23 +550,9 @@ export default function Technology() {
             </div>
           </div>
 
-          {/* Tabs as navigation below phone */}
-          <div className="flex gap-1.5 justify-center mt-4 pb-2">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
-                style={{
-                  background: activeTab === t.key ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.03)",
-                  border: activeTab === t.key ? "1px solid rgba(117,83,255,0.35)" : "1px solid rgba(255,255,255,0.06)",
-                  color: activeTab === t.key ? "#a78bff" : "rgba(255,255,255,0.4)",
-                  fontWeight: activeTab === t.key ? 600 : 400,
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* CTA below phone */}
+          <div className="flex justify-center mt-10">
+            <CtaButton />
           </div>
         </div>
       </div>

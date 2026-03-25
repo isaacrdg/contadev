@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://api.svgl.app/\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cdn.simpleicons.org/spotify/white\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/spotify.svg\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/logos/dell.svg)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/logos/dell.svg)",
+      "WebFetch(domain:good-fella.com)",
+      "Bash(do sed:*)",
+      "Bash(echo \"cleaned $f\")",
+      "Bash(git reset:*)",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(vercel deploy:*)",
+      "Bash(npx vercel:*)",
+      "Bash(git merge:*)",
+      "Bash(git branch:*)",
+      "Bash(npx tsc:*)",
+      "Read(//workspaces/contadev/**)",
+      "Bash(curl -s 'https://conta-dev.com/?form=true')",
+      "Bash(curl -s 'https://conta-dev.com/_next/static/chunks/app/page-52a1009adbf9ba00.js')",
+      "Bash(grep -oP '.{0,200}\\(searchParams|form|modal|isModal|setIsModal\\).{0,200}')",
+      "Bash(grep -oP '.{0,50}eB.{0,200}')",
+      "Bash(grep -oP '.{0,100}eN\\\\\\(.{0,200}')"
+    ]
+  }
+}

@@ -11,7 +11,7 @@ const brands = [
   { name: "Creditas", logo: "/logos/creditas.svg" },
 ];
 
-const allBrands = [...brands, ...brands, ...brands, ...brands];
+const allBrands = [...brands, ...brands];
 
 export default function LogosStrip() {
   return (
@@ -21,7 +21,7 @@ export default function LogosStrip() {
         style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.07)" }}
       >
         <span className="text-[9px] md:text-[10px] text-white/35 uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
-          Profissionais de
+          Utilizado por profissionais de empresas como:
         </span>
         <div className="overflow-hidden flex-1 relative">
           <div className="carousel-track items-center gap-10 md:gap-14">

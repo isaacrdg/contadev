@@ -17,6 +17,7 @@ function CodeDecoration() {
     let mouseX = -999;
     let mouseY = -999;
     let time = 0;
+    let isVisible = false;
 
     // No exclusion zones — render everywhere
 
@@ -93,11 +94,21 @@ function CodeDecoration() {
         }
       }
 
-      animId = requestAnimationFrame(draw);
+      if (isVisible) animId = requestAnimationFrame(draw);
     }
 
     resize();
-    draw();
+
+    // Only animate when visible
+    const visObs = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) { animId = requestAnimationFrame(draw); }
+        else { cancelAnimationFrame(animId); }
+      },
+      { threshold: 0 }
+    );
+    visObs.observe(canvas);
 
     window.addEventListener("resize", resize);
     canvas.addEventListener("mousemove", onMouseMove);
@@ -105,6 +116,7 @@ function CodeDecoration() {
 
     return () => {
       cancelAnimationFrame(animId);
+      visObs.disconnect();
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("mousemove", onMouseMove);
       canvas.removeEventListener("mouseleave", onMouseLeave);
@@ -142,9 +154,9 @@ export default function Footer() {
           <div>
           <div className="flex flex-col gap-8 md:gap-10">
             {/* Top row — socials left, copyright center, links right */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8">
+            <div className="flex flex-row justify-between items-center gap-8">
               {/* Left — social */}
-              <div className="flex flex-col gap-3 md:w-1/3">
+              <div className="flex flex-col gap-3 w-1/3">
                 {[
                   { name: "Instagram", href: "https://instagram.com/contadev" },
                   { name: "LinkedIn", href: "https://linkedin.com/company/contadev" },
@@ -163,13 +175,13 @@ export default function Footer() {
               </div>
 
               {/* Center — copyright */}
-              <div className="text-center md:w-1/3">
+              <div className="text-center w-1/3">
                 <p className="text-[12px] text-white/20">© 2026</p>
                 <p className="text-[12px] text-white/20">ContaDev.</p>
               </div>
 
               {/* Right — links */}
-              <div className="flex flex-col gap-3 md:items-end md:w-1/3">
+              <div className="flex flex-col gap-3 items-end w-1/3">
                 {["Privacidade", "Termos", "Contato"].map((l) => (
                   <a
                     key={l}

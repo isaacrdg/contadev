@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import SectionDivider from "@/components/SectionDivider";
 
 type Source = "twitter" | "reddit";
@@ -16,26 +17,40 @@ const RedditIcon = () => (
 );
 
 const row1 = [
-  { name: "Rafael Brito", grad: ["#7553ff", "#c084fc"], body: "migrei pra ContaDev há 6 meses e economizei mais de 12k em imposto. Absurdo como eu tava pagando a mais antes disso, nem acreditei quando vi o comparativo.", role: "Senior Backend Dev @ Nubank", source: "twitter" as Source },
-  { name: "Gabriel Mendes", grad: ["#f472b6", "#fb923c"], body: "mano abri minha PJ em menos de 24h aqui kkkk processo todo digital e o suporte respondeu cada dúvida na hora 🔥🔥", role: "Junior Dev @ Toptal", source: "reddit" as Source },
-  { name: "Lucas Silva", grad: ["#34d399", "#2dd4bf"], body: "cara eu preciso agradecer publicamente. antes da contadev eu tinha PAVOR de lidar com imposto, nota fiscal, essas coisas. perdia noite de sono achando que tava fazendo algo errado. desde que migrei...", role: "Mid Backend Dev @ iFood", source: "twitter" as Source },
-  { name: "André Costa", grad: ["#60a5fa", "#818cf8"], body: "trabalho remoto pra startup na alemanha e invoice sempre foi um caos total. contadev resolveu tudo de forma simples, sem eu precisar entender nada de contabilidade", role: "Senior Full Stack Dev @ Delivery Hero", source: "reddit" as Source },
-  { name: "Marcos Rocha", grad: ["#a78bfa", "#f472b6"], body: "Reduzi minha alíquota, faz 1 ano sem nenhum problema. Simplesmente funciona.", role: "Tech Lead @ Creditas", source: "twitter" as Source },
-  { name: "Tatiana Campos", grad: ["#fb923c", "#f87171"], body: "finalmente uma contabilidade que fala a mesma língua que dev!! NF automática suporte rápido sem burocracia 😍 não largo mais", role: "Frontend Dev @ Spotify", source: "reddit" as Source },
+  { name: "Rafael B.", grad: ["#7553ff", "#c084fc"], body: "troquei de contabilidade depois de ver um vídeo do Deyvin sobre PJ pra dev. melhor decisão que tomei, já economizei uns 12k em imposto desde que migrei pra ContaDev", role: "Backend Dev · PJ há 2 anos", source: "twitter" as Source },
+  { name: "Camila R.", grad: ["#f472b6", "#fb923c"], body: "abri minha PJ em menos de 24h aqui kkkk processo todo digital e o suporte respondeu cada dúvida na hora, recomendo demais", role: "Dev Fullstack · remoto", source: "reddit" as Source },
+  { name: "Lucas M.", grad: ["#34d399", "#2dd4bf"], body: "antes da contadev eu tinha pavor de lidar com imposto e NF. perdia noite achando que tava fazendo algo errado. agora tá tudo no automático e durmo tranquilo", role: "Mid Backend Dev · PJ", source: "twitter" as Source },
+  { name: "André C.", grad: ["#60a5fa", "#818cf8"], body: "trabalho remoto pra startup na alemanha e invoice sempre foi um caos. contadev resolveu tudo de forma simples, sem eu precisar entender contabilidade", role: "Fullstack Dev · remoto internacional", source: "reddit" as Source },
+  { name: "Marcos T.", grad: ["#a78bfa", "#f472b6"], body: "fui pesquisar no YouTube sobre contabilidade pra dev e caí num vídeo mencionando a ContaDev. testei e em 1 ano zero problema. simplesmente funciona.", role: "Tech Lead · PJ", source: "twitter" as Source },
+  { name: "Tatiana S.", grad: ["#fb923c", "#f87171"], body: "finalmente uma contabilidade que fala a mesma língua que dev. NF automática, suporte rápido, sem burocracia. não largo mais", role: "Frontend Dev · CLT→PJ", source: "reddit" as Source },
 ];
 
 const row2 = [
-  { name: "Thiago Martins", grad: ["#2dd4bf", "#60a5fa"], body: "Achei que ia ser igual todas as contabilidades que já usei. Mas o app deles é outro mundo — emiti minha primeira NF em 2 minutos, sem ligar pra ninguém.", role: "Mobile Dev @ 99", source: "reddit" as Source },
-  { name: "Diego Lima", grad: ["#f87171", "#fbbf24"], body: "antes pagava quase 15% de imposto depois da contadev caiu pra 6%... em 3 meses já pagou o investimento do ano inteiro 💰", role: "Senior Dev @ Vercel", source: "twitter" as Source },
-  { name: "Priscila Santos", grad: ["#c084fc", "#f472b6"], body: "Minha contabilidade antiga demorava DIAS pra responder. Aqui em 20 min já tava tudo resolvido no WhatsApp. A diferença é gritante.", role: "Mid Dev @ Stone", source: "twitter" as Source },
-  { name: "Felipe Oliveira", grad: ["#818cf8", "#34d399"], body: "uso a plataforma todo mês, nunca tive problema nenhum. a declaração de IR automatizada foi o que me ganhou de vez", role: "DevOps Engineer @ Deel", source: "reddit" as Source },
-  { name: "Larissa Almeida", grad: ["#f472b6", "#a78bfa"], body: "trabalho remoto pra empresa americana e a ContaDev cuida de TUDO: invoice câmbio imposto... posso focar só em codar 🚀✨", role: "Backend Dev @ Cloudflare", source: "twitter" as Source },
-  { name: "Ricardo Melo", grad: ["#fbbf24", "#fb923c"], body: "Eu preciso deixar registrado aqui: a ContaDev salvou minha transição de CLT pra PJ. Eu não entendia NADA de contabilidade, tinha medo de abrir empresa, de errar no imposto...", role: "Junior Dev @ Vtex", source: "reddit" as Source },
+  { name: "Thiago P.", grad: ["#2dd4bf", "#60a5fa"], body: "achei que ia ser mais uma contabilidade genérica. mas o app é outro nível, emiti minha primeira NF em 2 min sem ligar pra ninguém", role: "Mobile Dev · PJ", source: "reddit" as Source },
+  { name: "Diego L.", grad: ["#f87171", "#fbbf24"], body: "vi o Deyvin falando sobre quanto dev perde pagando imposto errado e fui atrás. saí de quase 15% pra 6% com a ContaDev. em 3 meses já pagou o ano inteiro", role: "Senior Dev · remoto", source: "twitter" as Source },
+  { name: "Priscila F.", grad: ["#c084fc", "#f472b6"], body: "minha contabilidade antiga demorava dias pra responder. aqui em 20 min já tava tudo resolvido no WhatsApp. a diferença é absurda", role: "Dev Pleno · PJ", source: "twitter" as Source },
+  { name: "Felipe O.", grad: ["#818cf8", "#34d399"], body: "uso a plataforma todo mês, zero dor de cabeça. a declaração de IR automatizada foi o que me convenceu de vez", role: "DevOps · PJ há 3 anos", source: "reddit" as Source },
+  { name: "Larissa A.", grad: ["#f472b6", "#a78bfa"], body: "conheci a ContaDev por indicação de um canal no YouTube sobre carreira dev. cuida de tudo: invoice, câmbio, imposto. só codar agora", role: "Backend Dev · remoto US", source: "twitter" as Source },
+  { name: "Ricardo N.", grad: ["#fbbf24", "#fb923c"], body: "preciso deixar registrado: a ContaDev salvou minha transição de CLT pra PJ. não entendia nada de contabilidade e tinha medo de errar tudo. pesquisei no YouTube e achei eles", role: "Junior Dev · primeiro PJ", source: "reddit" as Source },
 ];
 
 export default function Testimonials() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <section id="depoimentos" className="relative">
+    <section id="depoimentos" className="relative" ref={sectionRef}>
       <SectionDivider cross="left" />
 
       {/* Header */}
@@ -50,7 +65,7 @@ export default function Testimonials() {
       <div className="max-w-[1100px] mx-auto relative">
         {/* Row 1 — left */}
         <div className="overflow-hidden border-t border-white/[0.06]">
-          <div className="flex w-max testimonial-row-left">
+          <div className="flex w-max testimonial-row-left" style={{ animationPlayState: inView ? "running" : "paused" }}>
             {[...row1, ...row1].map((t, i) => (
               <div key={i} className="w-[300px] flex-shrink-0 border-r border-white/[0.06] px-5 py-5 transition-colors duration-300 hover:bg-white/[0.02] relative">
                 <div className="absolute top-4 right-4 text-white/20">
@@ -71,7 +86,7 @@ export default function Testimonials() {
 
         {/* Row 2 — right */}
         <div className="overflow-hidden border-t border-b border-white/[0.06]">
-          <div className="flex w-max testimonial-row-right">
+          <div className="flex w-max testimonial-row-right" style={{ animationPlayState: inView ? "running" : "paused" }}>
             {[...row2, ...row2].map((t, i) => (
               <div key={i} className="w-[300px] flex-shrink-0 border-r border-white/[0.06] px-5 py-5 transition-colors duration-300 hover:bg-white/[0.02] relative">
                 <div className="absolute top-4 right-4 text-white/20">

@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useFormModal } from "@/components/FormContext";
 
 const links = [
   { label: "Jornada",       href: "#jornada" },
   { label: "Plataforma",   href: "#tecnologia" },
-  { label: "Preços",        href: "#precos" },
+  { label: "Contato",        href: "#precos" },
   { label: "FAQ",           href: "#faq" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { openForm } = useFormModal();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -54,9 +56,9 @@ export default function Navbar() {
 
         {/* Direita — CTA */}
         <div className="flex items-center">
-          <a
-            href="#contato"
-            className="group inline-flex no-underline items-center gap-2 whitespace-nowrap text-[11px] md:text-[13px] py-1.5 pl-5 pr-1.5 md:py-1.5 md:pl-6 md:pr-1.5"
+          <button
+            onClick={openForm}
+            className="group inline-flex items-center gap-2 whitespace-nowrap text-[11px] md:text-[13px] py-1.5 pl-5 pr-1.5 md:py-1.5 md:pl-6 md:pr-1.5"
             style={{
               fontWeight: 500,
               color: "#15191E",
@@ -77,7 +79,7 @@ export default function Navbar() {
                 <polyline points="7 7 17 7 17 17" />
               </svg>
             </span>
-          </a>
+          </button>
         </div>
 
       </div>
