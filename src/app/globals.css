@@ -416,13 +416,13 @@ a *, button *, [role="button"] * {
 }
 
 .testimonial-row-left {
-  animation: scrollLeft 90s linear infinite;
+  animation: scrollLeft 180s linear infinite;
   will-change: transform;
 }
 .testimonial-row-left:hover { animation-play-state: paused; }
 
 .testimonial-row-right {
-  animation: scrollRight 90s linear infinite;
+  animation: scrollRight 180s linear infinite;
   will-change: transform;
 }
 .testimonial-row-right:hover { animation-play-state: paused; }
