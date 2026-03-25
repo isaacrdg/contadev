@@ -432,18 +432,12 @@ export default function Technology() {
           style={{ transitionDelay: "200ms" }}
         >
           {/* Tabs */}
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex gap-1.5 overflow-x-auto">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setActiveTab(t.key)}
-                className="text-[11px] px-3.5 py-2 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
-                style={{
-                  background: activeTab === t.key ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.03)",
-                  border: activeTab === t.key ? "1px solid rgba(117,83,255,0.35)" : "1px solid rgba(255,255,255,0.06)",
-                  color: activeTab === t.key ? "#a78bff" : "rgba(255,255,255,0.4)",
-                  fontWeight: activeTab === t.key ? 600 : 400,
-                }}
+                className={`text-[11px] px-3.5 py-2 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer ${activeTab === t.key ? "tab-active" : "tab-inactive"}`}
               >
                 {t.label}
               </button>
@@ -480,36 +474,77 @@ export default function Technology() {
           </div>
         </div>
 
-        {/* MOBILE — Phone mockup with overlapping feature chips */}
-        <div className="md:hidden mt-8 fade-up overflow-visible">
+        {/* MOBILE — Phone mockup with carousel cards passing behind */}
+        <div className="md:hidden mt-8 fade-up">
 
           {/* Tabs on top */}
-          <div className="flex gap-1.5 justify-center mb-5 pb-1">
+          <div className="flex gap-1.5 justify-center mb-5 pb-1 overflow-x-auto">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setActiveTab(t.key)}
-                className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
-                style={{
-                  background: activeTab === t.key ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.03)",
-                  border: activeTab === t.key ? "1px solid rgba(117,83,255,0.35)" : "1px solid rgba(255,255,255,0.06)",
-                  color: activeTab === t.key ? "#a78bff" : "rgba(255,255,255,0.4)",
-                  fontWeight: activeTab === t.key ? 600 : 400,
-                }}
+                className={`text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer ${activeTab === t.key ? "tab-active" : "tab-inactive"}`}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          {/* Composition area — fixed height */}
-          <div className="relative mx-auto overflow-visible" style={{ width: 300, height: 480 }}>
+          {/* Composition: cards behind + phone on top */}
+          <div className="relative mx-auto" style={{ height: 480, maxWidth: 360 }}>
 
-            {/* ── Floating benefit chips — fade in/out cycling ── */}
-            <MobileChips />
+            {/* Cards carousel — z-0, passes BEHIND the phone */}
+            <div className="absolute inset-0 z-0 flex flex-col justify-center gap-2 overflow-hidden" style={{ opacity: 0.55 }}>
+              {/* Soft blur fade edges */}
+              <div className="absolute top-0 left-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: "linear-gradient(to right, #191919, transparent)", filter: "blur(2px)" }} />
+              <div className="absolute top-0 right-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #191919, transparent)", filter: "blur(2px)" }} />
+              {/* Top/bottom blur */}
+              <div className="absolute top-0 left-0 right-0 h-10 z-10 pointer-events-none" style={{ background: "linear-gradient(to bottom, #191919, transparent)" }} />
+              <div className="absolute bottom-0 left-0 right-0 h-10 z-10 pointer-events-none" style={{ background: "linear-gradient(to top, #191919, transparent)" }} />
 
-            {/* ── Phone mockup — fixed size, tall & narrow ── */}
-            <div className="absolute z-10 left-1/2 top-0 -translate-x-1/2" style={{ width: 220, height: 480 }}>
+              {[
+                { items: row1, speed: "80s", dir: "normal" },
+                { items: row2, speed: "90s", dir: "reverse" },
+                { items: row3, speed: "85s", dir: "normal" },
+                { items: [...row1].reverse(), speed: "88s", dir: "reverse" },
+                { items: [...row2].reverse(), speed: "82s", dir: "normal" },
+                { items: row3, speed: "92s", dir: "reverse" },
+                { items: row1, speed: "86s", dir: "normal" },
+                { items: [...row3].reverse(), speed: "78s", dir: "reverse" },
+              ].map((row, ri) => (
+                <div key={ri} className="relative overflow-hidden">
+                  <div
+                    className="flex gap-2"
+                    style={{
+                      width: "max-content",
+                      animation: `scrollCarousel ${row.speed} linear infinite ${row.dir}`,
+                    }}
+                  >
+                    {[...row.items, ...row.items].map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg flex-shrink-0"
+                        style={{
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0" style={{ opacity: 0.7 }}>
+                          <path d={iconPaths[f.icon]} />
+                        </svg>
+                        <span className="text-[10px] whitespace-nowrap">
+                          <span className="font-medium text-white/30">{f.label}</span>
+                          <span className="text-white/15 ml-1">{f.rest}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Phone mockup — z-20, on top of the cards */}
+            <div className="absolute z-20 left-1/2 top-0 -translate-x-1/2" style={{ width: 220, height: 480 }}>
               <div
                 className="w-full h-full rounded-[32px] overflow-hidden flex flex-col"
                 style={{
@@ -523,9 +558,8 @@ export default function Technology() {
                   <div className="w-16 h-[5px] rounded-full" style={{ background: "#1a1a1a" }} />
                 </div>
 
-                {/* Screen area — fills remaining space, clips overflow */}
+                {/* Screen */}
                 <div className="flex-1 mx-[3px] mb-[3px] rounded-b-[27px] overflow-hidden flex flex-col" style={{ background: "#1c1c1c" }}>
-                  {/* App header */}
                   <div className="flex items-center justify-between px-2.5 py-2 border-b border-white/5 flex-shrink-0">
                     <div className="flex items-center gap-1.5">
                       <div className="w-4 h-4 rounded flex items-center justify-center font-display font-bold text-[6px] text-white" style={{ background: "#7553ff" }}>C</div>
@@ -533,8 +567,6 @@ export default function Technology() {
                     </div>
                     <span className="text-[7px] text-white/30">Mar 2026</span>
                   </div>
-
-                  {/* Tab content — scaled to fit, clipped */}
                   <div className="flex-1 overflow-hidden">
                     <div className="p-2 origin-top-left" style={{ transform: "scale(0.88)", width: "114%" }}>
                       <TabContent activeTab={activeTab} />
