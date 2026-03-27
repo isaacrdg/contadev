@@ -2,6 +2,9 @@
 import { useEffect, useRef } from "react";
 import SectionDivider from "@/components/SectionDivider";
 
+const CTA_BACKGROUND_IMAGE =
+  "https://cdn.midjourney.com/67654306-c4d4-453c-a360-5552f697cfe1/0_0.jpeg";
+
 const plans = [
   {
     name: "Brasil",
@@ -75,17 +78,29 @@ export default function Pricing() {
 
       <SectionDivider cross="right" />
 
-      {/* Light block */}
-      <div className="max-w-[1100px] mx-auto" style={{ background: "#f5f5f7" }}>
-        <div className="max-w-[1020px] mx-auto py-12 md:py-16 px-5 md:px-6">
+      {/* Background image block */}
+      <div
+        className="relative max-w-[1100px] mx-auto overflow-hidden"
+        style={{
+          backgroundImage: `url("${CTA_BACKGROUND_IMAGE}")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "#15191E",
+        }}
+      >
+        {/* Dark overlay for card legibility */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(21,25,30,0.88) 0%, rgba(21,25,30,0.75) 50%, rgba(21,25,30,0.92) 100%)" }} />
+
+        <div className="relative z-10 max-w-[1020px] mx-auto py-12 md:py-16 px-5 md:px-6">
 
           {/* Header — centered */}
           <div className="text-center mb-10 fade-up">
-            <h2 className="font-display font-bold text-4xl md:text-[42px] leading-[1.1] tracking-tight text-[#15191E]" style={{ letterSpacing: "-.3px" }}>
+            <h2 className="font-display font-bold text-4xl md:text-[42px] leading-[1.1] tracking-tight text-white" style={{ letterSpacing: "-.3px" }}>
               Qual é o seu{" "}
               <em className="not-italic" style={{ background: "linear-gradient(180deg, #3c0dff, #7553ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>cenário?</em>
             </h2>
-            <p className="text-[15px] text-[#60646C] mt-3 max-w-[420px] mx-auto">Escolha o plano ideal para o seu momento. Sem surpresas, sem letras miúdas.</p>
+            <p className="text-[15px] text-white/50 mt-3 max-w-[420px] mx-auto">Escolha o plano ideal para o seu momento. Sem surpresas, sem letras miúdas.</p>
           </div>
 
           {/* Cards */}
@@ -96,8 +111,10 @@ export default function Pricing() {
                 className={`fade-up relative flex flex-col transition-all duration-300 ${plan.featured ? "md:-mt-4 md:mb-[-16px]" : ""}`}
                 style={{
                   transitionDelay: `${i * 80}ms`,
-                  background: plan.featured ? "#15191E" : "#2a2a2f",
-                  border: plan.featured ? "1px solid rgba(117,83,255,0.25)" : "1px solid rgba(0,0,0,0.04)",
+                  background: plan.featured ? "rgba(21,25,30,0.90)" : "rgba(42,42,47,0.70)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  border: plan.featured ? "1px solid rgba(117,83,255,0.25)" : "1px solid rgba(255,255,255,0.08)",
                   borderRadius: "20px",
                   boxShadow: plan.featured
                     ? "0 20px 50px rgba(0,0,0,0.15), 0 0 40px rgba(117,83,255,0.06)"
@@ -168,7 +185,7 @@ export default function Pricing() {
             ))}
           </div>
 
-          <p className="text-center text-[12px] text-[#60646C]/60 mt-8 fade-up" style={{ transitionDelay: "240ms" }}>
+          <p className="text-center text-[12px] text-white/30 mt-8 fade-up" style={{ transitionDelay: "240ms" }}>
             Sem fidelidade · Sem multa · Cancele com 30 dias de aviso
           </p>
         </div>

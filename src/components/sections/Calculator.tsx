@@ -81,20 +81,20 @@ export default function Calculator() {
       ref={ref}
       className="relative"
     >
+      <SectionDivider cross="right" />
       <div className="max-w-[1100px] mx-auto relative overflow-hidden" style={{ background: "#1c1c1c" }}>
         {/* Grid de pontos */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
         }} />
         {/* Noise texture */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+        <div className="absolute inset-0 pointer-events-none opacity-[0.07]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundSize: "200px 200px",
         }} />
-      <SectionDivider cross="right" />
 
-        <div className="relative z-10 max-w-[1020px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10 items-stretch px-8 md:px-12 py-10 md:py-14">
+        <div className="relative z-10 max-w-[920px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-9 items-stretch px-6 md:px-10 py-10 md:py-14">
 
           {/* LEFT — copy */}
           <div className="fade-up">
@@ -176,16 +176,19 @@ export default function Calculator() {
 
         {/* Simulator card */}
         <div className="fade-up flex flex-col">
+          {/* Outer border wrapper — conic spin stays here, card content doesn't rotate */}
+          <div className="simulator-border-wrap relative rounded-2xl flex-1 flex flex-col p-[1px]">
           <div
-            className="relative rounded-2xl flex-1 flex flex-col overflow-hidden"
+            className="relative rounded-[15px] flex-1 flex flex-col overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.04) 100%)",
-              backdropFilter: "blur(24px) saturate(1.6)",
-              WebkitBackdropFilter: "blur(24px) saturate(1.6)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: "linear-gradient(135deg, rgba(38,38,38,1) 0%, rgba(34,34,34,0.97) 100%)",
               boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
             }}
           >
+            {/* Glass inner layer */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)",
+            }} />
             {/* Brilho branco no topo */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[1px] pointer-events-none" style={{
               background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), rgba(255,255,255,0.6), rgba(255,255,255,0.4), transparent)",
@@ -306,7 +309,8 @@ export default function Calculator() {
               Resultado instantâneo · Sem cadastro
             </p>
           </div>
-        </div>
+          </div>{/* inner card */}
+          </div>{/* border wrapper */}
         </div>
 
         </div>

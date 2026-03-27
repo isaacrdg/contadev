@@ -437,30 +437,53 @@ a *, button *, [role="button"] * {
   100% { transform: translateX(0); }
 }
 
-@keyframes ctaRainFall {
-  0%   { top: -5%; }
-  100% { top: 105%; }
-}
-
-@keyframes ctaBlink {
-  0%   { opacity: 1; }
-  50%  { opacity: 0.02; }
-  100% { opacity: 1; }
-}
-
-@keyframes ctaShimmer {
-  0%   { transform: translateX(-60%); }
-  100% { transform: translateX(60%); }
-}
-
 @keyframes ctaPulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50%      { transform: scale(1.4); opacity: 0.1; }
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50%      { transform: scale(1.5); opacity: 0.15; }
 }
 
 @keyframes ctaArrow {
   0%, 100% { transform: translateX(0); }
   50%      { transform: translateX(4px); }
+}
+
+/* Simulator card — snake border */
+.simulator-border-wrap {
+  overflow: hidden;
+  background: rgba(255,255,255,0.10);
+  isolation: isolate;
+}
+.simulator-border-wrap::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  margin-left: -100%;
+  margin-top: -100%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 65%,
+    rgba(117,83,255,0.5) 76%,
+    rgba(255,255,255,0.55) 80%,
+    rgba(117,83,255,0.5) 84%,
+    transparent 95%,
+    transparent 100%
+  );
+  animation: simulatorBorderSpin 10s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+.simulator-border-wrap > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes simulatorBorderSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes strokeFill {

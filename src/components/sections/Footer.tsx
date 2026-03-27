@@ -146,8 +146,8 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer ref={footerRef} className="relative" style={{ background: "#1f1f1f" }}>
-      <div className="max-w-[1100px] mx-auto relative overflow-hidden">
+    <footer ref={footerRef} className="relative">
+      <div className="max-w-[1100px] mx-auto relative overflow-hidden" style={{ background: "#1f1f1f" }}>
 
         {/* Content — always visible */}
         <div className="relative z-40 px-4 md:px-6 pt-6 md:pt-8 pb-4">
