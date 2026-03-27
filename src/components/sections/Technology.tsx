@@ -393,14 +393,15 @@ export default function Technology() {
         <div className="md:hidden mt-8 fade-up">
 
           {/* Tabs on top */}
-          <div className="relative z-[25] flex gap-1.5 justify-center mb-5 pb-1 overflow-x-auto">
+          <div className="relative z-[25] flex gap-2 mb-5 pb-1 overflow-x-auto" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+            <div className="flex-shrink-0 w-1" />
             {tabs.map((t) => {
               const active = activeTab === t.key;
               return (
                 <button
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
-                  className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-300 cursor-pointer"
+                  className="text-[10px] px-2.5 py-1.5 rounded-lg whitespace-nowrap flex-shrink-0 transition-all duration-300 cursor-pointer"
                   style={{
                     background: active ? "rgba(117,83,255,0.18)" : "transparent",
                     border: active ? "1.5px solid rgba(117,83,255,0.55)" : "1px solid rgba(255,255,255,0.04)",
@@ -414,6 +415,7 @@ export default function Technology() {
                 </button>
               );
             })}
+            <div className="flex-shrink-0 w-1" />
           </div>
 
           {/* Composition: cards behind + phone on top */}

@@ -503,6 +503,12 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
+/* Platform section mobile — prevent horizontal overflow leak */
+@media (max-width: 768px) {
+  #tecnologia { overflow-x: clip; }
+  #tecnologia .overflow-x-auto::-webkit-scrollbar { display: none; }
+}
+
 /* Tab active animated border */
 @keyframes tabBorderFlow {
   0%   { background-position: 0% 50%; }

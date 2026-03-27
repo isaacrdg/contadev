@@ -143,11 +143,12 @@ export default function Team() {
         </div>
 
         {/* RIGHT — chat */}
-        <div className="hidden md:flex flex-col fade-up md:max-w-[290px] md:mx-auto" style={{ transitionDelay: "200ms" }}>
+        <div className="flex flex-col fade-up max-w-[290px] mx-auto" style={{ transitionDelay: "200ms" }}>
 
           {/* Chat */}
           <div
             className="glass-card overflow-hidden flex-1 flex flex-col"
+            style={{ minHeight: 460 }}
           >
             {/* Chat header */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">

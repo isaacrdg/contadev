@@ -79,18 +79,22 @@ export default function Calculator() {
     <section
       id="calculadora"
       ref={ref}
-      className="relative px-5 md:px-6"
+      className="relative"
     >
+      <div className="max-w-[1100px] mx-auto relative overflow-hidden" style={{ background: "#1c1c1c" }}>
+        {/* Grid de pontos */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }} />
+        {/* Noise texture */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundSize: "200px 200px",
+        }} />
       <SectionDivider cross="right" />
-      <div
-        className="relative max-w-[1020px] mx-auto rounded-2xl overflow-hidden my-8 md:my-12"
-        style={{
-          background: "#1c1c1c",
-          border: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
 
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10 items-stretch p-6 md:p-10">
+        <div className="relative z-10 max-w-[1020px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-10 items-stretch px-8 md:px-12 py-10 md:py-14">
 
           {/* LEFT — copy */}
           <div className="fade-up">
@@ -127,23 +131,25 @@ export default function Calculator() {
             </p>
             <div className="flex flex-col gap-0">
               {[
-                { label: "Pagam a mais", value: 63, grad: "linear-gradient(90deg, #C46037, #e8956e)", glow: "rgba(196,96,55,0.45)" },
-                { label: "Regime errado", value: 48, grad: "linear-gradient(90deg, #C4C237, #dede7a)", glow: "rgba(196,194,55,0.45)" },
-                { label: "Sabem quanto pagam", value: 22, grad: "linear-gradient(90deg, #37C4AE, #6de0cd)", glow: "rgba(55,196,174,0.45)" },
+                { label: "Pagam a mais", value: 63, grad: "#bbb", glow: "rgba(255,255,255,0.12)", pattern: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)" },
+                { label: "Regime errado", value: 48, grad: "#bbb", glow: "rgba(255,255,255,0.12)", pattern: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)" },
+                { label: "Sabem quanto pagam", value: 22, grad: "#bbb", glow: "rgba(255,255,255,0.12)", pattern: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)" },
               ].map((bar, i) => (
                 <div key={bar.label}>
                   <div className="flex items-center gap-3 py-2.5">
                     <span className="text-[10px] text-white/50 w-[105px] flex-shrink-0">{bar.label}</span>
                     <div className="flex-1 h-[8px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                       <div
-                        className="h-full rounded-full relative"
+                        className="h-full rounded-full relative overflow-hidden"
                         style={{
                           width: barsVisible ? `${bar.value}%` : "0%",
                           background: bar.grad,
                           boxShadow: barsVisible ? `0 0 16px ${bar.glow}, 0 0 4px ${bar.glow}` : "none",
                           transition: `width 2s cubic-bezier(0.22, 1, 0.36, 1) ${i * 0.4}s, box-shadow 2s ease ${i * 0.4}s`,
                         }}
-                      />
+                      >
+                        <div className="absolute inset-0" style={{ backgroundImage: bar.pattern }} />
+                      </div>
                     </div>
                     <span
                       className="text-[11px] font-display font-bold w-[32px] text-right transition-colors duration-500"
@@ -173,18 +179,24 @@ export default function Calculator() {
           <div
             className="relative rounded-2xl flex-1 flex flex-col overflow-hidden"
             style={{
-              background: "#e8e6ef",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.04) 100%)",
+              backdropFilter: "blur(24px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(24px) saturate(1.6)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
             }}
           >
-            {/* Internal glow */}
-            <div className="absolute top-0 right-0 w-[300px] h-[300px] pointer-events-none" style={{
-              background: "radial-gradient(circle at 80% 20%, rgba(117,83,255,0.15) 0%, rgba(117,83,255,0.05) 40%, transparent 70%)",
-              filter: "blur(40px)",
+            {/* Brilho branco no topo */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[1px] pointer-events-none" style={{
+              background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), rgba(255,255,255,0.6), rgba(255,255,255,0.4), transparent)",
+            }} />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[60px] pointer-events-none" style={{
+              background: "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.10) 0%, transparent 70%)",
             }} />
 
           <div className="relative p-5 md:p-6 flex-1 flex flex-col">
             {/* Card header */}
-            <div className="flex items-center justify-between mb-5 pb-3" style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+            <div className="flex items-center justify-between mb-5 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center gap-2.5">
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -197,23 +209,23 @@ export default function Calculator() {
                     <line x1="8" y1="14" x2="12" y2="14" />
                   </svg>
                 </div>
-                <span className="font-display font-semibold text-[13px] text-[#1a1a2e]">Simular cenário</span>
+                <span className="font-display font-semibold text-[13px] text-[#fafafa]">Simular cenário</span>
               </div>
               <span
                 className="text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider"
-                style={{ background: "rgba(117,83,255,0.12)", color: "#6644f2", border: "1px solid rgba(117,83,255,0.20)" }}
+                style={{ background: "rgba(117,83,255,0.15)", color: "#a78bff", border: "1px solid rgba(117,83,255,0.30)" }}
               >
                 Gratuito
               </span>
             </div>
 
-            <p className="text-[12px] text-[#4a4860] mb-5 leading-relaxed">
+            <p className="text-[12px] text-white/50 mb-5 leading-relaxed">
               Preencha abaixo e descubra em segundos quanto você pode economizar.
             </p>
 
             {/* Field 1 — situação */}
             <div className="mb-4">
-              <label className="block text-[10px] uppercase tracking-[0.10em] text-[#6b6880] font-medium mb-2">
+              <label className="block text-[10px] uppercase tracking-[0.10em] text-white/40 font-medium mb-2">
                 Você trabalha para uma empresa:
               </label>
               <div className="flex gap-2 flex-wrap">
@@ -223,9 +235,9 @@ export default function Calculator() {
                     onClick={() => setSituacao(s.value)}
                     className="text-[12px] font-medium px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer"
                     style={{
-                      background: situacao === s.value ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.7)",
-                      border: situacao === s.value ? "1px solid rgba(117,83,255,0.50)" : "1px solid rgba(0,0,0,0.06)",
-                      color: situacao === s.value ? "#6644f2" : "#4a4860",
+                      background: situacao === s.value ? "rgba(117,83,255,0.15)" : "rgba(255,255,255,0.05)",
+                      border: situacao === s.value ? "1px solid rgba(117,83,255,0.50)" : "1px solid rgba(255,255,255,0.08)",
+                      color: situacao === s.value ? "#a78bff" : "rgba(255,255,255,0.5)",
                     }}
                   >
                     {s.label}
@@ -236,7 +248,7 @@ export default function Calculator() {
 
             {/* Field 2 — faturamento */}
             <div className="mb-5">
-              <label className="block text-[10px] uppercase tracking-[0.10em] text-[#6b6880] font-medium mb-2">
+              <label className="block text-[10px] uppercase tracking-[0.10em] text-white/40 font-medium mb-2">
                 Seu faturamento mensal (em R$)
               </label>
               <input
@@ -245,10 +257,10 @@ export default function Calculator() {
                 placeholder="R$ 0,00"
                 value={faturamento}
                 onChange={handleFaturamento}
-                className="w-full rounded-xl px-4 py-3 text-[14px] text-[#1a1a2e] placeholder-[#b0adb8] outline-none transition-all duration-200"
+                className="w-full rounded-xl px-4 py-3 text-[14px] text-[#fafafa] placeholder-white/25 outline-none transition-all duration-200"
                 style={{
-                  background: "rgba(255,255,255,0.5)",
-                  border: "1px solid rgba(0,0,0,0.08)",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.08)",
                   fontFamily: "var(--font-outfit)",
                 }}
                 onFocus={(e) => {
@@ -256,11 +268,11 @@ export default function Calculator() {
                   e.currentTarget.style.boxShadow = "0 0 0 3px rgba(117,83,255,0.12)";
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
-              <p className="mt-1.5 text-[10px] text-[#8a879a]">Valor bruto mensal, antes dos impostos</p>
+              <p className="mt-1.5 text-[10px] text-white/30">Valor bruto mensal, antes dos impostos</p>
             </div>
 
             {/* Button */}
@@ -290,7 +302,7 @@ export default function Calculator() {
               </svg>
             </button>
 
-            <p className="mt-2 text-center text-[10px] text-[#8a879a]">
+            <p className="mt-2 text-center text-[10px] text-white/30">
               Resultado instantâneo · Sem cadastro
             </p>
           </div>
