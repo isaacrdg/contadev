@@ -41,6 +41,13 @@ export default function ConsultoriaCTA() {
     <section id="precos" ref={ref} className="relative">
       <SectionDivider cross="right" />
 
+      {/* Version label */}
+      <div className="max-w-[1100px] mx-auto px-4 md:px-0 mb-4">
+        <span className="text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ background: "rgba(117,83,255,0.15)", color: "#7553ff" }}>
+          Versão 3 — 2 Colunas com Imagem (Atual)
+        </span>
+      </div>
+
       <div className="max-w-[1100px] mx-auto px-4 md:px-0">
         {/* Card */}
         <div

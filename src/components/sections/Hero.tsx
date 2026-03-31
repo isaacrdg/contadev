@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useFormModal } from "@/components/FormContext";
 
 function useCountUp(target: number, duration: number, started: boolean) {
   const [value, setValue] = useState(0);
@@ -26,6 +27,7 @@ const messages = [
 ];
 
 export default function Hero() {
+  const { openForm } = useFormModal();
   const dashRef = useRef<HTMLDivElement>(null);
   const [started, setStarted] = useState(false);
   const [visibleMsgs, setVisibleMsgs] = useState<number[]>([]);
@@ -86,6 +88,54 @@ export default function Hero() {
         }} />
       </div>
 
+      {/* Glow ring behind mockup — Yeldra-style */}
+      <div className="absolute hidden md:block pointer-events-none" style={{
+        top: "50%", right: "-5%",
+        width: 650, height: 650,
+        transform: "translateY(-50%)",
+      }}>
+        <div className="absolute inset-0 rounded-full" style={{
+          background: "conic-gradient(from 0deg, rgba(117,83,255,0.25), rgba(168,85,247,0.10), transparent, rgba(117,83,255,0.15), transparent, rgba(143,111,255,0.20), rgba(117,83,255,0.25))",
+          filter: "blur(40px)",
+          animation: "heroRingSpin 25s linear infinite",
+        }} />
+        <div className="absolute inset-[80px] rounded-full" style={{
+          background: "radial-gradient(circle, rgba(25,25,25,0.95) 40%, transparent 70%)",
+        }} />
+      </div>
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[
+          { top: "10%", left: "8%",  size: 3, delay: "0s",  dur: "14s", anim: "heroParticleA" },
+          { top: "65%", left: "12%", size: 2, delay: "2s",  dur: "16s", anim: "heroParticleB" },
+          { top: "20%", left: "30%", size: 4, delay: "1s",  dur: "12s", anim: "heroParticleC" },
+          { top: "50%", left: "25%", size: 2, delay: "4s",  dur: "18s", anim: "heroParticleA" },
+          { top: "35%", left: "55%", size: 5, delay: "0.5s",dur: "15s", anim: "heroParticleB" },
+          { top: "75%", left: "65%", size: 3, delay: "3s",  dur: "13s", anim: "heroParticleC" },
+          { top: "15%", left: "72%", size: 2, delay: "6s",  dur: "17s", anim: "heroParticleA" },
+          { top: "55%", left: "80%", size: 4, delay: "1.5s",dur: "14s", anim: "heroParticleB" },
+          { top: "85%", left: "45%", size: 2, delay: "5s",  dur: "16s", anim: "heroParticleC" },
+          { top: "30%", left: "90%", size: 3, delay: "2.5s",dur: "13s", anim: "heroParticleA" },
+          { top: "45%", left: "5%",  size: 3, delay: "7s",  dur: "15s", anim: "heroParticleB" },
+          { top: "8%",  left: "50%", size: 2, delay: "3.5s",dur: "18s", anim: "heroParticleC" },
+          { top: "90%", left: "30%", size: 3, delay: "0.8s",dur: "12s", anim: "heroParticleA" },
+          { top: "60%", left: "48%", size: 2, delay: "4.5s",dur: "17s", anim: "heroParticleB" },
+        ].map((p, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              top: p.top, left: p.left,
+              width: p.size, height: p.size,
+              background: `rgba(117,83,255,${p.size >= 4 ? 0.6 : 0.45})`,
+              boxShadow: `0 0 ${p.size * 3}px rgba(117,83,255,${p.size >= 4 ? 0.5 : 0.35})`,
+              animation: `${p.anim} ${p.dur} ease-in-out ${p.delay} infinite`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none z-[1]" style={{
         background: `
@@ -100,26 +150,50 @@ export default function Hero() {
       <div className="flex-1 flex items-center relative z-10">
         <div className="max-w-[1020px] mx-auto px-4 md:px-6 py-8 md:py-10 w-full flex items-center gap-10">
 
-        {/* ── LEFT — 70% do container ── */}
-        <div
-          className="w-full md:w-[60%] flex-shrink-0 transition-all duration-700"
-          style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "none" : "translateY(28px)" }}
-        >
+        {/* ── LEFT ── */}
+        <div className="w-full md:w-[60%] flex-shrink-0">
+
           <h1
             className="font-display font-bold text-[46px] md:text-6xl lg:text-7xl leading-[1.0] tracking-[-0.03em] text-[#fafafa] mb-4"
+            style={{
+              opacity: heroVisible ? 1 : 0,
+              transform: heroVisible ? "none" : "translateY(20px)",
+              transition: "opacity .7s ease .2s, transform .7s ease .2s",
+            }}
           >
             Tecnologia para a{" "}
             <em className="not-italic gradient-text">vida contábil</em>{" "}
             do dev
           </h1>
 
-          <p className="text-[18px] md:text-[16px] leading-[1.65] text-[#e0e0e0] font-extralight mb-8 max-w-none md:max-w-[480px]">
+          <p
+            className="text-[18px] md:text-[16px] leading-[1.65] text-[#e0e0e0] font-extralight mb-8 max-w-none md:max-w-[480px]"
+            style={{
+              opacity: heroVisible ? 1 : 0,
+              transform: heroVisible ? "none" : "translateY(16px)",
+              transition: "opacity .7s ease .35s, transform .7s ease .35s",
+            }}
+          >
             Centralize sua PJ, fale com especialistas que entendem de tech e comece a pagar menos imposto desde o primeiro mês.
           </p>
 
-          <div className="flex items-center gap-4 flex-wrap">
-            <a href="#tecnologia" className="btn-primary" style={{ fontSize: "14px" }}>
-              CONHECER PLATAFORMA
+          <div
+            className="flex items-center gap-4 flex-wrap"
+            style={{
+              opacity: heroVisible ? 1 : 0,
+              transform: heroVisible ? "none" : "translateY(16px)",
+              transition: "opacity .7s ease .5s, transform .7s ease .5s",
+            }}
+          >
+            <button onClick={openForm} className="btn-primary" style={{ fontSize: "14px" }}>
+              FALE COM UM ESPECIALISTA
+            </button>
+            <a href="#tecnologia" className="btn-ghost">
+              Conhecer plataforma
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
             </a>
           </div>
         </div>
@@ -129,8 +203,8 @@ export default function Hero() {
           className="hidden md:block flex-1 min-w-0"
           style={{
             opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? "none" : "translateY(28px)",
-            transition: "opacity .7s ease .3s, transform .7s ease .3s",
+            transform: heroVisible ? "none" : "translateY(28px) scale(0.97)",
+            transition: "opacity .8s ease .4s, transform .8s ease .4s",
             marginRight: "-40px",
           }}
         >
