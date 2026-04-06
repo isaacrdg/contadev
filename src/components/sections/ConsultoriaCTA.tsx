@@ -6,17 +6,17 @@ import { useFormModal } from "@/components/FormContext";
 const CTA_IMAGE =
   "https://cdn.midjourney.com/67654306-c4d4-453c-a360-5552f697cfe1/0_0.jpeg";
 
-const pills = [
-  "Consultoria gratuita",
-  "Resposta em minutos",
-  "100% online",
-  "Abertura de CNPJ grátis",
-];
-
 const stats = [
   { value: "50.8%", label: "Economia média" },
   { value: "3 min", label: "Até o especialista" },
   { value: "2.400+", label: "Devs atendidos" },
+];
+
+const checks = [
+  "Consultoria gratuita com especialista real",
+  "Economia média de 50.8% em impostos",
+  "Abertura de CNPJ sem custo",
+  "100% online, do primeiro contato ao CNPJ",
 ];
 
 export default function ConsultoriaCTA() {
@@ -41,125 +41,67 @@ export default function ConsultoriaCTA() {
     <section id="precos" ref={ref} className="relative">
       <SectionDivider cross="right" />
 
-      {/* Version label */}
-      <div className="max-w-[1100px] mx-auto px-4 md:px-0 mb-4">
-        <span className="text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ background: "rgba(117,83,255,0.15)", color: "#7553ff" }}>
-          Versão 3 — 2 Colunas com Imagem (Atual)
-        </span>
-      </div>
-
       <div className="max-w-[1100px] mx-auto px-4 md:px-0">
-        {/* Card */}
         <div
           className="relative overflow-hidden"
-          style={{
-            borderRadius: "24px",
-            background: "#e8e6ef",
-          }}
+          style={{ borderRadius: "24px", minHeight: "520px" }}
         >
-          {/* Background image — absolute, right-aligned */}
-          <div className="absolute inset-0 hidden md:block">
-            <img
-              src={CTA_IMAGE}
-              alt=""
-              className="absolute right-0 top-0 h-full w-[50%] object-cover object-[center_top]"
-              style={{
-                filter: "grayscale(100%) contrast(1.05) brightness(0.95)",
-                maskImage: "linear-gradient(90deg, transparent 0%, black 35%)",
-                WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 35%)",
-              }}
-            />
-          </div>
+          <img
+            src={CTA_IMAGE}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-[center_15%] hidden md:block"
+          />
 
-          {/* Floating card — over image */}
           <div
-            className="absolute bottom-5 right-5 z-20 px-4 py-3 rounded-xl hidden md:flex items-center gap-2.5"
+            className="absolute inset-0 hidden md:block"
             style={{
-              background: "rgba(19,34,51,0.65)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              background:
+                "linear-gradient(180deg, rgba(25,25,25,0.10) 0%, rgba(25,25,25,0.25) 30%, rgba(25,25,25,0.70) 60%, rgba(25,25,25,0.92) 85%, rgba(25,25,25,0.97) 100%)",
             }}
-          >
+          />
+
+          <div
+            className="absolute inset-0 hidden md:block pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse at 50% 100%, rgba(117,83,255,0.12) 0%, transparent 60%)",
+            }}
+          />
+
+          <div
+            className="absolute top-0 left-0 right-0 h-[2px] z-10 hidden md:block"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, #7553ff, transparent)",
+            }}
+          />
+
+          <div className="relative z-10 hidden md:flex flex-col justify-end min-h-[520px] px-8 md:px-12 pb-10 md:pb-14 pt-16">
             <div
-              className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ background: "#34d399", boxShadow: "0 0 8px rgba(52,211,153,0.5)" }}
-            />
-            <div className="text-[11px] text-white/70 font-medium">
-              Especialistas online agora
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="relative z-10 py-10 md:py-14 px-7 md:px-12 md:max-w-[55%]">
-            {/* Pills */}
-            <div className="flex flex-wrap gap-2 mb-7 fade-up">
-              {pills.map((pill) => (
-                <span
-                  key={pill}
-                  className="text-[11px] font-medium px-3.5 py-1.5 rounded-full"
-                  style={{
-                    background: "rgba(255,255,255,0.6)",
-                    border: "1px solid rgba(0,0,0,0.06)",
-                    color: "#3a3650",
-                  }}
-                >
-                  {pill}
-                </span>
-              ))}
-            </div>
-
-            {/* Headline */}
-            <div className="fade-up" style={{ transitionDelay: "80ms" }}>
-              <h2
-                className="font-display font-bold text-[28px] md:text-[40px] leading-[1.10] tracking-tight text-[#1a1a2e] mb-3"
-                style={{ letterSpacing: "-.3px" }}
-              >
-                Fale com quem entende{" "}
-                <span
-                  style={{
-                    background: "linear-gradient(180deg, #3c0dff, #7553ff)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  o seu cenário.
-                </span>
-              </h2>
-              <p className="text-[14px] md:text-[15px] text-[#5a5770] max-w-[420px] leading-relaxed">
-                Um especialista analisa sua situação fiscal, monta a melhor estratégia
-                e te acompanha do zero. Sem custo pra começar.
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div
-              className="flex items-center gap-0 mt-8 mb-8 fade-up"
-              style={{ transitionDelay: "160ms" }}
+              className="fade-up inline-flex items-center gap-0 self-start mb-7 px-5 py-3.5 rounded-2xl"
+              style={{
+                background: "rgba(25,25,25,0.55)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
             >
               {stats.map((stat, i) => (
                 <div key={stat.label} className="flex items-center">
-                  <div className="pr-5 md:pr-7" style={{ paddingLeft: i > 0 ? undefined : 0 }}>
-                    <div
-                      className="font-display font-bold text-[22px] md:text-[26px] leading-none"
-                      style={{
-                        background: "linear-gradient(180deg, #1a1a2e 20%, rgba(26,26,46,0.7))",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                      }}
-                    >
+                  <div className={i > 0 ? "pl-5 md:pl-6" : ""}>
+                    <div className="font-display font-bold text-[18px] md:text-[22px] leading-none text-white">
                       {stat.value}
                     </div>
-                    <div className="text-[10px] text-[#8a879a] mt-1 uppercase tracking-[.08em] font-medium">
+                    <div className="text-[9px] md:text-[10px] text-white/40 mt-1 uppercase tracking-[.08em] font-medium">
                       {stat.label}
                     </div>
                   </div>
                   {i < stats.length - 1 && (
                     <div
-                      className="w-[1px] h-[32px] flex-shrink-0 mr-5 md:mr-7"
+                      className="w-[1px] h-[28px] flex-shrink-0 ml-5 md:ml-6"
                       style={{
                         background:
-                          "linear-gradient(180deg, transparent, rgba(0,0,0,0.10), transparent)",
+                          "linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent)",
                       }}
                     />
                   )}
@@ -167,50 +109,192 @@ export default function ConsultoriaCTA() {
               ))}
             </div>
 
-            {/* CTA button */}
-            <div className="fade-up" style={{ transitionDelay: "240ms" }}>
-              <div className="relative inline-block">
-                {/* Glow */}
-                <div
-                  className="absolute -inset-3 rounded-full pointer-events-none"
+            <div className="fade-up" style={{ transitionDelay: "80ms" }}>
+              <h2
+                className="font-display font-bold text-[30px] md:text-[50px] leading-[1.05] tracking-tight text-white mb-3"
+                style={{ letterSpacing: "-.4px" }}
+              >
+                Fale com quem entende
+                <br />
+                <span className="gradient-text">o seu cenário.</span>
+              </h2>
+              <p className="text-[14px] md:text-[15px] text-white/50 max-w-[440px] leading-relaxed">
+                Um especialista analisa sua situação fiscal, monta a melhor
+                estratégia e te acompanha do zero. Sem custo pra começar.
+              </p>
+            </div>
+
+            <div
+              className="fade-up flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-8"
+              style={{ transitionDelay: "180ms" }}
+            >
+              <button onClick={openForm} className="btn-primary">
+                FALE COM UM ESPECIALISTA
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ animation: "ctaArrow 1.8s ease-in-out infinite" }}
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+
+              <span className="text-[12px] text-white/30 font-medium">
+                Sem compromisso - Sem custo - Resultado em 48h
+              </span>
+            </div>
+          </div>
+
+          <div
+            className="relative md:hidden overflow-hidden"
+            style={{
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "#1c1c1c",
+              borderRadius: "24px",
+            }}
+          >
+            <div className="relative h-[220px]">
+              <img
+                src={CTA_IMAGE}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-[center_12%]"
+                style={{ filter: "brightness(0.90) contrast(1.05)" }}
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(28,28,28,0.65) 0%, rgba(28,28,28,0.10) 55%, rgba(28,28,28,0.85) 100%)",
+                }}
+              />
+
+              <div
+                className="absolute bottom-4 left-4 right-4 z-20 px-4 py-3 rounded-2xl fade-up"
+                style={{
+                  background: "rgba(28,28,28,0.78)",
+                  backdropFilter: "blur(14px)",
+                  WebkitBackdropFilter: "blur(14px)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  transitionDelay: "120ms",
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-display font-bold text-[20px] leading-none text-white">
+                      50.8%
+                    </div>
+                    <div className="text-[9px] text-white/35 mt-1 uppercase tracking-[.08em] font-medium">
+                      Economia média
+                    </div>
+                  </div>
+                  <div
+                    className="w-[1px] h-[26px]"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, transparent, rgba(255,255,255,0.10), transparent)",
+                    }}
+                  />
+                  <div>
+                    <div className="font-display font-bold text-[20px] leading-none text-white">
+                      3 min
+                    </div>
+                    <div className="text-[9px] text-white/35 mt-1 uppercase tracking-[.08em] font-medium">
+                      Até o especialista
+                    </div>
+                  </div>
+                  <div
+                    className="w-[1px] h-[26px]"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, transparent, rgba(255,255,255,0.10), transparent)",
+                    }}
+                  />
+                  <div>
+                    <div className="font-display font-bold text-[20px] leading-none text-white">
+                      2.4k+
+                    </div>
+                    <div className="text-[9px] text-white/35 mt-1 uppercase tracking-[.08em] font-medium">
+                      Devs
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 pt-6 pb-7">
+              <div className="fade-up mb-4">
+                <span
+                  className="inline-block text-[10px] font-semibold uppercase tracking-[.10em] px-3.5 py-1.5 rounded-full"
                   style={{
-                    background: "rgba(117,83,255,0.18)",
-                    filter: "blur(20px)",
-                    animation: "ctaPulse 3s ease-in-out infinite",
-                  }}
-                />
-                <button
-                  onClick={openForm}
-                  className="relative inline-flex items-center gap-2.5 text-[14px] font-semibold rounded-full px-8 py-3.5 transition-all duration-300 cursor-pointer group"
-                  style={{
-                    background: "linear-gradient(135deg, #6644f2, #5129f0)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "#fff",
-                    boxShadow:
-                      "0 4px 25px rgba(117,83,255,0.30), inset 0 1px 0 rgba(255,255,255,0.10)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      "0 8px 40px rgba(117,83,255,0.50), inset 0 1px 0 rgba(255,255,255,0.15)";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 25px rgba(117,83,255,0.30), inset 0 1px 0 rgba(255,255,255,0.10)";
-                    e.currentTarget.style.transform = "translateY(0)";
+                    background: "rgba(117,83,255,0.10)",
+                    border: "1px solid rgba(117,83,255,0.18)",
+                    color: "#8f6fff",
                   }}
                 >
-                  {/* Sheen */}
-                  <span className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-                    <span
-                      className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
-                      }}
-                    />
-                  </span>
-                  <span className="relative">FALE COM UM ESPECIALISTA</span>
+                  Consultoria gratuita
+                </span>
+              </div>
+
+              <div className="fade-up" style={{ transitionDelay: "60ms" }}>
+                <h2
+                  className="font-display font-bold text-[27px] leading-[1.08] tracking-tight text-white mb-3"
+                  style={{ letterSpacing: "-.3px" }}
+                >
+                  Fale com quem entende{" "}
+                  <span className="gradient-text">o seu cenário.</span>
+                </h2>
+                <p className="text-[13px] text-white/45 leading-relaxed mb-5">
+                  Um especialista analisa sua situação fiscal, monta a melhor
+                  estratégia e te acompanha do zero.
+                </p>
+              </div>
+
+              <div
+                className="fade-up flex flex-col gap-2.5 mb-6"
+                style={{ transitionDelay: "120ms" }}
+              >
+                {checks.map((item) => (
+                  <div key={item} className="flex items-start gap-2.5">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="flex-shrink-0 mt-[2px]"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill="rgba(117,83,255,0.12)"
+                        stroke="rgba(117,83,255,0.30)"
+                        strokeWidth="1"
+                      />
+                      <path
+                        d="M8 12.5l2.5 2.5 5-5"
+                        stroke="#7553ff"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="text-[12px] text-white/60 leading-snug">
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="fade-up" style={{ transitionDelay: "180ms" }}>
+                <button onClick={openForm} className="btn-primary w-full justify-center">
+                  FALE COM UM ESPECIALISTA
                   <svg
                     width="16"
                     height="16"
@@ -220,59 +304,15 @@ export default function ConsultoriaCTA() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="relative"
                     style={{ animation: "ctaArrow 1.8s ease-in-out infinite" }}
                   >
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                   </svg>
                 </button>
-              </div>
-
-              <p className="text-[11px] text-[#8a879a] mt-3.5">
-                Sem compromisso · Sem custo
-              </p>
-            </div>
-          </div>
-
-
-          {/* Mobile — image strip */}
-          <div className="relative md:hidden h-[200px]">
-            <div
-              className="absolute top-0 left-0 right-0 h-[3px] z-10"
-              style={{
-                background: "linear-gradient(90deg, transparent, #6644f2, #7553ff, #6644f2, transparent)",
-              }}
-            />
-            <img
-              src={CTA_IMAGE}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-[center_top]"
-              style={{
-                filter: "grayscale(100%) contrast(1.05) brightness(0.88)",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: "linear-gradient(180deg, rgba(12,10,20,0.2) 0%, rgba(12,10,20,0.5) 100%)",
-              }}
-            />
-            <div
-              className="absolute bottom-4 left-4 z-10 px-3.5 py-2.5 rounded-xl flex items-center gap-2"
-              style={{
-                background: "rgba(19,34,51,0.65)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
-                border: "1px solid rgba(255,255,255,0.10)",
-              }}
-            >
-              <div
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: "#34d399", boxShadow: "0 0 8px rgba(52,211,153,0.5)" }}
-              />
-              <div className="text-[11px] text-white/70 font-medium">
-                Especialistas online agora
+                <p className="text-[11px] text-white/25 mt-3">
+                  Sem compromisso - Sem custo
+                </p>
               </div>
             </div>
           </div>
