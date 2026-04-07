@@ -20,8 +20,11 @@ export default function LogosStrip() {
         className="max-w-[1100px] mx-auto px-5 md:px-6 py-3 md:py-4 flex items-center gap-4 md:gap-8 animate-slide-in"
         style={{ background: "#1f1f1f", borderTop: "1px solid rgba(255,255,255,0.07)" }}
       >
-        <span className="text-[9px] md:text-[10px] text-white/35 uppercase tracking-[.08em] whitespace-nowrap flex-shrink-0">
-          Utilizado por profissionais de empresas como:
+        <span className="text-[9px] md:text-[10px] text-white/35 uppercase tracking-[.08em] flex-shrink-0 leading-[1.35] md:whitespace-nowrap text-left">
+          <span className="whitespace-nowrap">Utilizado por profissionais</span>
+          <br className="md:hidden" />
+          <span className="hidden md:inline"> </span>
+          <span className="whitespace-nowrap">de empresas como:</span>
         </span>
         <div className="overflow-hidden flex-1 relative">
           <div className="carousel-track items-center gap-10 md:gap-14">

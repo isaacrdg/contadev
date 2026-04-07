@@ -336,7 +336,7 @@ export default function Technology() {
           style={{ transitionDelay: "200ms" }}
         >
           {/* Tabs */}
-          <div className="flex gap-1.5 overflow-x-auto">
+          <div className="flex flex-wrap gap-1.5 px-1 py-1 -mx-1">
             {tabs.map((t) => {
               const active = activeTab === t.key;
               return (
@@ -393,7 +393,10 @@ export default function Technology() {
         <div className="md:hidden mt-8 fade-up">
 
           {/* Tabs on top */}
-          <div className="relative z-[25] flex gap-2 mb-5 pb-1 overflow-x-auto" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+          <div
+            className="relative z-[25] flex gap-2 mt-2 mb-5 py-2 overflow-x-auto no-scrollbar"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+          >
             <div className="flex-shrink-0 w-1" />
             {tabs.map((t) => {
               const active = activeTab === t.key;
@@ -422,11 +425,19 @@ export default function Technology() {
           <div className="relative mx-auto" style={{ height: 480, maxWidth: 360 }}>
 
             {/* Cards carousel — z-0, passes BEHIND the phone */}
-            <div className="absolute z-0 inset-0 flex flex-col justify-center gap-2 overflow-hidden" style={{ opacity: 0.55 }}>
+            <div className="absolute z-0 inset-0 flex flex-col justify-center gap-2 overflow-hidden" style={{ opacity: 0.85 }}>
 
-              {/* Vignette — inside the clipped area, covers card edges */}
+              {/* Vignette — soft fade só nas bordas, sem escurecer o miolo */}
               <div className="absolute inset-0 z-10 pointer-events-none" style={{
-                background: "radial-gradient(ellipse 48% 58% at 50% 50%, transparent 70%, rgba(25,25,25,0.7) 82%, #191919 95%)",
+                background:
+                  "radial-gradient(ellipse 75% 80% at 50% 50%, transparent 55%, rgba(25,25,25,0.55) 85%, #191919 100%)",
+              }} />
+              {/* Side gradients — fade horizontal nas bordas para encaixar com o restante da página */}
+              <div className="absolute inset-y-0 left-0 w-16 z-10 pointer-events-none" style={{
+                background: "linear-gradient(to right, #191919, transparent)",
+              }} />
+              <div className="absolute inset-y-0 right-0 w-16 z-10 pointer-events-none" style={{
+                background: "linear-gradient(to left, #191919, transparent)",
               }} />
 
               {[
@@ -454,16 +465,17 @@ export default function Technology() {
                         key={i}
                         className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg flex-shrink-0"
                         style={{
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.06)",
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          backdropFilter: "blur(4px)",
                         }}
                       >
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0" style={{ opacity: 0.7 }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8f6fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0" style={{ opacity: 0.85 }}>
                           <path d={iconPaths[f.icon]} />
                         </svg>
                         <span className="text-[10px] whitespace-nowrap">
-                          <span className="font-medium text-white/30">{f.label}</span>
-                          <span className="text-white/15 ml-1">{f.rest}</span>
+                          <span className="font-medium text-white/55">{f.label}</span>
+                          <span className="text-white/35 ml-1">{f.rest}</span>
                         </span>
                       </div>
                     ))}

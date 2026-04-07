@@ -51,54 +51,48 @@ export default function FeatureStrip() {
     return () => obs.disconnect();
   }, []);
 
-  return (
-    <section ref={ref} className="relative py-0">
-      {/* Top line + star */}
-      <div className="relative max-w-[1100px] mx-auto flex items-center" style={{ height: "1px", zIndex: 10 }}>
-        <div className="absolute -left-[10px] -top-[10px] z-10">
-          <svg width="20" height="20" viewBox="0 0 13 13" fill="none">
-            <path
-              d="M6.5 0C6.5 3.59 3.59 6.5 0 6.5C3.59 6.5 6.5 9.41 6.5 13C6.5 9.41 9.41 6.5 13 6.5C9.41 6.5 6.5 3.59 6.5 0Z"
-              fill="#191919"
-              stroke="rgba(255,255,255,0.20)"
-              strokeWidth="0.6"
-            />
-          </svg>
-        </div>
-        <div
-          className="absolute inset-0"
-          style={{
-            height: "1px",
-            background: "linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(117,83,255,0.15) 50%, rgba(255,255,255,0.06) 100%)",
-            marginLeft: "10px",
-            marginRight: "10px",
-          }}
-        />
-        <div className="absolute -right-[10px] -top-[10px] z-10">
-          <svg width="20" height="20" viewBox="0 0 13 13" fill="none">
-            <path
-              d="M6.5 0C6.5 3.59 3.59 6.5 0 6.5C3.59 6.5 6.5 9.41 6.5 13C6.5 9.41 9.41 6.5 13 6.5C9.41 6.5 6.5 3.59 6.5 0Z"
-              fill="#191919"
-              stroke="rgba(255,255,255,0.20)"
-              strokeWidth="0.6"
-            />
-          </svg>
-        </div>
-      </div>
+  const Star = () => (
+    <svg width="20" height="20" viewBox="0 0 13 13" fill="none">
+      <path
+        d="M6.5 0C6.5 3.59 3.59 6.5 0 6.5C3.59 6.5 6.5 9.41 6.5 13C6.5 9.41 9.41 6.5 13 6.5C9.41 6.5 6.5 3.59 6.5 0Z"
+        fill="#191919"
+        stroke="rgba(255,255,255,0.20)"
+        strokeWidth="0.6"
+      />
+    </svg>
+  );
 
-      {/* Features */}
-      <div className="max-w-[1100px] mx-auto px-4 md:px-0 py-10 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+  const StarLine = () => (
+    <div className="hidden md:block relative max-w-[1100px] mx-auto" style={{ height: "1px", zIndex: 10 }}>
+      <div className="absolute -left-[10px] -top-[10px] z-10"><Star /></div>
+      <div
+        className="absolute inset-0"
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(117,83,255,0.15) 50%, rgba(255,255,255,0.06) 100%)",
+          marginLeft: "10px",
+          marginRight: "10px",
+        }}
+      />
+      <div className="absolute -right-[10px] -top-[10px] z-10"><Star /></div>
+    </div>
+  );
+
+  return (
+    <section ref={ref} className="relative py-0 overflow-x-clip">
+      {/* ════════ DESKTOP ════════ */}
+      <StarLine />
+      <div className="hidden md:block max-w-[1100px] mx-auto py-12">
+        <div className="grid grid-cols-3 gap-0">
           {features.map((f, i) => (
             <div
               key={f.title}
-              className="fade-up flex items-start gap-4 px-6 md:px-8 py-5 md:py-0"
+              className="fade-up flex items-start gap-4 px-8"
               style={{
                 transitionDelay: `${i * 80}ms`,
                 borderRight: i < features.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
               }}
             >
-              {/* Icon box */}
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{
@@ -108,7 +102,6 @@ export default function FeatureStrip() {
               >
                 {f.icon}
               </div>
-
               <div>
                 <h3 className="text-[14px] font-display font-semibold text-[#fafafa] mb-1">
                   {f.title}
@@ -121,37 +114,41 @@ export default function FeatureStrip() {
           ))}
         </div>
       </div>
+      <StarLine />
 
-      {/* Bottom line + star */}
-      <div className="relative max-w-[1100px] mx-auto flex items-center" style={{ height: "1px", zIndex: 10 }}>
-        <div className="absolute -left-[10px] -top-[10px] z-10">
-          <svg width="20" height="20" viewBox="0 0 13 13" fill="none">
-            <path
-              d="M6.5 0C6.5 3.59 3.59 6.5 0 6.5C3.59 6.5 6.5 9.41 6.5 13C6.5 9.41 9.41 6.5 13 6.5C9.41 6.5 6.5 3.59 6.5 0Z"
-              fill="#191919"
-              stroke="rgba(255,255,255,0.20)"
-              strokeWidth="0.6"
-            />
-          </svg>
-        </div>
-        <div
-          className="absolute inset-0"
-          style={{
-            height: "1px",
-            background: "linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(117,83,255,0.15) 50%, rgba(255,255,255,0.06) 100%)",
-            marginLeft: "10px",
-            marginRight: "10px",
-          }}
-        />
-        <div className="absolute -right-[10px] -top-[10px] z-10">
-          <svg width="20" height="20" viewBox="0 0 13 13" fill="none">
-            <path
-              d="M6.5 0C6.5 3.59 3.59 6.5 0 6.5C3.59 6.5 6.5 9.41 6.5 13C6.5 9.41 9.41 6.5 13 6.5C9.41 6.5 6.5 3.59 6.5 0Z"
-              fill="#191919"
-              stroke="rgba(255,255,255,0.20)"
-              strokeWidth="0.6"
-            />
-          </svg>
+      {/* ════════ MOBILE — strip horizontal compacto, cores da LogosStrip ════════ */}
+      <div
+        className="md:hidden max-w-[1100px] mx-auto"
+        style={{
+          background: "#1f1f1f",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+        }}
+      >
+        <div className="grid grid-cols-3">
+          {features.map((f, i) => (
+            <div
+              key={f.title}
+              className="fade-up flex flex-col items-center text-center gap-2 px-2 py-4"
+              style={{
+                transitionDelay: `${i * 80}ms`,
+                borderRight: i < features.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <span className="scale-[0.85]">{f.icon}</span>
+              </div>
+              <h3 className="text-[10px] font-display font-semibold text-white/55 uppercase tracking-[.06em] leading-tight">
+                {f.title}
+              </h3>
+            </div>
+          ))}
         </div>
       </div>
     </section>

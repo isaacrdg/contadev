@@ -24,45 +24,378 @@ const journey = [
   },
 ];
 
-function MediaPlaceholder({ index }: { index: number }) {
-  const palettes = [
-    { from: "rgba(117,83,255,0.18)", to: "rgba(8,8,14,0)" },
-    { from: "rgba(59,130,246,0.14)", to: "rgba(8,8,14,0)" },
-    { from: "rgba(117,83,255,0.16)", to: "rgba(8,8,14,0)" },
-    { from: "rgba(99,102,241,0.14)", to: "rgba(8,8,14,0)" },
-  ];
-  const p = palettes[index % palettes.length];
+/* ---------- Illustrations (CSS/SVG, no videos) ---------- */
 
+function IllustrationBase({ children, tint }: { children: React.ReactNode; tint: string }) {
   return (
     <div
-      className="w-full h-full flex items-center justify-center relative"
+      className="w-full h-full relative flex items-center justify-center"
       style={{
-        background: `radial-gradient(ellipse at 50% 40%, ${p.from} 0%, ${p.to} 70%), #1c1c1c`,
+        background: `radial-gradient(ellipse at 50% 35%, ${tint} 0%, rgba(8,8,14,0) 70%), #131119`,
       }}
     >
-      {/* Abstract grid lines */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+            "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          maskImage: "radial-gradient(ellipse at 50% 50%, #000 40%, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(ellipse at 50% 50%, #000 40%, transparent 80%)",
         }}
       />
-      {/* Center icon placeholder */}
-      <div className="relative z-10 flex flex-col items-center gap-3 opacity-30">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center"
-          style={{ background: "rgba(117,83,255,0.25)", border: "1px solid rgba(117,83,255,0.4)" }}
-        >
-          <span className="text-[#8f6fff] font-display font-bold text-sm">{String(index + 1).padStart(2, "0")}</span>
-        </div>
-        <div className="w-24 h-1.5 rounded-full bg-white/10" />
-        <div className="w-16 h-1 rounded-full bg-white/5" />
-      </div>
+      <div className="relative z-10 w-full h-full flex items-center justify-center">{children}</div>
     </div>
   );
 }
+
+/* 01 — Chat: balões trocando mensagens (orientação) */
+function Step01() {
+  return (
+    <IllustrationBase tint="rgba(117,83,255,0.18)">
+      <div className="flex flex-col gap-2.5 w-[78%] max-w-[320px]">
+        <div className="jb jb-in" style={{ animationDelay: "0.2s" }}>
+          <div className="jb-dot" />
+          <span>Como funciona o MEI?</span>
+        </div>
+        <div className="jb jb-out" style={{ animationDelay: "1.1s" }}>
+          <span>A gente cuida disso pra você ✨</span>
+        </div>
+        <div className="jb jb-in" style={{ animationDelay: "2.0s" }}>
+          <div className="jb-dot" />
+          <span>E os impostos?</span>
+        </div>
+        <div className="jb jb-out jb-typing" style={{ animationDelay: "2.9s" }}>
+          <span className="dots"><i /><i /><i /></span>
+        </div>
+      </div>
+      <style jsx>{`
+        .jb {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 14px; border-radius: 14px;
+          font-size: 13px; line-height: 1.2;
+          opacity: 0; transform: translateY(8px);
+          animation: jbIn 0.5s ease-out forwards;
+          backdrop-filter: blur(6px);
+        }
+        .jb-in {
+          align-self: flex-start;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #e8e8ee;
+          border-bottom-left-radius: 4px;
+        }
+        .jb-out {
+          align-self: flex-end;
+          background: linear-gradient(135deg, #6644f2, #5129f0);
+          color: #fff;
+          border-bottom-right-radius: 4px;
+          box-shadow: 0 8px 24px -8px rgba(102,68,242,0.5);
+        }
+        .jb-dot {
+          width: 6px; height: 6px; border-radius: 99px;
+          background: #8f6fff; box-shadow: 0 0 8px #8f6fff;
+        }
+        .dots { display: inline-flex; gap: 4px; align-items: center; height: 14px; }
+        .dots i {
+          width: 5px; height: 5px; border-radius: 99px; background: #fff;
+          animation: dotPulse 1.2s ease-in-out infinite;
+        }
+        .dots i:nth-child(2) { animation-delay: 0.15s; }
+        .dots i:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes jbIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes dotPulse {
+          0%, 100% { opacity: 0.3; transform: translateY(0); }
+          50% { opacity: 1; transform: translateY(-2px); }
+        }
+      `}</style>
+    </IllustrationBase>
+  );
+}
+
+/* 02 — Dashboard: cards de automação aparecendo + barra progredindo */
+function Step02() {
+  return (
+    <IllustrationBase tint="rgba(59,130,246,0.14)">
+      <div className="w-[82%] max-w-[340px] flex flex-col gap-2.5">
+        <div className="dash-card dc-1">
+          <div className="dc-icon" style={{ background: "rgba(117,83,255,0.2)", borderColor: "rgba(117,83,255,0.4)" }}>
+            <span style={{ color: "#a78bff" }}>⚡</span>
+          </div>
+          <div className="dc-body">
+            <div className="dc-title">Nota fiscal emitida</div>
+            <div className="dc-bar"><div className="dc-fill" style={{ animationDelay: "0.4s" }} /></div>
+          </div>
+          <span className="dc-check">✓</span>
+        </div>
+        <div className="dash-card dc-2">
+          <div className="dc-icon" style={{ background: "rgba(59,130,246,0.2)", borderColor: "rgba(59,130,246,0.4)" }}>
+            <span style={{ color: "#7eb6ff" }}>◆</span>
+          </div>
+          <div className="dc-body">
+            <div className="dc-title">DAS gerado automaticamente</div>
+            <div className="dc-bar"><div className="dc-fill" style={{ animationDelay: "0.9s" }} /></div>
+          </div>
+          <span className="dc-check">✓</span>
+        </div>
+        <div className="dash-card dc-3">
+          <div className="dc-icon" style={{ background: "rgba(99,102,241,0.2)", borderColor: "rgba(99,102,241,0.4)" }}>
+            <span style={{ color: "#9c9eff" }}>◉</span>
+          </div>
+          <div className="dc-body">
+            <div className="dc-title">Conciliação bancária</div>
+            <div className="dc-bar"><div className="dc-fill" style={{ animationDelay: "1.4s" }} /></div>
+          </div>
+          <span className="dc-check">✓</span>
+        </div>
+      </div>
+      <style jsx>{`
+        .dash-card {
+          display: flex; align-items: center; gap: 11px;
+          padding: 11px 13px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 12px;
+          backdrop-filter: blur(6px);
+          opacity: 0; transform: translateX(-12px);
+          animation: cardIn 0.55s ease-out forwards;
+        }
+        .dc-1 { animation-delay: 0.2s; }
+        .dc-2 { animation-delay: 0.7s; }
+        .dc-3 { animation-delay: 1.2s; }
+        .dc-icon {
+          width: 30px; height: 30px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; flex-shrink: 0;
+          border: 1px solid;
+        }
+        .dc-body { flex: 1; min-width: 0; }
+        .dc-title {
+          font-size: 11.5px; color: #e8e8ee; font-weight: 500;
+          margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .dc-bar {
+          height: 3px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden;
+        }
+        .dc-fill {
+          height: 100%; width: 0;
+          background: linear-gradient(90deg, #6644f2, #8f6fff);
+          border-radius: 99px;
+          animation: fillBar 0.9s ease-out forwards;
+        }
+        .dc-check {
+          opacity: 0; color: #6ee7b7; font-size: 13px; font-weight: 700;
+          animation: checkIn 0.3s ease-out forwards;
+        }
+        .dc-1 .dc-check { animation-delay: 1.3s; }
+        .dc-2 .dc-check { animation-delay: 1.8s; }
+        .dc-3 .dc-check { animation-delay: 2.3s; }
+        @keyframes cardIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fillBar { to { width: 100%; } }
+        @keyframes checkIn { to { opacity: 1; } }
+      `}</style>
+    </IllustrationBase>
+  );
+}
+
+/* 03 — Especialista: avatar + cursor pulsando ao "clicar" */
+function Step03() {
+  return (
+    <IllustrationBase tint="rgba(117,83,255,0.16)">
+      <div className="relative flex flex-col items-center gap-4">
+        <div className="spec-card">
+          <div className="spec-avatar">
+            <div className="spec-status" />
+          </div>
+          <div className="spec-info">
+            <div className="spec-name">Ana Ribeiro</div>
+            <div className="spec-role">Sua contadora dedicada</div>
+          </div>
+          <button className="spec-btn">
+            Falar agora
+          </button>
+        </div>
+        <div className="cursor">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M3 2L17 9L10 11L7 17L3 2Z" fill="#fff" stroke="#000" strokeWidth="1" strokeLinejoin="round" />
+          </svg>
+          <div className="ripple" />
+        </div>
+      </div>
+      <style jsx>{`
+        .spec-card {
+          display: flex; align-items: center; gap: 12px;
+          padding: 14px 16px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.09);
+          border-radius: 14px;
+          backdrop-filter: blur(8px);
+          min-width: 280px;
+          opacity: 0; transform: translateY(8px);
+          animation: cardIn 0.6s ease-out 0.1s forwards;
+        }
+        .spec-avatar {
+          width: 42px; height: 42px; border-radius: 99px;
+          background: linear-gradient(135deg, #6644f2, #5129f0);
+          position: relative; flex-shrink: 0;
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+        }
+        .spec-avatar::after {
+          content: "AR"; position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          color: #fff; font-size: 12px; font-weight: 600;
+        }
+        .spec-status {
+          position: absolute; bottom: 1px; right: 1px;
+          width: 11px; height: 11px; border-radius: 99px;
+          background: #22c55e; border: 2px solid #131119;
+          animation: pulse 2s ease-in-out infinite;
+        }
+        .spec-info { flex: 1; }
+        .spec-name { font-size: 13px; color: #fafafa; font-weight: 600; }
+        .spec-role { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+        .spec-btn {
+          font-size: 11px; font-weight: 600;
+          padding: 7px 12px; border-radius: 99px;
+          background: linear-gradient(135deg, #6644f2, #5129f0);
+          color: #fff; border: none; cursor: pointer;
+          box-shadow: 0 6px 18px -6px rgba(102,68,242,0.6);
+          animation: btnPulse 2.4s ease-in-out 1.4s infinite;
+        }
+        .cursor {
+          position: absolute; right: 18%; bottom: 28%;
+          opacity: 0;
+          animation: cursorIn 0.5s ease-out 1.0s forwards, cursorClick 2.4s ease-in-out 1.4s infinite;
+        }
+        .ripple {
+          position: absolute; top: 50%; left: 50%;
+          width: 8px; height: 8px; border-radius: 99px;
+          background: rgba(143,111,255,0.6);
+          transform: translate(-50%, -50%);
+          animation: ripple 2.4s ease-out 1.6s infinite;
+        }
+        @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6), 0 0 0 2px #131119; }
+          50% { box-shadow: 0 0 0 5px rgba(34,197,94,0), 0 0 0 2px #131119; }
+        }
+        @keyframes cursorIn { to { opacity: 1; } }
+        @keyframes cursorClick {
+          0%, 90%, 100% { transform: scale(1); }
+          45% { transform: scale(0.85); }
+        }
+        @keyframes ripple {
+          0% { width: 8px; height: 8px; opacity: 0.7; }
+          100% { width: 60px; height: 60px; opacity: 0; }
+        }
+        @keyframes btnPulse {
+          0%, 90%, 100% { transform: scale(1); }
+          45% { transform: scale(0.96); }
+        }
+      `}</style>
+    </IllustrationBase>
+  );
+}
+
+/* 04 — Fluxo: timeline com checks aparecendo + pessoa ao lado */
+function Step04() {
+  return (
+    <IllustrationBase tint="rgba(99,102,241,0.14)">
+      <div className="flex items-center gap-5 w-[82%] max-w-[340px]">
+        <div className="flex-1 flex flex-col gap-3">
+          <div className="tl-row tlr-1">
+            <div className="tl-check">✓</div>
+            <span>Notas emitidas</span>
+          </div>
+          <div className="tl-row tlr-2">
+            <div className="tl-check">✓</div>
+            <span>Guias pagas</span>
+          </div>
+          <div className="tl-row tlr-3">
+            <div className="tl-check">✓</div>
+            <span>Relatórios prontos</span>
+          </div>
+          <div className="tl-row tlr-4">
+            <div className="tl-check tl-star">★</div>
+            <span>Decisão estratégica</span>
+          </div>
+        </div>
+        <div className="person">
+          <div className="p-avatar">
+            <div className="p-status" />
+          </div>
+          <div className="p-label">Você</div>
+        </div>
+      </div>
+      <style jsx>{`
+        .tl-row {
+          display: flex; align-items: center; gap: 10px;
+          font-size: 12.5px; color: #e8e8ee;
+          padding: 8px 12px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 10px;
+          opacity: 0; transform: translateX(-10px);
+          animation: rowIn 0.5s ease-out forwards;
+        }
+        .tlr-1 { animation-delay: 0.2s; }
+        .tlr-2 { animation-delay: 0.6s; }
+        .tlr-3 { animation-delay: 1.0s; }
+        .tlr-4 {
+          animation-delay: 1.5s;
+          background: linear-gradient(135deg, rgba(102,68,242,0.18), rgba(81,41,240,0.08));
+          border-color: rgba(143,111,255,0.35);
+        }
+        .tl-check {
+          width: 18px; height: 18px; border-radius: 99px;
+          background: rgba(110,231,183,0.18);
+          color: #6ee7b7; font-size: 11px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .tl-star {
+          background: rgba(143,111,255,0.25); color: #c4b1ff;
+          box-shadow: 0 0 12px rgba(143,111,255,0.4);
+        }
+        .person {
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          opacity: 0;
+          animation: rowIn 0.6s ease-out 0.4s forwards;
+        }
+        .p-avatar {
+          width: 44px; height: 44px; border-radius: 99px;
+          background: linear-gradient(135deg, #5129f0, #6644f2);
+          position: relative;
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 8px 22px -8px rgba(102,68,242,0.5);
+        }
+        .p-avatar::before {
+          content: ""; position: absolute; top: 9px; left: 50%;
+          transform: translateX(-50%);
+          width: 14px; height: 14px; border-radius: 99px;
+          background: #fff; opacity: 0.95;
+        }
+        .p-avatar::after {
+          content: ""; position: absolute; bottom: 5px; left: 50%;
+          transform: translateX(-50%);
+          width: 26px; height: 14px; border-radius: 99px 99px 0 0;
+          background: #fff; opacity: 0.95;
+        }
+        .p-status {
+          position: absolute; bottom: 2px; right: 2px; z-index: 2;
+          width: 11px; height: 11px; border-radius: 99px;
+          background: #22c55e; border: 2px solid #131119;
+        }
+        .p-label {
+          font-size: 10.5px; color: rgba(255,255,255,0.55);
+          font-weight: 500;
+        }
+        @keyframes rowIn { to { opacity: 1; transform: translateX(0); } }
+      `}</style>
+    </IllustrationBase>
+  );
+}
+
+const illustrations = [Step01, Step02, Step03, Step04];
 
 export default function Benefits() {
   const ref = useRef<HTMLDivElement>(null);
@@ -83,6 +416,7 @@ export default function Benefits() {
       <div className="max-w-[1020px] mx-auto px-6">
         {journey.map((item, i) => {
           const isEven = i % 2 === 1;
+          const Illustration = illustrations[i];
           return (
             <div
               key={item.step}
@@ -104,7 +438,7 @@ export default function Benefits() {
                 </p>
               </div>
 
-              {/* Media column */}
+              {/* Illustration column */}
               <div
                 className={`relative rounded-xl overflow-hidden bg-white/[0.03]
                   w-full aspect-[4/3]
@@ -112,7 +446,7 @@ export default function Benefits() {
                 `}
                 style={{ border: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <MediaPlaceholder index={i} />
+                <Illustration />
               </div>
             </div>
           );

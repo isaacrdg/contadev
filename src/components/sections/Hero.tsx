@@ -178,18 +178,21 @@ export default function Hero() {
           </p>
 
           <div
-            className="flex items-center gap-4 flex-wrap"
+            className="flex flex-row items-center gap-3 md:gap-4 flex-nowrap"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? "none" : "translateY(16px)",
               transition: "opacity .7s ease .5s, transform .7s ease .5s",
             }}
           >
-            <button onClick={openForm} className="btn-primary" style={{ fontSize: "14px" }}>
+            <button
+              onClick={openForm}
+              className="btn-primary hero-cta-primary"
+            >
               FALE COM UM ESPECIALISTA
             </button>
-            <a href="#tecnologia" className="btn-ghost">
-              Conhecer plataforma
+            <a href="#tecnologia" className="btn-ghost hero-cta-ghost">
+              <span>Conhecer plataforma</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
