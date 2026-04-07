@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 const features = [
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7553ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
         <line x1="8" y1="21" x2="16" y2="21" />
         <line x1="12" y1="17" x2="12" y2="21" />
@@ -15,7 +15,7 @@ const features = [
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7553ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
@@ -24,7 +24,7 @@ const features = [
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7553ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
         <polyline points="22 4 12 14.01 9 11.01" />
       </svg>
@@ -82,7 +82,14 @@ export default function FeatureStrip() {
     <section ref={ref} className="relative py-0 overflow-x-clip">
       {/* ════════ DESKTOP ════════ */}
       <StarLine />
-      <div className="hidden md:block max-w-[1100px] mx-auto py-12">
+      <div
+        className="hidden md:block max-w-[1100px] mx-auto py-12"
+        style={{
+          background: "#1c1c1c",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
         <div className="grid grid-cols-3 gap-0">
           {features.map((f, i) => (
             <div
@@ -94,10 +101,10 @@ export default function FeatureStrip() {
               }}
             >
               <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white/70"
                 style={{
-                  background: "rgba(117,83,255,0.06)",
-                  border: "1px solid rgba(117,83,255,0.12)",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.10)",
                 }}
               >
                 {f.icon}
@@ -120,31 +127,31 @@ export default function FeatureStrip() {
       <div
         className="md:hidden max-w-[1100px] mx-auto"
         style={{
-          background: "#1f1f1f",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "#1c1c1c",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
         <div className="grid grid-cols-3">
           {features.map((f, i) => (
             <div
               key={f.title}
-              className="fade-up flex flex-col items-center text-center gap-2 px-2 py-4"
+              className="fade-up flex flex-col items-center text-center gap-2.5 px-2 py-4"
               style={{
                 transitionDelay: `${i * 80}ms`,
                 borderRight: i < features.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
               }}
             >
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-white/75"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.14)",
                 }}
               >
                 <span className="scale-[0.85]">{f.icon}</span>
               </div>
-              <h3 className="text-[10px] font-display font-semibold text-white/55 uppercase tracking-[.06em] leading-tight">
+              <h3 className="text-[10px] font-display font-semibold text-white/85 uppercase tracking-[.06em] leading-tight">
                 {f.title}
               </h3>
             </div>
