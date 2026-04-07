@@ -213,7 +213,12 @@ function TabContent({ activeTab }: { activeTab: string }) {
             ].map((t) => (
               <div key={t.q} className="px-3.5 py-2.5 rounded-xl border border-white/5" style={{ background: "#1c1c1c" }}>
                 <p className="text-[10px] text-[#fafafa] font-medium">{t.q}</p>
-                <p className="text-[8px] text-emerald-400 mt-1">✓ {t.time}</p>
+                <p className="text-[8px] text-emerald-400 mt-1 inline-flex items-center gap-1">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {t.time}
+                </p>
               </div>
             ))}
           </div>

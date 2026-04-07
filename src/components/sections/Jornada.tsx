@@ -115,38 +115,64 @@ function Step01() {
 
 /* 02 — Dashboard: cards de automação aparecendo + barra progredindo */
 function Step02() {
+  const ICON_STROKE = "rgba(255,255,255,0.75)";
+  const IconFile = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="9" y1="13" x2="15" y2="13" />
+      <line x1="9" y1="17" x2="13" y2="17" />
+    </svg>
+  );
+  const IconReceipt = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 2v20l2-1.5L8 22l2-1.5L12 22l2-1.5L16 22l2-1.5L20 22V2l-2 1.5L16 2l-2 1.5L12 2l-2 1.5L8 2 6 3.5 4 2z" />
+      <line x1="8" y1="9" x2="16" y2="9" />
+      <line x1="8" y1="13" x2="16" y2="13" />
+    </svg>
+  );
+  const IconBank = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="22" x2="21" y2="22" />
+      <line x1="6" y1="18" x2="6" y2="11" />
+      <line x1="10" y1="18" x2="10" y2="11" />
+      <line x1="14" y1="18" x2="14" y2="11" />
+      <line x1="18" y1="18" x2="18" y2="11" />
+      <polygon points="12 2 20 7 4 7 12 2" />
+    </svg>
+  );
+  const IconCheck = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+
   return (
     <IllustrationBase tint="rgba(59,130,246,0.14)">
       <div className="w-[82%] max-w-[340px] flex flex-col gap-2.5">
         <div className="dash-card dc-1">
-          <div className="dc-icon" style={{ background: "rgba(117,83,255,0.2)", borderColor: "rgba(117,83,255,0.4)" }}>
-            <span style={{ color: "#a78bff" }}>⚡</span>
-          </div>
+          <div className="dc-icon"><IconFile /></div>
           <div className="dc-body">
             <div className="dc-title">Nota fiscal emitida</div>
             <div className="dc-bar"><div className="dc-fill" style={{ animationDelay: "0.4s" }} /></div>
           </div>
-          <span className="dc-check">✓</span>
+          <span className="dc-check"><IconCheck /></span>
         </div>
         <div className="dash-card dc-2">
-          <div className="dc-icon" style={{ background: "rgba(59,130,246,0.2)", borderColor: "rgba(59,130,246,0.4)" }}>
-            <span style={{ color: "#7eb6ff" }}>◆</span>
-          </div>
+          <div className="dc-icon"><IconReceipt /></div>
           <div className="dc-body">
             <div className="dc-title">DAS gerado automaticamente</div>
             <div className="dc-bar"><div className="dc-fill" style={{ animationDelay: "0.9s" }} /></div>
           </div>
-          <span className="dc-check">✓</span>
+          <span className="dc-check"><IconCheck /></span>
         </div>
         <div className="dash-card dc-3">
-          <div className="dc-icon" style={{ background: "rgba(99,102,241,0.2)", borderColor: "rgba(99,102,241,0.4)" }}>
-            <span style={{ color: "#9c9eff" }}>◉</span>
-          </div>
+          <div className="dc-icon"><IconBank /></div>
           <div className="dc-body">
             <div className="dc-title">Conciliação bancária</div>
             <div className="dc-bar"><div className="dc-fill" style={{ animationDelay: "1.4s" }} /></div>
           </div>
-          <span className="dc-check">✓</span>
+          <span className="dc-check"><IconCheck /></span>
         </div>
       </div>
       <style jsx>{`
@@ -167,7 +193,8 @@ function Step02() {
           width: 30px; height: 30px; border-radius: 9px;
           display: flex; align-items: center; justify-content: center;
           font-size: 14px; flex-shrink: 0;
-          border: 1px solid;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.10);
         }
         .dc-body { flex: 1; min-width: 0; }
         .dc-title {
@@ -184,7 +211,7 @@ function Step02() {
           animation: fillBar 0.9s ease-out forwards;
         }
         .dc-check {
-          opacity: 0; color: #6ee7b7; font-size: 13px; font-weight: 700;
+          opacity: 0; display: inline-flex; align-items: center; justify-content: center;
           animation: checkIn 0.3s ease-out forwards;
         }
         .dc-1 .dc-check { animation-delay: 1.3s; }
@@ -299,24 +326,34 @@ function Step03() {
 
 /* 04 — Fluxo: timeline com checks aparecendo + pessoa ao lado */
 function Step04() {
+  const CheckIcon = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+  const StarIcon = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="#c4b1ff" stroke="#c4b1ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
   return (
     <IllustrationBase tint="rgba(99,102,241,0.14)">
       <div className="flex items-center gap-5 w-[82%] max-w-[340px]">
         <div className="flex-1 flex flex-col gap-3">
           <div className="tl-row tlr-1">
-            <div className="tl-check">✓</div>
+            <div className="tl-check"><CheckIcon /></div>
             <span>Notas emitidas</span>
           </div>
           <div className="tl-row tlr-2">
-            <div className="tl-check">✓</div>
+            <div className="tl-check"><CheckIcon /></div>
             <span>Guias pagas</span>
           </div>
           <div className="tl-row tlr-3">
-            <div className="tl-check">✓</div>
+            <div className="tl-check"><CheckIcon /></div>
             <span>Relatórios prontos</span>
           </div>
           <div className="tl-row tlr-4">
-            <div className="tl-check tl-star">★</div>
+            <div className="tl-check tl-star"><StarIcon /></div>
             <span>Decisão estratégica</span>
           </div>
         </div>
