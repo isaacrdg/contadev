@@ -1,6 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
 import crypto from "crypto";
+import { readJson, writeJson } from "./kv";
 
 export type TicketStatus = "aberto" | "em_atendimento" | "aguardando_cliente" | "resolvido";
 export type TicketPriority = "baixa" | "media" | "alta" | "urgente";
@@ -34,32 +33,15 @@ export interface NewTicketPayload {
   priority?: TicketPriority;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const TICKETS_FILE = path.join(DATA_DIR, "tickets.json");
-
-async function ensureFile(): Promise<void> {
-  try {
-    await fs.access(TICKETS_FILE);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(TICKETS_FILE, "[]", "utf-8");
-  }
-}
+const KEY = "tickets";
 
 export async function readTickets(): Promise<Ticket[]> {
-  await ensureFile();
-  const raw = await fs.readFile(TICKETS_FILE, "utf-8");
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Ticket[]) : [];
-  } catch {
-    return [];
-  }
+  const raw = await readJson<Ticket[]>(KEY, []);
+  return Array.isArray(raw) ? raw : [];
 }
 
 async function writeTickets(tickets: Ticket[]): Promise<void> {
-  await ensureFile();
-  await fs.writeFile(TICKETS_FILE, JSON.stringify(tickets, null, 2), "utf-8");
+  await writeJson(KEY, tickets);
 }
 
 export async function addTicket(payload: NewTicketPayload): Promise<Ticket> {

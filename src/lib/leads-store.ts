@@ -1,6 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
 import crypto from "crypto";
+import { readJson, writeJson } from "./kv";
 
 export type LeadStatus = "novo" | "em_contato" | "convertido" | "perdido";
 
@@ -54,41 +53,24 @@ export interface NewLeadPayload {
   utmData?: UtmData;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const LEADS_FILE = path.join(DATA_DIR, "leads.json");
-
-async function ensureFile(): Promise<void> {
-  try {
-    await fs.access(LEADS_FILE);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(LEADS_FILE, "[]", "utf-8");
-  }
-}
+const KEY = "leads";
 
 export async function readLeads(): Promise<Lead[]> {
-  await ensureFile();
-  const raw = await fs.readFile(LEADS_FILE, "utf-8");
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    // Migração transparente — leads antigos não tinham statusHistory ou tags
-    return (parsed as Lead[]).map((l) => ({
-      ...l,
-      statusHistory:
-        Array.isArray(l.statusHistory) && l.statusHistory.length > 0
-          ? l.statusHistory
-          : [{ status: l.status ?? "novo", at: l.createdAt ?? new Date().toISOString() }],
-      tags: Array.isArray(l.tags) ? l.tags : [],
-    }));
-  } catch {
-    return [];
-  }
+  const raw = await readJson<Lead[]>(KEY, []);
+  if (!Array.isArray(raw)) return [];
+  // Migração transparente — leads antigos não tinham statusHistory ou tags
+  return raw.map((l) => ({
+    ...l,
+    statusHistory:
+      Array.isArray(l.statusHistory) && l.statusHistory.length > 0
+        ? l.statusHistory
+        : [{ status: l.status ?? "novo", at: l.createdAt ?? new Date().toISOString() }],
+    tags: Array.isArray(l.tags) ? l.tags : [],
+  }));
 }
 
 async function writeLeads(leads: Lead[]): Promise<void> {
-  await ensureFile();
-  await fs.writeFile(LEADS_FILE, JSON.stringify(leads, null, 2), "utf-8");
+  await writeJson(KEY, leads);
 }
 
 function cleanUtm(utm?: UtmData): UtmData | undefined {

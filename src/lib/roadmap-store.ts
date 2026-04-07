@@ -1,6 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type { Status } from "./roadmap";
+import { readJson, writeJson } from "./kv";
 
 /**
  * Overlay de progresso das tasks do roadmap.
@@ -9,34 +8,17 @@ import type { Status } from "./roadmap";
  * em getMergedRoadmap().
  */
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const PROGRESS_FILE = path.join(DATA_DIR, "roadmap-progress.json");
+const KEY = "roadmap-progress";
 
 export type ProgressMap = Record<string, Status>;
 
-async function ensureFile(): Promise<void> {
-  try {
-    await fs.access(PROGRESS_FILE);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(PROGRESS_FILE, "{}", "utf-8");
-  }
-}
-
 export async function readProgress(): Promise<ProgressMap> {
-  await ensureFile();
-  const raw = await fs.readFile(PROGRESS_FILE, "utf-8");
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? (parsed as ProgressMap) : {};
-  } catch {
-    return {};
-  }
+  const raw = await readJson<ProgressMap>(KEY, {});
+  return raw && typeof raw === "object" ? raw : {};
 }
 
 async function writeProgress(map: ProgressMap): Promise<void> {
-  await ensureFile();
-  await fs.writeFile(PROGRESS_FILE, JSON.stringify(map, null, 2), "utf-8");
+  await writeJson(KEY, map);
 }
 
 export async function setTaskStatus(id: string, status: Status): Promise<ProgressMap> {
