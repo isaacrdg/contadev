@@ -1,17 +1,32 @@
 /**
- * Storage abstraction — auto-detecta:
- * - Vercel KV (produção)  → quando KV_REST_API_URL está setada
- * - Filesystem JSON (dev) → quando não está
+ * Storage abstraction — auto-detecta o backend:
+ * - Neon Postgres (produção) → quando DATABASE_URL está setada
+ * - Filesystem JSON (dev local) → quando não está
  *
- * Cada chave (`leads`, `tickets`, `roadmap-progress`) é armazenada como um
- * único valor JSON. Esse modelo é simples e funciona pra dezenas/centenas
- * de leads. Quando virar produção real com volume alto, refator pra
- * chaves individuais (`lead:${id}`) ou direto pra Postgres/Supabase.
+ * Em produção usa uma única tabela `kv_store(key, value, updated_at)`
+ * onde cada chave (`leads`, `tickets`, `roadmap-progress`) guarda o JSON
+ * completo. Modelo simples e suficiente pro estágio atual; quando virar
+ * produção real com volume alto, refator pra schema próprio (task
+ * `schema-leads` no /admin/roadmap).
  */
 import { promises as fs } from "fs";
 import path from "path";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
-const USE_KV = !!process.env.KV_REST_API_URL;
+const DATABASE_URL = process.env.DATABASE_URL;
+const USE_NEON = !!DATABASE_URL;
+
+// SQL client lazy — só criado se DATABASE_URL existir
+let sqlClient: NeonQueryFunction<false, false> | null = null;
+function getSql(): NeonQueryFunction<false, false> {
+  if (!sqlClient) {
+    if (!DATABASE_URL) {
+      throw new Error("DATABASE_URL não configurado");
+    }
+    sqlClient = neon(DATABASE_URL);
+  }
+  return sqlClient;
+}
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -31,13 +46,21 @@ function fileFor(key: string): string {
  * Lê o valor JSON associado à chave. Se não existir, retorna o fallback.
  */
 export async function readJson<T>(key: string, fallback: T): Promise<T> {
-  if (USE_KV) {
-    // Import dinâmico pra evitar carregar @vercel/kv em build/dev quando não usa
-    const { kv } = await import("@vercel/kv");
-    const value = await kv.get<T>(key);
-    return value ?? fallback;
+  if (USE_NEON) {
+    try {
+      const sql = getSql();
+      const rows = (await sql`SELECT value FROM kv_store WHERE key = ${key}`) as Array<{
+        value: T;
+      }>;
+      if (rows.length === 0) return fallback;
+      return rows[0].value as T;
+    } catch (err) {
+      console.error(`[kv] Erro lendo ${key}:`, err);
+      return fallback;
+    }
   }
 
+  // Modo dev — file system
   await ensureDir();
   try {
     const raw = await fs.readFile(fileFor(key), "utf-8");
@@ -52,20 +75,31 @@ export async function readJson<T>(key: string, fallback: T): Promise<T> {
  * Sobrescreve completamente o valor associado à chave.
  */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
-  if (USE_KV) {
-    const { kv } = await import("@vercel/kv");
-    await kv.set(key, value);
-    return;
+  if (USE_NEON) {
+    try {
+      const sql = getSql();
+      // UPSERT — INSERT ON CONFLICT, atualiza updated_at
+      await sql`
+        INSERT INTO kv_store (key, value, updated_at)
+        VALUES (${key}, ${JSON.stringify(value)}::jsonb, now())
+        ON CONFLICT (key)
+        DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+      `;
+      return;
+    } catch (err) {
+      console.error(`[kv] Erro gravando ${key}:`, err);
+      throw err;
+    }
   }
 
+  // Modo dev — file system
   await ensureDir();
   await fs.writeFile(fileFor(key), JSON.stringify(value, null, 2), "utf-8");
 }
 
 /**
- * True quando rodando contra Vercel KV (produção).
- * Usado pra logs informativos e telas de status.
+ * True quando rodando contra Neon (produção).
  */
-export function isUsingKv(): boolean {
-  return USE_KV;
+export function isUsingNeon(): boolean {
+  return USE_NEON;
 }
