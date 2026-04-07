@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface FormModalProps {
   open: boolean;
@@ -13,6 +13,31 @@ type Profile =
   | "first_freela"
   | "mei"
   | "other";
+
+interface UtmData {
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+}
+
+function captureUtmFromUrl(): UtmData | undefined {
+  if (typeof window === "undefined") return undefined;
+  const params = new URLSearchParams(window.location.search);
+  const utm: UtmData = {};
+  const src = params.get("utm_source");
+  const med = params.get("utm_medium");
+  const cmp = params.get("utm_campaign");
+  const cnt = params.get("utm_content");
+  const trm = params.get("utm_term");
+  if (src) utm.utmSource = src;
+  if (med) utm.utmMedium = med;
+  if (cmp) utm.utmCampaign = cmp;
+  if (cnt) utm.utmContent = cnt;
+  if (trm) utm.utmTerm = trm;
+  return Object.keys(utm).length > 0 ? utm : undefined;
+}
 
 const profileOptions: { key: Profile; brasil: string; exterior: string }[] = [
   { key: "open_company", brasil: "Preciso abrir uma empresa", exterior: "Preciso abrir uma empresa" },
@@ -32,6 +57,14 @@ export default function FormModal({ open, onClose }: FormModalProps) {
   const [worksWhere, setWorksWhere] = useState<WorksWhere | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
+  const utmRef = useRef<UtmData | undefined>(undefined);
+
+  // Captura UTMs uma vez na primeira vez que o modal abre — antes do pushState mudar a URL
+  useEffect(() => {
+    if (open && !utmRef.current) {
+      utmRef.current = captureUtmFromUrl();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -89,6 +122,7 @@ export default function FormModal({ open, onClose }: FormModalProps) {
           name, phone, email,
           coupon: coupon || undefined,
           worksWhere, profile,
+          utmData: utmRef.current,
         }),
       });
     } catch {

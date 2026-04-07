@@ -28,3 +28,6 @@ yarn-error.log*
 
 # pasta de projeto legado (não faz parte do deploy)
 contadev/
+
+# leads storage local (dados de leads do form, sem persistência em deploy)
+data/

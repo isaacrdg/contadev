@@ -5,8 +5,8 @@ import SectionDivider from "@/components/SectionDivider";
 const CALC_URL = "/calculadora";
 
 const situacoes = [
-  { value: "brasileira",    label: "Brasileira" },
-  { value: "internacional", label: "Internacional" },
+  { value: "brasileira",    label: "🇧🇷 Brasileira" },
+  { value: "internacional", label: "🇪🇺 Internacional" },
 ];
 
 function formatBRL(raw: string): string {

@@ -155,9 +155,9 @@ export default function Footer() {
             {/* Left — social */}
             <div className="flex flex-col gap-2">
               {[
-                { name: "Instagram", href: "https://instagram.com/contadev" },
+                { name: "Instagram", href: "https://www.instagram.com/contadev_/" },
                 { name: "LinkedIn", href: "https://linkedin.com/company/contadev" },
-                { name: "YouTube", href: "https://youtube.com/@contadev" },
+                { name: "YouTube", href: "https://www.youtube.com/@Conta-Dev" },
               ].map((s) => (
                 <a
                   key={s.name}

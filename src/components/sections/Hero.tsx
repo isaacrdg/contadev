@@ -22,7 +22,7 @@ const messages = [
   { id: 1, dir: "out", text: "Quero abrir minha PJ, como funciona?", time: "10:42", delay: 800 },
   { id: 2, dir: "in",  text: "A gente cuida de tudo! E a abertura é gratuita, sem taxas escondidas 😉", time: "10:43", delay: 2800 },
   { id: 3, dir: "out", text: "Sério?? Quanto tempo leva?", time: "10:43", delay: 5500 },
-  { id: 4, dir: "in",  text: "Em até 48h seu CNPJ tá pronto. 100% digital 🚀", time: "10:44", delay: 8000 },
+  { id: 4, dir: "in",  text: "Em até 48h seu CNPJ tá pronto. 100% digital", time: "10:44", delay: 8000 },
   { id: 5, dir: "out", text: "Não acredito!! Bora!! 🔥", time: "10:44", delay: 10500 },
 ];
 

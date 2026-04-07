@@ -83,27 +83,38 @@ export default function FloatingButton() {
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Hide on hero / faq sections
+  // Hide on hero AND from FAQ onwards (FAQ, CTA, Footer)
   useEffect(() => {
-    const targets = ["hero", "faq"]
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-    if (!targets.length) return;
+    const hero = document.getElementById("hero");
+    const faq = document.getElementById("faq");
 
-    const visible = new Set<string>();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) visible.add(e.target.id);
-          else visible.delete(e.target.id);
-        });
-        setHidden(visible.size > 0);
-        if (visible.size > 0) setOpen(false);
-      },
-      { threshold: 0.15 }
-    );
-    targets.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+    function update() {
+      let shouldHide = false;
+
+      // Hide while hero is meaningfully visible
+      if (hero) {
+        const r = hero.getBoundingClientRect();
+        const heroVisible = r.bottom > window.innerHeight * 0.15;
+        if (heroVisible) shouldHide = true;
+      }
+
+      // Hide once FAQ's top reaches the viewport — and stay hidden below
+      if (faq) {
+        const r = faq.getBoundingClientRect();
+        if (r.top < window.innerHeight) shouldHide = true;
+      }
+
+      setHidden(shouldHide);
+      if (shouldHide) setOpen(false);
+    }
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   // Initialize chat with root when opening for the first time
@@ -210,22 +221,21 @@ export default function FloatingButton() {
                 <span /><span /><span />
               </div>
             )}
+            {showOptions && (
+              <div className="cd-options-inline">
+                {node.options.map((opt, i) => (
+                  <button
+                    key={i}
+                    className={`cd-opt-btn ${opt.action === "open_form" ? "cd-opt-primary" : ""}`}
+                    onClick={() => handleOption(opt)}
+                    style={{ animationDelay: `${i * 40}ms` }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-
-          {showOptions && (
-            <div className="cd-chat-options">
-              {node.options.map((opt, i) => (
-                <button
-                  key={i}
-                  className={`cd-opt-btn ${opt.action === "open_form" ? "cd-opt-primary" : ""}`}
-                  onClick={() => handleOption(opt)}
-                  style={{ animationDelay: `${i * 50}ms` }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
@@ -293,10 +303,14 @@ export default function FloatingButton() {
           width: 360px;
           max-width: calc(100vw - 32px);
           height: min(560px, calc(100vh - 140px));
-          background: #161520;
+          background: #1a1a1a;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 18px;
-          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(102, 68, 242, 0.1);
+          box-shadow:
+            0 40px 80px -20px rgba(0, 0, 0, 0.75),
+            0 16px 36px -12px rgba(0, 0, 0, 0.55),
+            0 0 0 1px rgba(255, 255, 255, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -310,8 +324,17 @@ export default function FloatingButton() {
           align-items: center;
           gap: 12px;
           padding: 14px 16px;
-          background: linear-gradient(135deg, rgba(102, 68, 242, 0.18), rgba(81, 41, 240, 0.06));
+          background: #161616;
           border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          position: relative;
+        }
+        .cd-chat-head::after {
+          content: "";
+          position: absolute;
+          left: 0; right: 0; bottom: -1px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+          pointer-events: none;
         }
         .cd-chat-avatar {
           position: relative;
@@ -336,7 +359,7 @@ export default function FloatingButton() {
           height: 11px;
           border-radius: 999px;
           background: #22c55e;
-          border: 2px solid #161520;
+          border: 2px solid #161616;
         }
         .cd-chat-info { flex: 1; min-width: 0; }
         .cd-chat-name {
@@ -384,11 +407,17 @@ export default function FloatingButton() {
         .cd-chat-body {
           flex: 1;
           overflow-y: auto;
-          padding: 16px 14px 12px;
+          padding: 16px 14px 16px;
           display: flex;
           flex-direction: column;
           gap: 8px;
           scroll-behavior: smooth;
+          background-color: #1a1a1a;
+          background-image:
+            radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+            radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+          background-size: 22px 22px, 22px 22px;
+          background-position: 0 0, 11px 11px;
         }
         .cd-chat-body::-webkit-scrollbar { width: 6px; }
         .cd-chat-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
@@ -434,44 +463,47 @@ export default function FloatingButton() {
         .cd-bubble-typing span:nth-child(2) { animation-delay: 0.15s; }
         .cd-bubble-typing span:nth-child(3) { animation-delay: 0.3s; }
 
-        /* ─────── Options ─────── */
-        .cd-chat-options {
-          padding: 10px 14px 14px;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        /* ─────── Options (inline pills, right-aligned) ─────── */
+        .cd-options-inline {
+          align-self: flex-end;
           display: flex;
-          flex-direction: column;
-          gap: 7px;
-          background: rgba(0, 0, 0, 0.15);
+          flex-wrap: wrap;
+          gap: 6px;
+          justify-content: flex-end;
+          max-width: 92%;
+          margin-top: 4px;
         }
         .cd-opt-btn {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #ededed;
-          font-size: 12.5px;
+          background: transparent;
+          border: 1px solid rgba(143, 111, 255, 0.4);
+          color: #c4b1ff;
+          font-size: 11.5px;
           font-weight: 500;
-          padding: 10px 14px;
-          border-radius: 12px;
+          padding: 7px 13px;
+          border-radius: 999px;
           cursor: pointer;
-          text-align: left;
           transition: all 0.2s ease;
           opacity: 0;
           animation: cdOptIn 0.3s ease-out forwards;
+          white-space: nowrap;
           font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
         }
         .cd-opt-btn:hover {
-          background: rgba(255, 255, 255, 0.09);
-          border-color: rgba(117, 83, 255, 0.4);
-          transform: translateX(2px);
-        }
-        .cd-opt-primary {
-          background: linear-gradient(135deg, rgba(102, 68, 242, 0.25), rgba(81, 41, 240, 0.12));
-          border-color: rgba(117, 83, 255, 0.5);
+          background: rgba(143, 111, 255, 0.12);
+          border-color: rgba(143, 111, 255, 0.7);
           color: #fff;
         }
+        .cd-opt-primary {
+          background: linear-gradient(135deg, #6644f2, #5129f0);
+          border-color: transparent;
+          color: #fff;
+          box-shadow: 0 4px 14px -4px rgba(102, 68, 242, 0.5);
+        }
         .cd-opt-primary:hover {
-          background: linear-gradient(135deg, rgba(102, 68, 242, 0.4), rgba(81, 41, 240, 0.2));
-          border-color: rgba(117, 83, 255, 0.7);
+          background: linear-gradient(135deg, #5129f0, #3d1fef);
+          border-color: transparent;
+          color: #fff;
         }
 
         /* ─────── Animations ─────── */
