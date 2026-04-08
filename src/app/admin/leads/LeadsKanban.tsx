@@ -379,7 +379,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
           <button
             onClick={() => setShowHelp(true)}
             title="Atalhos do teclado (?)"
-            className="text-[12px] font-medium w-9 h-9 rounded-lg transition-colors hover:bg-white/10 flex items-center justify-center"
+            className="text-[12px] font-medium w-9 h-9 rounded-md transition-colors hover:bg-white/10 flex items-center justify-center"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
@@ -391,7 +391,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
           </button>
           <button
             onClick={refresh}
-            className="text-[12px] font-medium px-4 py-2 rounded-lg transition-colors hover:bg-white/10"
+            className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors hover:bg-white/10"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
@@ -410,15 +410,15 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
           onClick={() => setShowHelp(false)}
         >
           <div
-            className="rounded-2xl p-6 max-w-[420px] w-full"
+            className="rounded-xl p-6 max-w-[420px] w-full"
             style={{
               background: "#1a1a1a",
               border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 30px 80px -20px rgba(0,0,0,0.7)",
+              boxShadow: "0 20px 50px -20px rgba(0,0,0,0.75)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-[15px] font-bold mb-4">Atalhos do teclado</h2>
+            <h2 className="text-[14px] font-semibold mb-4">Atalhos do teclado</h2>
             <div className="space-y-2 text-[12px]">
               <Shortcut keys={["/"]} desc="Focar busca" />
               <Shortcut keys={["j", "↓"]} desc="Próximo card" />
@@ -433,11 +433,11 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
             </div>
             <button
               onClick={() => setShowHelp(false)}
-              className="mt-5 w-full text-[11px] font-semibold py-2 rounded-lg"
+              className="mt-5 w-full text-[11px] font-medium py-2 rounded-md transition-colors hover:bg-white/10"
               style={{
-                background: "rgba(143,111,255,0.15)",
-                border: "1px solid rgba(143,111,255,0.4)",
-                color: "#c4b1ff",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.85)",
               }}
             >
               Fechar
@@ -503,10 +503,10 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
 
       {/* Toolbar de filtros — compacta */}
       <div
-        className="mb-5 rounded-xl p-2 flex flex-wrap items-center gap-2"
+        className="mb-5 rounded-lg p-2 flex flex-wrap items-center gap-2"
         style={{
           background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
         {/* Search */}
@@ -665,17 +665,14 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
               onDragOver={(e) => onColumnDragOver(e, col.id)}
               onDragLeave={(e) => onColumnDragLeave(e, col.id)}
               onDrop={(e) => onColumnDrop(e, col.id)}
-              className="rounded-xl p-3 transition-all"
+              className="rounded-lg p-3 transition-colors"
               style={{
                 background: isDropTarget
-                  ? `linear-gradient(180deg, rgba(${col.rgb},0.10), rgba(${col.rgb},0.04))`
+                  ? "rgba(255,255,255,0.05)"
                   : "rgba(255,255,255,0.02)",
                 border: isDropTarget
-                  ? `1px dashed rgba(${col.rgb},0.55)`
+                  ? `1px solid rgba(${col.rgb},0.55)`
                   : "1px solid rgba(255,255,255,0.06)",
-                boxShadow: isDropTarget
-                  ? `0 0 0 4px rgba(${col.rgb},0.08), 0 0 30px -8px rgba(${col.rgb},0.3)`
-                  : "none",
                 minHeight: "200px",
               }}
             >
@@ -710,24 +707,24 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
                       onDragStart={(e) => onCardDragStart(e, lead.id)}
                       onDragEnd={onCardDragEnd}
                       onClick={() => onCardClick(lead.id)}
-                      className="rounded-lg p-3 transition-all cursor-grab active:cursor-grabbing hover:brightness-125 select-none"
+                      className="rounded-md p-3 transition-all cursor-grab active:cursor-grabbing hover:bg-white/[0.04] select-none"
                       style={{
-                        background: `linear-gradient(135deg, rgba(${col.rgb},0.10), rgba(${col.rgb},0.03)), #1a1a1a`,
-                        border:
-                          focusedLeadId === lead.id
-                            ? "1px solid rgba(143,111,255,0.85)"
-                            : `1px solid rgba(${col.rgb},0.30)`,
+                        background: "#1c1c1c",
+                        borderLeft: `2px solid rgba(${col.rgb},0.8)`,
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderLeftWidth: "2px",
+                        borderLeftColor: `rgba(${col.rgb},0.7)`,
                         boxShadow:
                           focusedLeadId === lead.id
-                            ? `0 0 0 3px rgba(143,111,255,0.20), 0 1px 0 rgba(${col.rgb},0.06) inset, 0 6px 18px -10px rgba(${col.rgb},0.25)`
-                            : `0 1px 0 rgba(${col.rgb},0.06) inset, 0 6px 18px -10px rgba(${col.rgb},0.25)`,
+                            ? `0 0 0 1px rgba(255,255,255,0.18)`
+                            : "none",
                         opacity:
                           draggingId === lead.id
                             ? 0.35
                             : isPending
                               ? 0.5
                               : lead.status === "perdido"
-                                ? 0.65
+                                ? 0.55
                                 : 1,
                         transform: draggingId === lead.id ? "scale(0.97)" : "none",
                       }}

@@ -38,11 +38,11 @@ export default function LoginForm() {
 
   return (
     <div
-      className="w-full max-w-[380px] rounded-2xl p-7"
+      className="w-full max-w-[380px] rounded-xl p-7"
       style={{
         background: "#1a1a1a",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 30px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        boxShadow: "0 20px 50px -20px rgba(0,0,0,0.75)",
       }}
     >
       <div className="flex items-center gap-3 mb-6">
@@ -95,12 +95,11 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={!password.trim() || loading}
-          className="w-full text-[12px] font-semibold py-3 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full text-[12px] font-medium py-3 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/15"
           style={{
-            background: "linear-gradient(135deg, #6644f2, #5129f0)",
+            background: "rgba(255,255,255,0.10)",
             border: "1px solid rgba(255,255,255,0.18)",
-            color: "#fff",
-            boxShadow: "0 6px 18px -6px rgba(102,68,242,0.5)",
+            color: "#fafafa",
           }}
         >
           {loading ? "Entrando..." : "Entrar"}

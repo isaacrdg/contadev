@@ -42,11 +42,11 @@ export default function CommandPalette({ open, onClose }: Props) {
     >
       <Command
         label="Command palette"
-        className="w-full max-w-[560px] rounded-2xl overflow-hidden"
+        className="w-full max-w-[560px] rounded-xl overflow-hidden"
         style={{
           background: "#1a1a1a",
           border: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.7)",
+          boxShadow: "0 20px 50px -20px rgba(0,0,0,0.75)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -139,10 +139,11 @@ export default function CommandPalette({ open, onClose }: Props) {
                   style={{ color: "rgba(255,255,255,0.85)" }}
                 >
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                    className="w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-semibold flex-shrink-0"
                     style={{
-                      background: "linear-gradient(135deg, #6644f2, #5129f0)",
-                      color: "#fff",
+                      background: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      color: "rgba(255,255,255,0.85)",
                     }}
                   >
                     {lead.name

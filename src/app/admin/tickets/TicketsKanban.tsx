@@ -135,12 +135,11 @@ export default function TicketsKanban({ initialTickets }: { initialTickets: Tick
           </button>
           <button
             onClick={() => setShowNewModal(true)}
-            className="text-[12px] font-semibold px-4 py-2 rounded-lg transition-all hover:brightness-110"
+            className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors hover:bg-white/15"
             style={{
-              background: "linear-gradient(135deg, #6644f2, #5129f0)",
+              background: "rgba(255,255,255,0.10)",
               border: "1px solid rgba(255,255,255,0.18)",
-              color: "#fff",
-              boxShadow: "0 4px 14px -4px rgba(102,68,242,0.4)",
+              color: "#fafafa",
             }}
           >
             + Novo ticket
@@ -308,11 +307,11 @@ function NewTicketModal({
     >
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl p-6 w-full max-w-[480px]"
+        className="rounded-xl p-6 w-full max-w-[480px]"
         style={{
           background: "#1a1a1a",
           border: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.7)",
+          boxShadow: "0 20px 50px -20px rgba(0,0,0,0.75)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -389,12 +388,11 @@ function NewTicketModal({
           <button
             type="submit"
             disabled={!valid || busy}
-            className="flex-1 text-[12px] font-semibold py-2.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 text-[12px] font-medium py-2.5 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors hover:bg-white/15"
             style={{
-              background: "linear-gradient(135deg, #6644f2, #5129f0)",
+              background: "rgba(255,255,255,0.10)",
               border: "1px solid rgba(255,255,255,0.18)",
-              color: "#fff",
-              boxShadow: "0 4px 14px -4px rgba(102,68,242,0.4)",
+              color: "#fafafa",
             }}
           >
             {busy ? "Criando..." : "Criar ticket"}

@@ -175,11 +175,15 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-[560px] max-h-[88vh] flex flex-col rounded-2xl"
+        className="relative w-full max-w-[560px] max-h-[88vh] flex flex-col rounded-xl"
         style={{
-          background: `linear-gradient(180deg, rgba(${rgb},0.06), rgba(${rgb},0.01)), #191919`,
-          border: `1px solid rgba(${rgb},0.35)`,
-          boxShadow: `0 30px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), 0 12px 40px -10px rgba(${rgb},0.18)`,
+          background: "#1a1a1a",
+          borderTop: `2px solid rgba(${rgb},0.7)`,
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderTopWidth: "2px",
+          borderTopColor: `rgba(${rgb},0.7)`,
+          boxShadow:
+            "0 30px 80px -20px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.04)",
           animation: "leadModalIn 0.25s ease",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -197,20 +201,15 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
                   ? "Editar observações"
                   : "Adicionar observação"
             }
-            className="relative h-8 px-3 rounded-full flex items-center gap-1.5 text-[11px] font-semibold transition-all"
+            className="relative h-8 px-3 rounded-md flex items-center gap-1.5 text-[11px] font-medium transition-colors"
             style={{
               background: notesOpen
-                ? `linear-gradient(135deg, rgba(${rgb},0.35), rgba(${rgb},0.15))`
-                : hasNotes
-                  ? `linear-gradient(135deg, rgba(${rgb},0.20), rgba(${rgb},0.06))`
-                  : "rgba(255,255,255,0.06)",
+                ? "rgba(255,255,255,0.10)"
+                : "rgba(255,255,255,0.05)",
               border: notesOpen
-                ? `1px solid rgba(${rgb},0.6)`
-                : hasNotes
-                  ? `1px solid rgba(${rgb},0.35)`
-                  : "1px solid rgba(255,255,255,0.1)",
-              color: notesOpen || hasNotes ? "#fafafa" : "rgba(255,255,255,0.65)",
-              boxShadow: notesOpen ? `0 0 0 1px rgba(${rgb},0.15) inset` : "none",
+                ? "1px solid rgba(255,255,255,0.20)"
+                : "1px solid rgba(255,255,255,0.10)",
+              color: "rgba(255,255,255,0.85)",
             }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -254,10 +253,10 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
             <div
-              className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-[16px] text-white"
+              className="flex-shrink-0 w-11 h-11 rounded-md flex items-center justify-center font-semibold text-[14px] text-white/85"
               style={{
-                background: `linear-gradient(135deg, rgba(${rgb},0.6), rgba(${rgb},0.3))`,
-                border: `1px solid rgba(${rgb},0.5)`,
+                background: `rgba(${rgb},0.18)`,
+                border: `1px solid rgba(${rgb},0.45)`,
               }}
             >
               {lead.name
@@ -487,9 +486,9 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
         {/* Notes panel — slides over the body */}
         {notesOpen && (
           <div
-            className="absolute inset-0 flex flex-col rounded-2xl overflow-hidden"
+            className="absolute inset-0 flex flex-col rounded-xl overflow-hidden"
             style={{
-              background: `linear-gradient(180deg, rgba(${rgb},0.10), rgba(${rgb},0.02) 30%), #191919`,
+              background: "#1a1a1a",
               animation: "leadNotesIn 0.22s ease",
               zIndex: 5,
             }}

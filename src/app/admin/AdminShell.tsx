@@ -170,12 +170,11 @@ export default function AdminShell({
 
               {menuOpen && (
                 <div
-                  className="absolute right-0 top-[calc(100%+8px)] min-w-[220px] rounded-xl p-1.5 z-50"
+                  className="absolute right-0 top-[calc(100%+8px)] min-w-[220px] rounded-lg p-1.5 z-50"
                   style={{
                     background: "#1c1c1c",
                     border: "1px solid rgba(255,255,255,0.1)",
-                    boxShadow:
-                      "0 24px 60px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
+                    boxShadow: "0 20px 50px -20px rgba(0,0,0,0.7)",
                     animation: "menuIn 0.18s ease",
                   }}
                 >
