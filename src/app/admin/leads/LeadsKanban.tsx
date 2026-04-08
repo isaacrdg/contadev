@@ -70,6 +70,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [activeWorks, setActiveWorks] = useState<Set<"brasil" | "exterior">>(new Set());
   const [showStuckOnly, setShowStuckOnly] = useState(false);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard navigation
@@ -500,9 +501,9 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
         </div>
       )}
 
-      {/* Toolbar de filtros */}
+      {/* Toolbar de filtros — compacta */}
       <div
-        className="mb-5 rounded-xl p-3 flex flex-wrap items-center gap-2"
+        className="mb-5 rounded-xl p-2 flex flex-wrap items-center gap-2"
         style={{
           background: "rgba(255,255,255,0.02)",
           border: "1px solid rgba(255,255,255,0.06)",
@@ -510,7 +511,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
       >
         {/* Search */}
         <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg flex-1 min-w-[200px]"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg flex-1 min-w-[220px]"
           style={{
             background: "rgba(0,0,0,0.3)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -525,7 +526,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar... (atalho: /)"
+            placeholder="Buscar nome, telefone, email..."
             className="flex-1 bg-transparent text-[12px] text-[#fafafa] placeholder-white/30 outline-none"
           />
           {searchQuery && (
@@ -546,21 +547,66 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
         <FilterPill
           active={activeWorks.has("brasil")}
           onClick={() => toggleWorks("brasil")}
-          label="🇧🇷 Brasil"
+          label="Brasil"
         />
         <FilterPill
           active={activeWorks.has("exterior")}
           onClick={() => toggleWorks("exterior")}
-          label="🌎 Exterior"
+          label="Exterior"
         />
 
         {/* Stuck only */}
         <FilterPill
           active={showStuckOnly}
           onClick={() => setShowStuckOnly((v) => !v)}
-          label="⚠ Parados >7d"
+          label="Parados >7d"
           activeRgb="239,68,68"
         />
+
+        {/* Toggle de tags (só aparece se tem tags) */}
+        {allTags.length > 0 && (
+          <button
+            onClick={() => setTagsExpanded((v) => !v)}
+            className="text-[10.5px] font-medium px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 whitespace-nowrap"
+            style={{
+              background:
+                tagsExpanded || activeTags.size > 0
+                  ? "rgba(143,111,255,0.12)"
+                  : "rgba(255,255,255,0.04)",
+              border:
+                tagsExpanded || activeTags.size > 0
+                  ? "1px solid rgba(143,111,255,0.4)"
+                  : "1px solid rgba(255,255,255,0.08)",
+              color:
+                tagsExpanded || activeTags.size > 0
+                  ? "#c4b1ff"
+                  : "rgba(255,255,255,0.6)",
+            }}
+          >
+            Tags
+            {activeTags.size > 0 && (
+              <span className="text-[9px] tabular-nums opacity-80">
+                ({activeTags.size})
+              </span>
+            )}
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transform: tagsExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+              }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+        )}
 
         {hasActiveFilters && (
           <button
@@ -575,12 +621,9 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
           </button>
         )}
 
-        {/* Tags row (segunda linha se tiver tags) */}
-        {allTags.length > 0 && (
+        {/* Tags row — só aparece quando expandido */}
+        {tagsExpanded && allTags.length > 0 && (
           <div className="w-full flex flex-wrap gap-1.5 mt-1 pt-2 border-t border-white/5">
-            <span className="text-[9px] uppercase tracking-[0.08em] font-semibold text-white/35 self-center mr-1">
-              Tags:
-            </span>
             {allTags.map((tag) => {
               const isActive = activeTags.has(tag);
               return (
@@ -598,7 +641,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
                     color: isActive ? "#c4b1ff" : "rgba(255,255,255,0.6)",
                   }}
                 >
-                  #{tag}
+                  {tag}
                 </button>
               );
             })}
@@ -606,7 +649,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
         )}
 
         {hasActiveFilters && (
-          <div className="w-full text-[10px] text-white/40 mt-1">
+          <div className="w-full text-[10px] text-white/40 mt-1 px-1">
             Mostrando {filteredLeads.length} de {leads.length}
           </div>
         )}
@@ -751,7 +794,7 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
                             color: "rgba(255,255,255,0.7)",
                           }}
                         >
-                          {lead.worksWhere === "brasil" ? "🇧🇷 Brasil" : "🌎 Exterior"}
+                          {lead.worksWhere === "brasil" ? "Brasil" : "Exterior"}
                         </span>
                         <span
                           className="text-[9px] px-1.5 py-0.5 rounded font-medium"
@@ -772,53 +815,10 @@ export default function LeadsKanban({ initialLeads }: { initialLeads: Lead[] }) 
                               color: "#6ee7b7",
                             }}
                           >
-                            🎟 {lead.coupon}
-                          </span>
-                        )}
-                        {lead.tags && lead.tags.length > 0 &&
-                          lead.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-[9px] px-1.5 py-0.5 rounded font-medium"
-                              style={{
-                                background: "rgba(143,111,255,0.10)",
-                                border: "1px solid rgba(143,111,255,0.30)",
-                                color: "#c4b1ff",
-                              }}
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        {lead.tags && lead.tags.length > 3 && (
-                          <span className="text-[9px] text-white/40 px-1">
-                            +{lead.tags.length - 3}
+                            {lead.coupon}
                           </span>
                         )}
                       </div>
-
-                      {lead.utmData && (
-                        <div
-                          className="text-[9px] font-mono mb-2.5 px-2 py-1.5 rounded"
-                          style={{
-                            background: "rgba(255,255,255,0.025)",
-                            border: "1px solid rgba(255,255,255,0.05)",
-                            color: "rgba(255,255,255,0.5)",
-                          }}
-                        >
-                          {lead.utmData.utmSource && (
-                            <div><span className="text-white/30">src:</span> {lead.utmData.utmSource}</div>
-                          )}
-                          {lead.utmData.utmMedium && (
-                            <div><span className="text-white/30">med:</span> {lead.utmData.utmMedium}</div>
-                          )}
-                          {lead.utmData.utmCampaign && (
-                            <div><span className="text-white/30">cmp:</span> {lead.utmData.utmCampaign}</div>
-                          )}
-                          {lead.utmData.utmContent && (
-                            <div><span className="text-white/30">cnt:</span> {lead.utmData.utmContent}</div>
-                          )}
-                        </div>
-                      )}
 
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
                         <button

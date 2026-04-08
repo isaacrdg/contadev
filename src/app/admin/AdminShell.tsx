@@ -83,15 +83,16 @@ export default function AdminShell({
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center gap-5">
+          {/* Logo + título compacto */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.svg"
               alt="Conta Dev"
               style={{ height: "32px", width: "auto" }}
             />
-            <div className="border-l border-white/10 pl-3 ml-1">
+            <div className="border-l border-white/10 pl-3 ml-1 hidden lg:block">
               <div className="text-[13px] font-semibold leading-none tracking-tight">
                 Painel Admin
               </div>
@@ -99,37 +100,34 @@ export default function AdminShell({
             </div>
           </div>
 
-          <nav className="flex gap-1 items-center">
-            <button
-              onClick={() => setPaletteOpen(true)}
-              title="Buscar (Cmd+K)"
-              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11.5px] text-white/55 hover:text-white hover:bg-white/5 transition-colors mr-2"
+          {/* Search bar — ocupa o meio inteiro */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            title="Buscar (⌘K)"
+            className="hidden md:flex items-center gap-3 flex-1 max-w-[520px] h-10 px-4 rounded-lg text-[12.5px] text-white/45 hover:text-white/75 hover:border-white/15 transition-colors group"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.10)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span className="flex-1 text-left">Buscar leads, navegar...</span>
+            <kbd
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded leading-none flex items-center gap-0.5"
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(0,0,0,0.4)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.55)",
               }}
             >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              Buscar
-              <kbd
-                className="text-[9px] font-mono px-1.5 py-0.5 rounded leading-none ml-1"
-                style={{
-                  background: "rgba(0,0,0,0.4)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                ⌘K
-              </kbd>
-            </button>
-            <NavLink
-              href="/admin/dashboard"
-              active={pathname?.startsWith("/admin/dashboard")}
-            >
-              Dashboard
-            </NavLink>
+              ⌘K
+            </kbd>
+          </button>
+
+          <nav className="flex gap-1 items-center flex-shrink-0">
             <NavLink href="/admin/leads" active={pathname?.startsWith("/admin/leads")}>
               Leads
             </NavLink>
@@ -181,6 +179,25 @@ export default function AdminShell({
                   }}
                 >
                   <div className="px-3 py-1.5 text-[9px] uppercase tracking-[0.08em] font-semibold text-white/35">
+                    Visão geral
+                  </div>
+                  <MenuItem
+                    href="/admin/dashboard"
+                    active={pathname?.startsWith("/admin/dashboard")}
+                    icon={
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="9" />
+                        <rect x="14" y="3" width="7" height="5" />
+                        <rect x="14" y="12" width="7" height="9" />
+                        <rect x="3" y="16" width="7" height="5" />
+                      </svg>
+                    }
+                    label="Dashboard"
+                  />
+
+                  <div className="my-1.5 mx-2 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+
+                  <div className="px-3 py-1.5 text-[9px] uppercase tracking-[0.08em] font-semibold text-white/35">
                     Interno
                   </div>
                   <MenuItem
@@ -226,7 +243,7 @@ export default function AdminShell({
                   />
                   {authEnabled && (
                     <>
-                      <div className="my-1.5 mx-2 h-px bg-white/8" style={{ background: "rgba(255,255,255,0.08)" }} />
+                      <div className="my-1.5 mx-2 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
                       <LogoutMenuItem />
                     </>
                   )}

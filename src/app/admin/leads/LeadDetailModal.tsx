@@ -1,7 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Lead, LeadStatus, Profile } from "@/lib/leads-store";
-import { WA_TEMPLATES, renderTemplate, buildWaUrl } from "@/lib/wa-templates";
+import {
+  WA_TEMPLATES,
+  renderTemplate,
+  buildWaUrl,
+  type WaTemplateIcon,
+} from "@/lib/wa-templates";
 
 interface Props {
   lead: Lead;
@@ -329,7 +334,7 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
                       color: "#86efac",
                     }}
                   >
-                    <span>{tpl.emoji}</span>
+                    <WaTemplateIconSvg name={tpl.icon} />
                     {tpl.label}
                   </a>
                 );
@@ -468,47 +473,7 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
           {/* Status timeline — populated from statusHistory */}
           {Array.isArray(lead.statusHistory) && lead.statusHistory.length > 0 && (
             <Section title="Histórico de status">
-              <div className="space-y-2 mt-1">
-                {lead.statusHistory.map((entry, i) => {
-                  const sRgb = STATUS_RGB[entry.status];
-                  const isLast = i === lead.statusHistory.length - 1;
-                  return (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="flex flex-col items-center" style={{ width: 16 }}>
-                        <div
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{
-                            background: `rgba(${sRgb},0.95)`,
-                            boxShadow: isLast
-                              ? `0 0 0 3px rgba(${sRgb},0.18)`
-                              : "none",
-                          }}
-                        />
-                        {!isLast && (
-                          <div
-                            className="w-px flex-1 mt-1"
-                            style={{
-                              background: "rgba(255,255,255,0.1)",
-                              minHeight: 16,
-                            }}
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 flex items-baseline justify-between gap-3 py-0.5">
-                        <span
-                          className="text-[11.5px] font-medium"
-                          style={{ color: isLast ? "#fafafa" : "rgba(255,255,255,0.65)" }}
-                        >
-                          {STATUS_LABELS[entry.status]}
-                        </span>
-                        <span className="text-[10px] text-white/40 font-mono">
-                          {fmtDate(entry.at)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <StatusTimeline history={lead.statusHistory} />
             </Section>
           )}
 
@@ -659,6 +624,126 @@ function Field({
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+function WaTemplateIconSvg({ name }: { name: WaTemplateIcon }) {
+  const props = {
+    width: 12,
+    height: 12,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  switch (name) {
+    case "wave":
+      return (
+        <svg {...props}>
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
+      );
+    case "search":
+      return (
+        <svg {...props}>
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      );
+    case "money":
+      return (
+        <svg {...props}>
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      );
+    case "phone":
+      return (
+        <svg {...props}>
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      );
+    case "refresh":
+      return (
+        <svg {...props}>
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...props}>
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      );
+  }
+}
+
+function StatusTimeline({
+  history,
+}: {
+  history: Array<{ status: LeadStatus; at: string }>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const LIMIT = 5;
+  const hasMore = history.length > LIMIT;
+  // Mostra os mais recentes primeiro (reverse) — mais útil pra "o que aconteceu por último"
+  const reversed = [...history].reverse();
+  const visible = expanded ? reversed : reversed.slice(0, LIMIT);
+  const hidden = reversed.length - visible.length;
+
+  return (
+    <div className="space-y-2 mt-1">
+      {visible.map((entry, i) => {
+        const sRgb = STATUS_RGB[entry.status];
+        const isFirst = i === 0; // primeiro = mais recente
+        const isLastVisible = i === visible.length - 1;
+        return (
+          <div key={i} className="flex items-center gap-3">
+            <div className="flex flex-col items-center" style={{ width: 16 }}>
+              <div
+                className="w-2.5 h-2.5 rounded-full"
+                style={{
+                  background: `rgba(${sRgb},0.95)`,
+                  boxShadow: isFirst ? `0 0 0 3px rgba(${sRgb},0.18)` : "none",
+                }}
+              />
+              {!isLastVisible && (
+                <div
+                  className="w-px flex-1 mt-1"
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    minHeight: 16,
+                  }}
+                />
+              )}
+            </div>
+            <div className="flex-1 flex items-baseline justify-between gap-3 py-0.5">
+              <span
+                className="text-[11.5px] font-medium"
+                style={{ color: isFirst ? "#fafafa" : "rgba(255,255,255,0.65)" }}
+              >
+                {STATUS_LABELS[entry.status]}
+              </span>
+              <span className="text-[10px] text-white/40 font-mono">
+                {fmtDate(entry.at)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+      {hasMore && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="text-[10.5px] text-white/45 hover:text-white/75 transition-colors mt-1 ml-7"
+        >
+          {expanded ? "Mostrar menos" : `Ver mais ${hidden} entrada${hidden > 1 ? "s" : ""}…`}
+        </button>
+      )}
     </div>
   );
 }
