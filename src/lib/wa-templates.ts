@@ -1,12 +1,6 @@
 import type { Lead } from "./leads-store";
 
-export type WaTemplateIcon =
-  | "wave"
-  | "search"
-  | "money"
-  | "phone"
-  | "refresh"
-  | "check";
+export type WaTemplateIcon = "wave" | "refresh" | "check";
 
 export interface WaTemplate {
   id: string;
@@ -29,27 +23,6 @@ export const WA_TEMPLATES: WaTemplate[] = [
     icon: "wave",
     template:
       "E aí, {firstName}! 😊 Sou a Malu, especialista da Conta Dev. Vi que você preencheu nosso form e tô aqui pra te ajudar com tudo que você precisar 💜",
-  },
-  {
-    id: "descoberta",
-    label: "Descoberta",
-    icon: "search",
-    template:
-      "Pra eu te orientar do melhor jeito, me conta um pouco do seu cenário? Tipo: você já tem CNPJ ou ainda vai abrir? Recebe pelo Brasil ou exterior? Tô curiosa pra entender 🚀",
-  },
-  {
-    id: "simulacao",
-    label: "Simulação de impostos",
-    icon: "money",
-    template:
-      "Show, {firstName}! Vou gerar uma simulação dos seus impostos e te explicar tudinho. Em geral nossos clientes economizam ~50% só pela estrutura tributária correta 💜",
-  },
-  {
-    id: "agendar-call",
-    label: "Agendar call",
-    icon: "phone",
-    template:
-      "Oi {firstName}! Que tal a gente marcar uma call rápida (15 min) pra eu te explicar tudo direitinho e tirar suas dúvidas? Me passa um horário que funciona pra você 😊",
   },
   {
     id: "follow-up",

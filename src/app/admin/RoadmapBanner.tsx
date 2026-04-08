@@ -32,10 +32,12 @@ export default function RoadmapBanner({ pending, critical }: Props) {
 
   return (
     <div
-      className="mb-5 rounded-lg px-4 py-2.5 flex items-center gap-3"
+      className="mb-5 rounded-lg pl-4 pr-3 py-2.5 flex items-center gap-3 relative overflow-hidden"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(143,111,255,0.08)",
+        border: "1px solid rgba(143,111,255,0.30)",
+        borderLeftWidth: "3px",
+        borderLeftColor: "rgba(143,111,255,0.85)",
       }}
     >
       <div className="relative flex-shrink-0">
@@ -44,7 +46,7 @@ export default function RoadmapBanner({ pending, critical }: Props) {
           height="14"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="rgba(255,255,255,0.55)"
+          stroke="#c4b1ff"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -57,33 +59,34 @@ export default function RoadmapBanner({ pending, critical }: Props) {
             style={{
               background: "#ef4444",
               boxShadow: "0 0 0 1.5px rgb(25,25,25)",
+              animation: "rmPulse 1.8s ease-in-out infinite",
             }}
           />
         )}
       </div>
 
-      <div className="flex-1 min-w-0 text-[11.5px] text-white/70 leading-tight">
-        <span className="text-white/90 font-medium">
+      <div className="flex-1 min-w-0 text-[11.5px] leading-tight">
+        <span className="text-[#fafafa] font-semibold">
           {pending} {pending === 1 ? "tarefa pendente" : "tarefas pendentes"}
         </span>
         {critical > 0 && (
           <>
             {" "}
-            <span className="text-[#fca5a5]">
+            <span className="text-[#fca5a5] font-medium">
               · {critical} crítica{critical > 1 ? "s" : ""}
             </span>
           </>
         )}
-        <span className="text-white/45"> antes do painel ir pra produção</span>
+        <span className="text-white/55"> antes do painel ir pra produção</span>
       </div>
 
       <Link
         href="/admin/roadmap"
-        className="flex-shrink-0 text-[11px] font-medium px-3 py-1.5 rounded-md transition-colors hover:bg-white/10 whitespace-nowrap"
+        className="flex-shrink-0 text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors hover:brightness-110 whitespace-nowrap"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.85)",
+          background: "rgba(143,111,255,0.18)",
+          border: "1px solid rgba(143,111,255,0.55)",
+          color: "#e7dcff",
         }}
       >
         Ver roadmap
@@ -100,6 +103,13 @@ export default function RoadmapBanner({ pending, critical }: Props) {
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
+
+      <style jsx>{`
+        @keyframes rmPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.25); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -56,11 +56,27 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [statusBusy, setStatusBusy] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [tagsPopoverOpen, setTagsPopoverOpen] = useState(false);
   const hasNotes = !!(lead.notes && lead.notes.trim());
+  const tagsCount = (lead.tags ?? []).length;
+  const tagsPopoverRef = useRef<HTMLDivElement>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
   const savedFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Click outside fecha o popover de tags
+  useEffect(() => {
+    if (!tagsPopoverOpen) return;
+    function onClick(e: MouseEvent) {
+      if (!tagsPopoverRef.current) return;
+      if (!tagsPopoverRef.current.contains(e.target as Node)) {
+        setTagsPopoverOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [tagsPopoverOpen]);
 
   // Lock body scroll
   useEffect(() => {
@@ -188,9 +204,84 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top actions: Obs toggle + Close — escondido quando o painel de obs está aberto */}
+        {/* Top actions: Tags + Obs toggle + Close — escondido quando o painel de obs está aberto */}
         {!notesOpen && (
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          {/* Tags button + popover */}
+          <div className="relative" ref={tagsPopoverRef}>
+            <button
+              onClick={() => setTagsPopoverOpen((v) => !v)}
+              aria-label="Tags"
+              aria-expanded={tagsPopoverOpen}
+              title={
+                tagsCount > 0
+                  ? `${tagsCount} tag${tagsCount > 1 ? "s" : ""} aplicada${tagsCount > 1 ? "s" : ""}`
+                  : "Adicionar tags"
+              }
+              className="relative h-8 px-3 rounded-md flex items-center gap-1.5 text-[11px] font-medium transition-colors"
+              style={{
+                background: tagsPopoverOpen
+                  ? "rgba(255,255,255,0.10)"
+                  : "rgba(255,255,255,0.05)",
+                border: tagsPopoverOpen
+                  ? "1px solid rgba(255,255,255,0.20)"
+                  : "1px solid rgba(255,255,255,0.10)",
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                <line x1="7" y1="7" x2="7.01" y2="7" />
+              </svg>
+              Tags
+              {tagsCount > 0 && (
+                <span
+                  className="text-[9px] font-bold tabular-nums px-1.5 py-0.5 rounded leading-none"
+                  style={{
+                    background: "rgba(143,111,255,0.20)",
+                    border: "1px solid rgba(143,111,255,0.4)",
+                    color: "#c4b1ff",
+                  }}
+                >
+                  {tagsCount}
+                </span>
+              )}
+            </button>
+            {tagsPopoverOpen && (
+              <div
+                className="absolute right-0 top-[calc(100%+8px)] w-[280px] rounded-lg p-3"
+                style={{
+                  background: "#1c1c1c",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  boxShadow: "0 16px 40px -16px rgba(0,0,0,0.7)",
+                  animation: "tagsPopoverIn 0.18s ease",
+                }}
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <h4 className="text-[10px] uppercase tracking-[0.08em] font-semibold text-white/45">
+                    Tags do lead
+                  </h4>
+                  <button
+                    onClick={() => setTagsPopoverOpen(false)}
+                    aria-label="Fechar"
+                    className="w-5 h-5 rounded flex items-center justify-center text-white/35 hover:text-white/80 hover:bg-white/5 transition-colors"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+                <TagsEditor
+                  leadId={lead.id}
+                  initialTags={lead.tags ?? []}
+                  onUpdate={onUpdate}
+                  compact
+                />
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setNotesOpen((v) => !v)}
             aria-label={notesOpen ? "Fechar observações" : "Abrir observações"}
@@ -267,7 +358,7 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
                 .join("")
                 .toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0" style={{ paddingRight: "120px" }}>
+            <div className="flex-1 min-w-0" style={{ paddingRight: "210px" }}>
               <h2 className="text-[18px] font-bold text-[#fafafa] leading-tight tracking-tight truncate">
                 {lead.name}
               </h2>
@@ -383,15 +474,6 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
               value={lead.worksWhere === "brasil" ? "🇧🇷 Brasil" : "🌎 Exterior"}
             />
             <Field label="Perfil" value={PROFILE_LABELS[lead.profile]} />
-          </Section>
-
-          {/* Tags */}
-          <Section title="Tags">
-            <TagsEditor
-              leadId={lead.id}
-              initialTags={lead.tags ?? []}
-              onUpdate={onUpdate}
-            />
           </Section>
 
           {/* Status — clickable */}
@@ -574,6 +656,16 @@ export default function LeadDetailModal({ lead, rgb, onClose, onUpdate }: Props)
             transform: translateY(0);
           }
         }
+        @keyframes tagsPopoverIn {
+          from {
+            opacity: 0;
+            transform: translateY(-6px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
       `}</style>
     </div>
   );
@@ -643,26 +735,6 @@ function WaTemplateIconSvg({ name }: { name: WaTemplateIcon }) {
       return (
         <svg {...props}>
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-        </svg>
-      );
-    case "search":
-      return (
-        <svg {...props}>
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      );
-    case "money":
-      return (
-        <svg {...props}>
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      );
-    case "phone":
-      return (
-        <svg {...props}>
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
         </svg>
       );
     case "refresh":
@@ -751,10 +823,12 @@ function TagsEditor({
   leadId,
   initialTags,
   onUpdate,
+  compact = false,
 }: {
   leadId: string;
   initialTags: string[];
   onUpdate: (lead: Lead) => void;
+  compact?: boolean;
 }) {
   const [tags, setTags] = useState<string[]>(initialTags);
   const [input, setInput] = useState("");
