@@ -32,27 +32,19 @@ export default function RoadmapBanner({ pending, critical }: Props) {
 
   return (
     <div
-      className="mb-6 rounded-xl px-5 py-4 flex items-center gap-4"
+      className="mb-5 rounded-lg px-4 py-2.5 flex items-center gap-3"
       style={{
-        background:
-          "linear-gradient(135deg, rgba(102,68,242,0.12), rgba(102,68,242,0.03))",
-        border: "1px solid rgba(143,111,255,0.4)",
-        boxShadow: "0 12px 32px -16px rgba(102,68,242,0.4)",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.10)",
       }}
     >
-      <div
-        className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center relative"
-        style={{
-          background: "rgba(143,111,255,0.18)",
-          border: "1px solid rgba(143,111,255,0.45)",
-        }}
-      >
+      <div className="relative flex-shrink-0">
         <svg
-          width="18"
-          height="18"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#c4b1ff"
+          stroke="rgba(255,255,255,0.55)"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -61,63 +53,53 @@ export default function RoadmapBanner({ pending, critical }: Props) {
         </svg>
         {critical > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full"
+            className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
             style={{
               background: "#ef4444",
-              boxShadow:
-                "0 0 0 2px rgb(25,25,25), 0 0 8px rgba(239,68,68,0.7)",
-              animation: "rmPulse 1.8s ease-in-out infinite",
+              boxShadow: "0 0 0 1.5px rgb(25,25,25)",
             }}
           />
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-[#fafafa] mb-0.5">
-          Tem coisa pra implementar antes do painel ir pra produção
-        </div>
-        <p className="text-[11px] text-white/60 leading-relaxed">
+      <div className="flex-1 min-w-0 text-[11.5px] text-white/70 leading-tight">
+        <span className="text-white/90 font-medium">
           {pending} {pending === 1 ? "tarefa pendente" : "tarefas pendentes"}
-          {critical > 0 && (
-            <>
-              {" "}— <span className="text-[#fca5a5] font-semibold">{critical} crítica{critical > 1 ? "s" : ""}</span>
-            </>
-          )}{" "}
-          · segurança, banco de dados, integração com a API/DB existente.
-        </p>
+        </span>
+        {critical > 0 && (
+          <>
+            {" "}
+            <span className="text-[#fca5a5]">
+              · {critical} crítica{critical > 1 ? "s" : ""}
+            </span>
+          </>
+        )}
+        <span className="text-white/45"> antes do painel ir pra produção</span>
       </div>
 
       <Link
         href="/admin/roadmap"
-        className="flex-shrink-0 text-[12px] font-semibold px-4 py-2.5 rounded-lg transition-all hover:brightness-110 whitespace-nowrap"
+        className="flex-shrink-0 text-[11px] font-medium px-3 py-1.5 rounded-md transition-colors hover:bg-white/10 whitespace-nowrap"
         style={{
-          background: "linear-gradient(135deg, #6644f2, #5129f0)",
-          border: "1px solid rgba(255,255,255,0.18)",
-          color: "#fff",
-          boxShadow: "0 6px 18px -6px rgba(102,68,242,0.5)",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          color: "rgba(255,255,255,0.85)",
         }}
       >
-        Ver roadmap →
+        Ver roadmap
       </Link>
 
       <button
         onClick={handleDismiss}
         aria-label="Dispensar"
-        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
-        title="Dispensar (volta a aparecer ao limpar localStorage)"
+        className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-white/35 hover:text-white/75 hover:bg-white/5 transition-colors"
+        title="Dispensar"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-
-      <style jsx global>{`
-        @keyframes rmPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.25); }
-        }
-      `}</style>
     </div>
   );
 }

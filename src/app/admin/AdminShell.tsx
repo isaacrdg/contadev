@@ -83,14 +83,15 @@ export default function AdminShell({
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center gap-5">
-          {/* Logo + título compacto */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="max-w-[1400px] mx-auto px-6 py-4 grid grid-cols-3 items-center gap-5">
+          {/* Logo (clicável → home/leads) */}
+          <Link href="/admin/leads" className="flex items-center gap-3 justify-self-start group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.svg"
               alt="Conta Dev"
               style={{ height: "32px", width: "auto" }}
+              className="transition-opacity group-hover:opacity-80"
             />
             <div className="border-l border-white/10 pl-3 ml-1 hidden lg:block">
               <div className="text-[13px] font-semibold leading-none tracking-tight">
@@ -98,13 +99,13 @@ export default function AdminShell({
               </div>
               <div className="text-[10px] text-white/45 mt-1">Leads do site</div>
             </div>
-          </div>
+          </Link>
 
-          {/* Search bar — ocupa o meio inteiro */}
+          {/* Search bar — centralizada */}
           <button
             onClick={() => setPaletteOpen(true)}
             title="Buscar (⌘K)"
-            className="hidden md:flex items-center gap-3 flex-1 max-w-[520px] h-10 px-4 rounded-lg text-[12.5px] text-white/45 hover:text-white/75 hover:border-white/15 transition-colors group"
+            className="hidden md:flex items-center gap-3 w-full max-w-[440px] h-10 px-4 rounded-lg text-[12.5px] text-white/45 hover:text-white/75 hover:border-white/15 transition-colors justify-self-center"
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.10)",
@@ -127,7 +128,7 @@ export default function AdminShell({
             </kbd>
           </button>
 
-          <nav className="flex gap-1 items-center flex-shrink-0">
+          <nav className="flex gap-1 items-center justify-self-end">
             <NavLink href="/admin/leads" active={pathname?.startsWith("/admin/leads")}>
               Leads
             </NavLink>
