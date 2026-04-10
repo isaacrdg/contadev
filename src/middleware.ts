@@ -1,33 +1,47 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const COOKIE_NAME = "cd_admin_auth";
+const ADMIN_COOKIE = "cd_admin_auth";
+const REDATOR_COOKIE = "cd_redator_auth";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Só protege /admin/* — exclui a própria página de login e API de login
-  if (!pathname.startsWith("/admin")) return NextResponse.next();
-  if (pathname === "/admin/login") return NextResponse.next();
-  if (pathname === "/api/admin/login") return NextResponse.next();
+  // ─── /admin/* ───
+  if (pathname.startsWith("/admin")) {
+    if (pathname === "/admin/login") return NextResponse.next();
 
-  // Se não há senha configurada, libera (modo dev sem auth)
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) return NextResponse.next();
+    const expected = process.env.ADMIN_PASSWORD;
+    if (!expected) return NextResponse.next();
 
-  // Verifica cookie
-  const cookie = req.cookies.get(COOKIE_NAME);
-  if (cookie?.value === expected) {
-    return NextResponse.next();
+    const cookie = req.cookies.get(ADMIN_COOKIE);
+    if (cookie?.value === expected) return NextResponse.next();
+
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = "/admin/login";
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Sem auth → redireciona pro login preservando o destino
-  const loginUrl = req.nextUrl.clone();
-  loginUrl.pathname = "/admin/login";
-  loginUrl.searchParams.set("from", pathname);
-  return NextResponse.redirect(loginUrl);
+  // ─── /redator/* ───
+  if (pathname.startsWith("/redator")) {
+    if (pathname === "/redator/login") return NextResponse.next();
+
+    const expected = process.env.REDATOR_PASSWORD;
+    if (!expected) return NextResponse.next();
+
+    const cookie = req.cookies.get(REDATOR_COOKIE);
+    if (cookie?.value === expected) return NextResponse.next();
+
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = "/redator/login";
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/redator/:path*"],
 };

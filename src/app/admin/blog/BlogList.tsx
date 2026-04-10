@@ -1,10 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import type { BlogPost } from "@/lib/blog-store";
 
 export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
   const [posts, setPosts] = useState(initialPosts);
+  const pathname = usePathname();
+  // Detecta se tá no /redator ou /admin pra links corretos
+  const basePath = pathname?.startsWith("/redator") ? "/redator" : "/admin/blog";
 
   async function handleDelete(slug: string) {
     if (!confirm("Tem certeza que quer deletar esse post?")) return;
@@ -24,7 +28,7 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
           </p>
         </div>
         <Link
-          href="/admin/blog/novo"
+          href={`${basePath}/novo`}
           className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors hover:bg-white/15"
           style={{
             background: "rgba(255,255,255,0.10)",
@@ -99,7 +103,7 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
                   Visualizar
                 </Link>
                 <Link
-                  href={`/admin/blog/${post.slug}`}
+                  href={`${basePath}/${post.slug}`}
                   className="text-[11px] font-medium text-white/80 px-3 py-1.5 rounded-md transition-colors hover:bg-white/10"
                   style={{
                     background: "rgba(255,255,255,0.06)",

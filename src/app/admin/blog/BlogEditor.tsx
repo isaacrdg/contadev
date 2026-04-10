@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface Props {
   mode: "create" | "edit";
@@ -16,6 +16,8 @@ interface Props {
 
 export default function BlogEditor({ mode, slug, initial }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = pathname?.startsWith("/redator") ? "/redator" : "/admin/blog";
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [publishedAt, setPublishedAt] = useState(
@@ -78,7 +80,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("falhou");
-      router.push("/admin/blog");
+      router.push(basePath);
       router.refresh();
     } catch {
       alert("Erro ao salvar. Tente novamente.");
@@ -119,7 +121,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => router.push("/admin/blog")}
+            onClick={() => router.push(basePath)}
             className="text-[12px] font-medium px-4 py-2 rounded-md text-white/70 hover:bg-white/10 transition-colors"
             style={{
               background: "rgba(255,255,255,0.05)",
