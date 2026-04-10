@@ -1,13 +1,21 @@
 import crypto from "crypto";
 import { readJson, writeJson } from "./kv";
 
+export interface AuthorStep {
+  name: string;
+  at: string; // ISO timestamp
+}
+
 export interface BlogPost {
   slug: string;
   title: string;
   description: string;
   publishedAt: string;
   status: "draft" | "published";
-  content: string; // raw markdown
+  content: string; // HTML from tiptap editor
+  writtenBy?: AuthorStep;  // quem escreveu
+  reviewedBy?: AuthorStep; // quem revisou
+  publishedBy?: AuthorStep; // quem publicou
   createdAt: string;
   updatedAt: string;
 }
