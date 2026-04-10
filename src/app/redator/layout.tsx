@@ -11,7 +11,7 @@ export default function RedatorLayout({ children }: { children: ReactNode }) {
   if (isLoginPage) {
     return (
       <div className="redator-theme min-h-screen flex items-center justify-center p-6">
-        <style jsx global>{`${themeCSS}`}</style>
+        <style dangerouslySetInnerHTML={{ __html: themeCSS }} />
         {children}
       </div>
     );
@@ -19,7 +19,7 @@ export default function RedatorLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="redator-theme min-h-screen">
-      <style jsx global>{`${themeCSS}`}</style>
+      <style dangerouslySetInnerHTML={{ __html: themeCSS }} />
       <header
         className="sticky top-0 z-50 backdrop-blur-md"
         style={{
@@ -103,7 +103,8 @@ const themeCSS = `
   }
 
   /* ── Light ── */
-  [data-theme="light"] .redator-theme {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] {
     --bg: #f8f8f8;
     --bg-card: #ffffff;
     --bg-input: #f0f0f0;
@@ -130,118 +131,164 @@ const themeCSS = `
   }
 
   /* ── Light: forçar override nos elementos com inline styles ── */
-  [data-theme="light"] .redator-theme input,
-  [data-theme="light"] .redator-theme textarea,
-  [data-theme="light"] .redator-theme select {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] input,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] textarea,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] select {
     background: #f0f0f0 !important;
     border-color: rgba(0, 0, 0, 0.15) !important;
     color: #1a1a1a !important;
   }
-  [data-theme="light"] .redator-theme input::placeholder,
-  [data-theme="light"] .redator-theme textarea::placeholder {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] input::placeholder,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] textarea::placeholder {
     color: rgba(0, 0, 0, 0.35) !important;
   }
   /* Cards da sidebar */
-  [data-theme="light"] .redator-theme [style*="background: #1c1c1c"],
-  [data-theme="light"] .redator-theme [style*="background:#1c1c1c"] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: #1c1c1c"],
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background:#1c1c1c"] {
     background: #ffffff !important;
     border-color: rgba(0, 0, 0, 0.10) !important;
   }
   /* Toolbar do editor */
-  [data-theme="light"] .redator-theme [style*="background: rgba(0, 0, 0, 0.4)"],
-  [data-theme="light"] .redator-theme [style*="background: rgba(0,0,0,0.4)"] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.4)"],
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: rgba(0,0,0,0.4)"] {
     background: #f0f0f0 !important;
     border-color: rgba(0, 0, 0, 0.12) !important;
   }
   /* Corpo do editor */
-  [data-theme="light"] .redator-theme [style*="background: rgba(0, 0, 0, 0.3)"],
-  [data-theme="light"] .redator-theme [style*="background: rgba(0,0,0,0.3)"] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.3)"],
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: rgba(0,0,0,0.3)"] {
     background: #ffffff !important;
     border-color: rgba(0, 0, 0, 0.12) !important;
   }
   /* Toolbar buttons */
-  [data-theme="light"] .redator-theme [style*="color: rgba(255, 255, 255"] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="color: rgba(255, 255, 255"] {
     color: rgba(0, 0, 0, 0.6) !important;
   }
-  [data-theme="light"] .redator-theme [style*="color: #fafafa"] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="color: #fafafa"] {
     color: #1a1a1a !important;
   }
   /* Text muted overrides */
-  [data-theme="light"] .redator-theme .text-white\\/40,
-  [data-theme="light"] .redator-theme .text-white\\/45,
-  [data-theme="light"] .redator-theme .text-white\\/50,
-  [data-theme="light"] .redator-theme .text-white\\/55 {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/40,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/45,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/50,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/55 {
     color: rgba(0, 0, 0, 0.55) !important;
   }
-  [data-theme="light"] .redator-theme .text-white\\/25,
-  [data-theme="light"] .redator-theme .text-white\\/30,
-  [data-theme="light"] .redator-theme .text-white\\/35 {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/25,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/30,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/35 {
     color: rgba(0, 0, 0, 0.35) !important;
   }
-  [data-theme="light"] .redator-theme .text-white\\/70,
-  [data-theme="light"] .redator-theme .text-white\\/75,
-  [data-theme="light"] .redator-theme .text-white\\/80,
-  [data-theme="light"] .redator-theme .text-white\\/85 {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/70,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/75,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/80,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-white\\/85 {
     color: rgba(0, 0, 0, 0.75) !important;
   }
-  [data-theme="light"] .redator-theme .text-\\[\\#fafafa\\] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .text-\\[\\#fafafa\\] {
     color: #1a1a1a !important;
   }
   /* Header do redator */
-  [data-theme="light"] .redator-theme header {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] header {
     background: rgba(248, 248, 248, 0.92) !important;
     border-bottom-color: rgba(0, 0, 0, 0.08) !important;
   }
   /* Blog list cards */
-  [data-theme="light"] .redator-theme [style*="background: rgb(25, 25, 25)"],
-  [data-theme="light"] .redator-theme [style*="background: rgb(25,25,25)"] {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: rgb(25, 25, 25)"],
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] [style*="background: rgb(25,25,25)"] {
     background: #f8f8f8 !important;
   }
   /* Separators */
-  [data-theme="light"] .redator-theme .border-white\\/5,
-  [data-theme="light"] .redator-theme .border-white\\/10 {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .border-white\\/5,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .border-white\\/10 {
     border-color: rgba(0, 0, 0, 0.08) !important;
   }
 
   /* Editor tiptap prose override pra light */
-  [data-theme="light"] .redator-theme .ProseMirror {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .ProseMirror {
     color: #374151 !important;
   }
-  [data-theme="light"] .redator-theme .prose h1,
-  [data-theme="light"] .redator-theme .prose h2,
-  [data-theme="light"] .redator-theme .prose h3 {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose h1,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose h2,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose h3 {
     color: #111827 !important;
   }
-  [data-theme="light"] .redator-theme .prose p,
-  [data-theme="light"] .redator-theme .prose li,
-  [data-theme="light"] .redator-theme .prose ul,
-  [data-theme="light"] .redator-theme .prose ol {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose p,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose li,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose ul,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose ol {
     color: #374151 !important;
   }
-  [data-theme="light"] .redator-theme .prose a {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose a {
     color: #6644f2 !important;
   }
-  [data-theme="light"] .redator-theme .prose code {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose code {
     background: rgba(0, 0, 0, 0.06) !important;
     color: #1a1a1a !important;
   }
-  [data-theme="light"] .redator-theme .prose pre {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose pre {
     background: #f5f5f5 !important;
     color: #1a1a1a !important;
   }
-  [data-theme="light"] .redator-theme .prose blockquote {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose blockquote {
     border-color: rgba(0,0,0,0.15) !important;
     color: rgba(0,0,0,0.6) !important;
   }
-  [data-theme="light"] .redator-theme .prose th,
-  [data-theme="light"] .redator-theme .prose td {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose th,
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose td {
     border-color: rgba(0,0,0,0.12) !important;
     color: #374151 !important;
   }
-  [data-theme="light"] .redator-theme .prose th {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose th {
     background: rgba(0,0,0,0.04) !important;
   }
-  [data-theme="light"] .redator-theme .prose hr {
+  [data-theme="light"] .redator-theme,
+  .redator-theme[data-theme="light"] .prose hr {
     border-color: rgba(0,0,0,0.12) !important;
   }
 

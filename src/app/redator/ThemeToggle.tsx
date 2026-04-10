@@ -15,7 +15,11 @@ function resolve(theme: Theme): "light" | "dark" {
 }
 
 function applyTheme(theme: Theme) {
-  document.documentElement.setAttribute("data-theme", resolve(theme));
+  const resolved = resolve(theme);
+  // Aplica no html E no container .redator-theme (pra garantir que o CSS pega)
+  document.documentElement.setAttribute("data-theme", resolved);
+  const container = document.querySelector(".redator-theme");
+  if (container) container.setAttribute("data-theme", resolved);
 }
 
 // Ícones SVG — sol, lua, monitor
