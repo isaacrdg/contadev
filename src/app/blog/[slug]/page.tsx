@@ -1,15 +1,10 @@
-import { createReader } from "@keystatic/core/reader";
-import keystaticConfig from "../../../../keystatic.config";
-import { DocumentRenderer } from "@keystatic/core/renderer";
+import { getPostBySlug, getAllSlugs } from "@/lib/blog";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-const reader = createReader(process.cwd(), keystaticConfig);
-
-export async function generateStaticParams() {
-  const slugs = await reader.collections.posts.list();
-  return slugs.map((slug) => ({ slug }));
+export function generateStaticParams() {
+  return getAllSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -18,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await reader.collections.posts.read(slug);
+  const post = await getPostBySlug(slug);
   if (!post) return { title: "Post não encontrado" };
   return {
     title: `${post.title} · Blog Conta Dev`,
@@ -38,13 +33,11 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await reader.collections.posts.read(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post || post.status !== "published") {
     notFound();
   }
-
-  const content = await post.content();
 
   // JSON-LD BlogPosting
   const jsonLd = {
@@ -74,7 +67,6 @@ export default async function BlogPostPage({
       className="min-h-screen"
       style={{ background: "#17151e", color: "#fafafa" }}
     >
-      {/* JSON-LD pro head */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -105,9 +97,10 @@ export default async function BlogPostPage({
             </p>
           </header>
 
-          <div className="prose prose-invert prose-sm max-w-none [&_h2]:text-[20px] [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-[16px] [&_h3]:font-semibold [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:text-[14px] [&_p]:text-white/75 [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:text-[14px] [&_ul]:text-white/75 [&_ol]:text-[14px] [&_ol]:text-white/75 [&_li]:mb-1 [&_a]:text-[#c4b1ff] [&_a]:underline [&_a]:underline-offset-2 [&_code]:text-[13px] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-white/[0.06] [&_code]:text-white/80 [&_blockquote]:border-l-2 [&_blockquote]:border-white/20 [&_blockquote]:pl-4 [&_blockquote]:text-white/60 [&_blockquote]:italic">
-            <DocumentRenderer document={content} />
-          </div>
+          <div
+            className="prose prose-invert prose-sm max-w-none [&_h2]:text-[20px] [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-[16px] [&_h3]:font-semibold [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:text-[14px] [&_p]:text-white/75 [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:text-[14px] [&_ul]:text-white/75 [&_ol]:text-[14px] [&_ol]:text-white/75 [&_li]:mb-1 [&_a]:text-[#c4b1ff] [&_a]:underline [&_a]:underline-offset-2 [&_code]:text-[13px] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-white/[0.06] [&_code]:text-white/80 [&_blockquote]:border-l-2 [&_blockquote]:border-white/20 [&_blockquote]:pl-4 [&_blockquote]:text-white/60 [&_blockquote]:italic"
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          />
         </article>
 
         <footer className="mt-16 pt-8 border-t border-white/10">

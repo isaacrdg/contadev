@@ -1,5 +1,4 @@
-import { createReader } from "@keystatic/core/reader";
-import keystaticConfig from "../../../keystatic.config";
+import { getPublishedPosts } from "@/lib/blog";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -9,28 +8,8 @@ export const metadata: Metadata = {
     "Artigos sobre contabilidade pra devs, impostos PJ, planejamento tributário e muito mais.",
 };
 
-export const dynamic = "force-dynamic";
-
-const reader = createReader(process.cwd(), keystaticConfig);
-
-export default async function BlogPage() {
-  const slugs = await reader.collections.posts.list();
-  const allPosts = await Promise.all(
-    slugs.map(async (slug) => {
-      const post = await reader.collections.posts.read(slug);
-      return post ? { slug, ...post } : null;
-    })
-  );
-
-  const posts = allPosts
-    .filter(
-      (p): p is NonNullable<typeof p> =>
-        p !== null && p.status === "published"
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
+export default function BlogPage() {
+  const posts = getPublishedPosts();
 
   return (
     <div

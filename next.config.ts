@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
     "localhost",
     "*.app.github.dev"
   ],
-  serverExternalPackages: ["@keystatic/core", "@keystatic/next"],
 };
 
 export default nextConfig;
