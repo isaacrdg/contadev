@@ -13,6 +13,8 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 import { Underline } from "@tiptap/extension-underline";
 import { getTeamMembers } from "@/lib/team";
 import type { AuthorStep } from "@/lib/blog-store";
+import { usePalette } from "@/app/redator/ThemeContext";
+import { useRedatorUser } from "@/app/redator/useRedatorUser";
 
 interface Props {
   mode: "create" | "edit";
@@ -45,6 +47,8 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const basePath = pathname?.startsWith("/redator") ? "/redator" : "/admin/blog";
+  const p = usePalette();
+  const redatorUser = useRedatorUser();
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [currentSlug, setCurrentSlug] = useState(slug ?? "");
@@ -56,13 +60,50 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
   const [status, setStatus] = useState<"draft" | "published">(initial?.status ?? "draft");
   const [saving, setSaving] = useState(false);
 
-  // Author tracking — IDs dos membros da equipe
-  const [writtenById, setWrittenById] = useState(initial?.writtenBy?.name ?? "");
+  // Author tracking
+  // Regra: em modo "create", quem tá logado é auto-preenchido como "Escreveu"
+  // Em modo "edit", o autor original é preservado (não muda)
+  const autoWrittenBy =
+    mode === "create" && redatorUser ? redatorUser.name : (initial?.writtenBy?.name ?? "");
+  const [writtenById, setWrittenById] = useState(autoWrittenBy);
   const [reviewedById, setReviewedById] = useState(initial?.reviewedBy?.name ?? "");
   const [publishedById, setPublishedById] = useState(initial?.publishedBy?.name ?? "");
+  // Lock: se já tem autor salvo (rascunho editado), não permite mudar
+  const writtenByLocked = mode === "edit" && !!initial?.writtenBy?.name;
+
+  // Prompt modal (substitui browser prompt)
+  const [promptState, setPromptState] = useState<{
+    open: boolean;
+    title: string;
+    placeholder: string;
+    value: string;
+    onConfirm: (val: string) => void;
+  }>({ open: false, title: "", placeholder: "", value: "", onConfirm: () => {} });
+
+  function showPrompt(title: string, placeholder: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      setPromptState({
+        open: true,
+        title,
+        placeholder,
+        value: "",
+        onConfirm: (val) => {
+          setPromptState((s) => ({ ...s, open: false }));
+          resolve(val || null);
+        },
+      });
+    });
+  }
 
   // Stats em tempo real
   const [stats, setStats] = useState({ words: 0, chars: 0, paragraphs: 0 });
+
+  // Auto-fill "Escreveu" quando user carrega (cookie pode demorar)
+  useEffect(() => {
+    if (mode === "create" && redatorUser && !writtenById) {
+      setWrittenById(redatorUser.name);
+    }
+  }, [redatorUser, mode, writtenById]);
 
   // Auto-generate slug from title (se não foi editado manualmente)
   useEffect(() => {
@@ -80,6 +121,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
   }, []);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
@@ -165,13 +207,13 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
     }
   }
 
-  function addLink() {
-    const url = prompt("URL do link:", "https://");
+  async function addLink() {
+    const url = await showPrompt("Inserir link", "https://");
     if (url && editor) editor.chain().focus().setLink({ href: url }).run();
   }
 
-  function addImage() {
-    const url = prompt("URL da imagem:");
+  async function addImage() {
+    const url = await showPrompt("URL da imagem", "https://exemplo.com/imagem.jpg");
     if (url && editor) editor.chain().focus().setImage({ src: url }).run();
   }
 
@@ -194,7 +236,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
           <button
             onClick={() => router.push(basePath)}
             className="text-[12px] font-medium px-4 py-2 rounded-md text-white/70 hover:bg-white/10 transition-colors"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+            style={{ background: p.card, border: `1px solid ${p.cardBorder}` }}
           >
             Cancelar
           </button>
@@ -202,7 +244,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
             onClick={handleSave}
             disabled={!title.trim() || saving}
             className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors hover:bg-white/15 disabled:opacity-40"
-            style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)", color: "#fafafa" }}
+            style={{ background: p.card, border: `1px solid ${p.cardBorder}`, color: p.text }}
           >
             {saving ? "Salvando..." : mode === "create" ? "Criar post" : "Salvar"}
           </button>
@@ -217,8 +259,8 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Título do post"
-            className="w-full text-[20px] font-bold text-[#fafafa] placeholder-white/30 outline-none rounded-lg px-4 py-3"
-            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
+            className="w-full text-[20px] font-bold text-inherit placeholder-current/30 outline-none rounded-lg px-4 py-3"
+            style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText }}
           />
 
           {/* Slug */}
@@ -234,8 +276,8 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
                 setSlugEdited(true);
               }}
               placeholder="url-do-post"
-              className="flex-1 text-[12px] font-mono text-[#fafafa] placeholder-white/25 outline-none rounded-md px-3 py-2"
-              style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
+              className="flex-1 text-[12px] font-mono text-inherit placeholder-current/25 outline-none rounded-md px-3 py-2"
+              style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText }}
             />
             <button
               onClick={() => {
@@ -243,7 +285,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
                 setSlugEdited(false);
               }}
               className="text-[10px] font-medium px-2.5 py-1.5 rounded-md text-white/55 hover:text-white/85 transition-colors"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+              style={{ background: p.card, border: `1px solid ${p.cardBorder}` }}
             >
               Regenerar
             </button>
@@ -255,14 +297,14 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Descrição curta (aparece na listagem e no SEO)"
             rows={2}
-            className="w-full text-[13px] text-[#fafafa] placeholder-white/30 outline-none rounded-lg px-4 py-3 resize-none"
-            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
+            className="w-full text-[13px] text-inherit placeholder-current/30 outline-none rounded-lg px-4 py-3 resize-none"
+            style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText }}
           />
 
           {/* Toolbar */}
           <div
             className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 rounded-t-lg"
-            style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.08)", borderBottom: "none" }}
+            style={{ background: p.toolbarBg, border: `1px solid ${p.inputBorder}`, borderBottom: "none" }}
           >
             <select
               value={
@@ -275,13 +317,13 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
                 if (v === "p") editor.chain().focus().setParagraph().run();
                 else editor.chain().focus().toggleHeading({ level: parseInt(v[1]) as 1 | 2 | 3 }).run();
               }}
-              className="text-[11px] font-medium px-2 py-1.5 rounded bg-transparent text-white/80 outline-none cursor-pointer"
-              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+              className="text-[11px] font-medium px-2 py-1.5 rounded bg-transparent outline-none cursor-pointer"
+              style={{ border: `1px solid ${p.inputBorder}`, color: p.text }}
             >
-              <option value="p" className="bg-[#1c1c1c]">Parágrafo</option>
-              <option value="h1" className="bg-[#1c1c1c]">Título 1</option>
-              <option value="h2" className="bg-[#1c1c1c]">Título 2</option>
-              <option value="h3" className="bg-[#1c1c1c]">Título 3</option>
+              <option value="p" style={{ background: p.card }}>Parágrafo</option>
+              <option value="h1" style={{ background: p.card }}>Título 1</option>
+              <option value="h2" style={{ background: p.card }}>Título 2</option>
+              <option value="h3" style={{ background: p.card }}>Título 3</option>
             </select>
             <Sep />
             <TBtn on={editor.isActive("bold")} click={() => editor.chain().focus().toggleBold().run()} t="Negrito"><strong>B</strong></TBtn>
@@ -316,7 +358,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
           {/* Editor tiptap */}
           <div
             className="rounded-b-lg overflow-hidden"
-            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)", borderTop: "none" }}
+            style={{ background: p.editorBg, border: `1px solid ${p.inputBorder}`, borderTop: "none" }}
           >
             <EditorContent editor={editor} />
           </div>
@@ -327,7 +369,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
           {/* Status + data */}
           <SidebarCard title="Publicação">
             <div>
-              <label className="block text-[11px] text-white/55 mb-1.5">Status</label>
+              <label className="block text-[11px] mb-1.5" style={{ color: p.textMuted }}>Status</label>
               <div className="flex gap-2">
                 {(["draft", "published"] as const).map((s) => (
                   <button
@@ -335,9 +377,9 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
                     onClick={() => setStatus(s)}
                     className="flex-1 text-[11px] font-medium py-2 rounded-md transition-colors"
                     style={{
-                      background: status === s ? (s === "published" ? "rgba(34,197,94,0.15)" : "rgba(234,179,8,0.15)") : "rgba(255,255,255,0.04)",
-                      border: status === s ? (s === "published" ? "1px solid rgba(34,197,94,0.45)" : "1px solid rgba(234,179,8,0.45)") : "1px solid rgba(255,255,255,0.08)",
-                      color: status === s ? (s === "published" ? "#6ee7b7" : "#fbbf24") : "rgba(255,255,255,0.6)",
+                      background: status === s ? (s === "published" ? p.pubBg : p.draftBg) : p.input,
+                      border: `1px solid ${status === s ? (s === "published" ? p.pubBorder : p.draftBorder) : p.inputBorder}`,
+                      color: status === s ? (s === "published" ? p.pubText : p.draftText) : p.textMuted,
                     }}
                   >
                     {s === "draft" ? "Rascunho" : "Publicado"}
@@ -346,13 +388,13 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
               </div>
             </div>
             <div>
-              <label className="block text-[11px] text-white/55 mb-1.5">Data</label>
+              <label className="block text-[11px] mb-1.5" style={{ color: p.textMuted }}>Data</label>
               <input
                 type="date"
                 value={publishedAt}
                 onChange={(e) => setPublishedAt(e.target.value)}
-                className="w-full text-[12px] text-[#fafafa] outline-none rounded-md px-3 py-2"
-                style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", colorScheme: "dark" }}
+                className="w-full text-[12px] text-inherit outline-none rounded-md px-3 py-2"
+                style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText, colorScheme: "auto" }}
               />
             </div>
           </SidebarCard>
@@ -364,6 +406,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
               value={writtenById}
               onChange={setWrittenById}
               timestamp={initial?.writtenBy?.at}
+              disabled={writtenByLocked}
             />
             <AuthorSelect
               label="Revisou"
@@ -381,7 +424,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
 
           {/* Estatísticas — tempo real */}
           <SidebarCard title="Estatísticas">
-            <div className="space-y-1.5 text-[11px] text-white/55">
+            <div className="space-y-1.5 text-[11px]" style={{ color: p.textMuted }}>
               <StatRow label="Palavras" value={stats.words} />
               <StatRow label="Caracteres" value={stats.chars} />
               <StatRow label="Parágrafos" value={stats.paragraphs} />
@@ -393,17 +436,68 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
           </SidebarCard>
         </div>
       </div>
+
+      {/* Prompt modal estilizado (substitui browser prompt) */}
+      {promptState.open && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => {
+            setPromptState((s) => ({ ...s, open: false }));
+          }}
+        >
+          <div
+            className="w-full max-w-[400px] rounded-xl p-5"
+            style={{ background: p.card, border: `1px solid ${p.cardBorder}`, boxShadow: "0 20px 50px -20px rgba(0,0,0,0.7)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[14px] font-semibold mb-4" style={{ color: p.text }}>
+              {promptState.title}
+            </h3>
+            <input
+              type="text"
+              autoFocus
+              value={promptState.value}
+              onChange={(e) => setPromptState((s) => ({ ...s, value: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") promptState.onConfirm(promptState.value);
+                if (e.key === "Escape") setPromptState((s) => ({ ...s, open: false }));
+              }}
+              placeholder={promptState.placeholder}
+              className="w-full text-[13px] outline-none rounded-lg px-4 py-3 mb-4"
+              style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText }}
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setPromptState((s) => ({ ...s, open: false }))}
+                className="text-[12px] font-medium px-4 py-2 rounded-md"
+                style={{ color: p.textMuted }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => promptState.onConfirm(promptState.value)}
+                className="text-[12px] font-medium px-4 py-2 rounded-md"
+                style={{ background: p.input, border: `1px solid ${p.cardBorder}`, color: p.text }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function TBtn({ on, click, t, children }: { on: boolean; click: () => void; t: string; children: React.ReactNode }) {
+  const pal = usePalette();
   return (
     <button
       onClick={click}
       title={t}
       className="w-8 h-8 rounded flex items-center justify-center text-[12px] font-medium transition-colors"
-      style={{ background: on ? "rgba(255,255,255,0.12)" : "transparent", color: on ? "#fafafa" : "rgba(255,255,255,0.55)" }}
+      style={{ background: on ? (pal.bg === "#f5f5f5" ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.12)") : "transparent", color: on ? pal.text : pal.textMuted }}
     >
       {children}
     </button>
@@ -411,13 +505,15 @@ function TBtn({ on, click, t, children }: { on: boolean; click: () => void; t: s
 }
 
 function Sep() {
-  return <div className="w-px h-5 mx-1" style={{ background: "rgba(255,255,255,0.1)" }} />;
+  const pal = usePalette();
+  return <div className="w-px h-5 mx-1" style={{ background: pal.border }} />;
 }
 
 function SidebarCard({ title, children }: { title: string; children: React.ReactNode }) {
+  const pal = usePalette();
   return (
-    <div className="rounded-lg p-4 space-y-3" style={{ background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <h3 className="text-[10px] uppercase tracking-[0.08em] font-semibold text-white/40">{title}</h3>
+    <div className="rounded-lg p-4 space-y-3" style={{ background: pal.card, border: `1px solid ${pal.cardBorder}` }}>
+      <h3 className="text-[10px] uppercase tracking-[0.08em] font-semibold" style={{ color: pal.textDimmed }}>{title}</h3>
       {children}
     </div>
   );
@@ -428,30 +524,43 @@ function AuthorSelect({
   value,
   onChange,
   timestamp,
+  disabled = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   timestamp?: string;
+  disabled?: boolean;
 }) {
+  const pal = usePalette();
   return (
     <div>
-      <label className="block text-[11px] text-white/55 mb-1">{label}</label>
+      <label className="block text-[11px] mb-1" style={{ color: pal.textMuted }}>
+        {label}
+        {disabled && <span className="ml-1 text-[9px] opacity-50">(fixo)</span>}
+      </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full text-[12px] text-[#fafafa] outline-none rounded-md px-3 py-2 cursor-pointer"
-        style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", colorScheme: "dark" }}
+        disabled={disabled}
+        className="w-full text-[12px] outline-none rounded-md px-3 py-2"
+        style={{
+          background: pal.input,
+          border: `1px solid ${pal.inputBorder}`,
+          color: pal.inputText,
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.7 : 1,
+        }}
       >
-        <option value="" className="bg-[#1c1c1c]">—</option>
+        <option value="" style={{ background: pal.card }}>—</option>
         {team.map((m) => (
-          <option key={m.id} value={m.name} className="bg-[#1c1c1c]">
+          <option key={m.id} value={m.name} style={{ background: pal.card }}>
             {m.name}
           </option>
         ))}
       </select>
       {timestamp && (
-        <p className="text-[9px] text-white/35 mt-1 font-mono">
+        <p className="text-[9px] mt-1 font-mono" style={{ color: pal.textDimmed }}>
           {new Date(timestamp).toLocaleString("pt-BR")}
         </p>
       )}
@@ -460,10 +569,11 @@ function AuthorSelect({
 }
 
 function StatRow({ label, value }: { label: string; value: string | number }) {
+  const pal = usePalette();
   return (
     <div className="flex justify-between">
       <span>{label}</span>
-      <span className="tabular-nums font-mono text-white/75">{value}</span>
+      <span className="tabular-nums font-mono" style={{ color: pal.text }}>{value}</span>
     </div>
   );
 }

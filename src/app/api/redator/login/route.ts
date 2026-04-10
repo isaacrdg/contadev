@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-const COOKIE_NAME = "cd_redator_auth";
+const AUTH_COOKIE = "cd_redator_auth";
+const USER_COOKIE = "cd_redator_user";
 const ONE_WEEK = 60 * 60 * 24 * 7;
 
 export async function POST(req: Request) {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { password?: string } = {};
+  let body: { password?: string; userId?: string } = {};
   try {
     body = await req.json();
   } catch {
@@ -23,19 +24,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Senha incorreta" }, { status: 401 });
   }
 
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(COOKIE_NAME, expected, {
+  const res = NextResponse.json({ ok: true, userId: body.userId });
+
+  // Auth cookie
+  res.cookies.set(AUTH_COOKIE, expected, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: ONE_WEEK,
     path: "/",
   });
+
+  // User identity cookie (não httpOnly — lido no client via JS)
+  if (body.userId) {
+    res.cookies.set(USER_COOKIE, body.userId, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: ONE_WEEK,
+      path: "/",
+    });
+  }
+
   return res;
 }
 
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.delete(COOKIE_NAME);
+  res.cookies.delete(AUTH_COOKIE);
+  res.cookies.delete(USER_COOKIE);
   return res;
 }
