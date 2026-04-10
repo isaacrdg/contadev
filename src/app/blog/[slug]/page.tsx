@@ -1,11 +1,9 @@
-import { getPostBySlug, getAllSlugs } from "@/lib/blog";
+import { getPostForRendering, getAllSlugs } from "@/lib/blog";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-export function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -13,7 +11,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getPostForRendering(slug);
   if (!post) return { title: "Post não encontrado" };
   return {
     title: `${post.title} · Blog Conta Dev`,
@@ -33,13 +31,10 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getPostForRendering(slug);
 
-  if (!post || post.status !== "published") {
-    notFound();
-  }
+  if (!post) notFound();
 
-  // JSON-LD BlogPosting
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",

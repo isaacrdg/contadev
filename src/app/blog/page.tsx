@@ -1,4 +1,4 @@
-import { getPublishedPosts } from "@/lib/blog";
+import { getPublishedPostsMeta } from "@/lib/blog";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -8,8 +8,10 @@ export const metadata: Metadata = {
     "Artigos sobre contabilidade pra devs, impostos PJ, planejamento tributário e muito mais.",
 };
 
-export default function BlogPage() {
-  const posts = getPublishedPosts();
+export const dynamic = "force-dynamic";
+
+export default async function BlogPage() {
+  const posts = await getPublishedPostsMeta();
 
   return (
     <div

@@ -135,6 +135,9 @@ export default function AdminShell({
             <NavLink href="/admin/tickets" active={pathname?.startsWith("/admin/tickets")}>
               Tickets
             </NavLink>
+            <NavLink href="/admin/blog" active={pathname?.startsWith("/admin/blog")}>
+              Blog
+            </NavLink>
 
             {/* Hamburger menu — Integrações + Roadmap + (futuras seções internas) + Sair */}
             <div className="relative ml-1" ref={menuRef}>
