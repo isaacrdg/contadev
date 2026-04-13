@@ -93,13 +93,14 @@ export default function Pricing() {
             <button
               key={r}
               onClick={() => setRegion(r)}
-              className="text-[13px] font-medium px-5 py-2 rounded-full transition-all"
+              className="text-[13px] font-medium px-5 py-2 rounded-full transition-all flex items-center gap-2"
               style={{
                 background: region === r ? "rgba(255,255,255,0.10)" : "transparent",
                 border: region === r ? "1px solid rgba(255,255,255,0.20)" : "1px solid rgba(255,255,255,0.06)",
                 color: region === r ? "#fafafa" : "rgba(255,255,255,0.45)",
               }}
             >
+              <span className="text-[15px] leading-none">{r === "brasil" ? "🇧🇷" : "🌎"}</span>
               {REGIONS[r].label}
             </button>
           ))}
@@ -181,12 +182,12 @@ export default function Pricing() {
                       onClick={openForm}
                       className={`w-full flex items-center justify-center gap-2 text-[14px] font-semibold py-3.5 rounded-xl transition-all duration-300 ${
                         isFeatured
-                          ? "hover:shadow-[0_8px_24px_-8px_rgba(102,68,242,0.5)] hover:scale-[1.02]"
-                          : "hover:bg-white/[0.08] hover:border-white/20"
+                          ? "hover:shadow-[0_8px_24px_-8px_rgba(102,68,242,0.6)] hover:scale-[1.02]"
+                          : "hover:brightness-125"
                       }`}
                       style={isFeatured
-                        ? { background: "linear-gradient(135deg, #6644f2, #5129f0)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 6px 20px -6px rgba(102,68,242,0.45)" }
-                        : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", color: "#fafafa" }
+                        ? { background: "linear-gradient(135deg, #6644f2, #5129f0)", color: "#fff", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 6px 20px -6px rgba(102,68,242,0.5)" }
+                        : { background: "linear-gradient(135deg, rgba(102,68,242,0.35), rgba(81,41,240,0.20))", border: "1px solid rgba(117,83,255,0.30)", color: "#fafafa" }
                       }
                     >
                       Começar agora
