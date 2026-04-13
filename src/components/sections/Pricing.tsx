@@ -129,7 +129,7 @@ export default function Pricing() {
                 {/* Badge */}
                 {isFeatured && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.20)", color: "#fafafa" }}>
-                    Melhor custo
+                    Melhor opção
                   </div>
                 )}
 
