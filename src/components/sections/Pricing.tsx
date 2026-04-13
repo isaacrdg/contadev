@@ -186,8 +186,8 @@ export default function Pricing() {
                           : "hover:brightness-125"
                       }`}
                       style={isFeatured
-                        ? { background: "linear-gradient(135deg, #6644f2, #5129f0)", color: "#fff", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 6px 20px -6px rgba(102,68,242,0.5)" }
-                        : { background: "linear-gradient(135deg, rgba(102,68,242,0.35), rgba(81,41,240,0.20))", border: "1px solid rgba(117,83,255,0.30)", color: "#fafafa" }
+                        ? { background: "#6644f2", color: "#fff", border: "1px solid rgba(255,255,255,0.18)", boxShadow: "0 6px 20px -6px rgba(102,68,242,0.5)" }
+                        : { background: "rgba(102,68,242,0.25)", border: "1px solid rgba(117,83,255,0.30)", color: "#fafafa" }
                       }
                     >
                       Começar agora
