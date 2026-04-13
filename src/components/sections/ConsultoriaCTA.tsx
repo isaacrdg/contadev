@@ -54,7 +54,7 @@ export default function ConsultoriaCTA() {
   }, []);
 
   return (
-    <section id="precos" ref={ref} className="relative pt-12 md:pt-20">
+    <section id="consultoria" ref={ref} className="relative pt-12 md:pt-20">
       {/* G1: Respiro vertical via pt acima */}
       <div className="hidden md:block">
         <SectionDivider cross="right" />

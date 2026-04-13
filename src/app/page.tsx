@@ -31,8 +31,8 @@ export default function Home() {
         <Team />
         <Testimonials />
         <Pricing />
-        <ConsultoriaCTA />
         <FAQ />
+        <ConsultoriaCTA />
         <Contact />
       </main>
       <Footer />
