@@ -4,38 +4,50 @@ import { useFormModal } from "@/components/FormContext";
 
 type Region = "brasil" | "internacional";
 
-interface PlanRow {
-  name: string;
+interface RegionPrices {
   mensal: number;
   anual: number;
   bianual: number;
 }
 
-const PLANS: Record<Region, PlanRow[]> = {
-  brasil: [
-    { name: "Essencial", mensal: 24990, anual: 16244, bianual: 15494 },
-    { name: "Premium",   mensal: 34900, anual: 22685, bianual: 21638 },
-  ],
-  internacional: [
-    { name: "Essencial", mensal: 24990, anual: 16244, bianual: 15494 },
-    { name: "Premium",   mensal: 34900, anual: 22685, bianual: 21638 },
-  ],
+const REGIONS: Record<Region, { label: string; prices: RegionPrices; features: string[] }> = {
+  brasil: {
+    label: "Brasil",
+    prices: { mensal: 24990, anual: 16244, bianual: 15494 },
+    features: [
+      "Abertura de empresa grátis",
+      "Emissão ilimitada de notas",
+      "Declarações mensais e anuais",
+      "Suporte via WhatsApp",
+      "Acesso à plataforma",
+    ],
+  },
+  internacional: {
+    label: "Internacional",
+    prices: { mensal: 34900, anual: 22685, bianual: 21638 },
+    features: [
+      "Tudo do plano Brasil",
+      "Invoices em inglês",
+      "Planejamento tributário",
+      "Declaração IRPF inclusa",
+      "Contador dedicado",
+      "Atendimento prioritário",
+    ],
+  },
 };
 
-const BILLING_COLS = [
-  { key: "mensal"  as const, label: "Mensal",  installment: false },
-  { key: "anual"   as const, label: "Anual",   installment: true, badge: "Melhor" },
-  { key: "bianual" as const, label: "Bianual", installment: true },
+type BillingKey = "mensal" | "anual" | "bianual";
+
+const COLUMNS: { key: BillingKey; label: string; featured: boolean }[] = [
+  { key: "mensal", label: "Mensal", featured: false },
+  { key: "anual", label: "Anual", featured: true },
+  { key: "bianual", label: "Bianual", featured: false },
 ];
 
-function fmt(cents: number): string {
+function fmt(cents: number): { main: string; dec: string } {
   const r = Math.floor(cents / 100);
   const d = cents % 100;
-  return `R$${r.toLocaleString("pt-BR")}${d > 0 ? `,${String(d).padStart(2, "0")}` : ""}`;
-}
-
-function discount(monthly: number, price: number): number {
-  return Math.round((1 - price / monthly) * 100);
+  return { main: `R$${r}`, dec: d > 0 ? `,${String(d).padStart(2, "0")}` : "" };
 }
 
 export default function Pricing() {
@@ -54,12 +66,14 @@ export default function Pricing() {
     return () => obs.disconnect();
   }, []);
 
-  const plans = PLANS[region];
+  const data = REGIONS[region];
+  const monthlyBase = data.prices.mensal;
 
   return (
     <section id="precos" ref={ref} className="relative py-16 md:py-24 overflow-hidden">
-      <div className="absolute pointer-events-none" style={{ width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(117,83,255,0.06) 0%, transparent 70%)", top: "-200px", right: "-200px", animation: "pOrb1 25s ease-in-out infinite alternate" }} />
-      <div className="absolute pointer-events-none" style={{ width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.04) 0%, transparent 70%)", bottom: "-150px", left: "-150px", animation: "pOrb2 30s ease-in-out infinite alternate" }} />
+      {/* Background orbs sutis */}
+      <div className="absolute pointer-events-none" style={{ width: "550px", height: "550px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.025) 0%, transparent 70%)", top: "-180px", right: "-180px", animation: "pOrb1 25s ease-in-out infinite alternate" }} />
+      <div className="absolute pointer-events-none" style={{ width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)", bottom: "-120px", left: "-120px", animation: "pOrb2 30s ease-in-out infinite alternate" }} />
 
       <div className="relative z-10 max-w-[1020px] mx-auto px-5 md:px-6">
         {/* Header */}
@@ -68,13 +82,13 @@ export default function Pricing() {
             Quanto custa simplificar{" "}
             <em className="not-italic" style={{ background: "linear-gradient(180deg, #3c0dff, #7553ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>sua PJ?</em>
           </h2>
-          <p className="text-[15px] text-white/50 mt-4 max-w-[480px] mx-auto leading-relaxed">
-            Mensalidade fixa independente do seu faturamento. Sem taxa escondida, sem 13ª mensalidade, sem reajuste surpresa.
+          <p className="text-[15px] text-white/50 mt-4 max-w-[460px] mx-auto leading-relaxed">
+            Mensalidade fixa independente do seu faturamento. Sem taxa escondida, sem reajuste surpresa.
           </p>
         </div>
 
         {/* Region toggle */}
-        <div className="flex items-center justify-center gap-2 mb-10 fade-up">
+        <div className="flex items-center justify-center gap-2 mb-12 fade-up">
           {(["brasil", "internacional"] as Region[]).map((r) => (
             <button
               key={r}
@@ -86,15 +100,19 @@ export default function Pricing() {
                 color: region === r ? "#fafafa" : "rgba(255,255,255,0.45)",
               }}
             >
-              {r === "brasil" ? "Brasil" : "Internacional"}
+              {REGIONS[r].label}
             </button>
           ))}
         </div>
 
-        {/* 3 billing columns */}
+        {/* 3 Cards: Mensal | Anual (featured) | Bianual */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-4 items-start">
-          {BILLING_COLS.map((col, i) => {
-            const isFeatured = col.key === "anual";
+          {COLUMNS.map((col, i) => {
+            const price = data.prices[col.key];
+            const disc = col.key !== "mensal" ? Math.round((1 - price / monthlyBase) * 100) : 0;
+            const { main, dec } = fmt(price);
+            const isFeatured = col.featured;
+
             return (
               <div
                 key={col.key}
@@ -102,92 +120,81 @@ export default function Pricing() {
                 style={{
                   transitionDelay: `${i * 100}ms`,
                   background: isFeatured ? "rgba(15,14,20,0.98)" : "rgba(255,255,255,0.015)",
-                  border: isFeatured ? "1px solid rgba(117,83,255,0.30)" : "1px solid rgba(255,255,255,0.06)",
+                  border: isFeatured ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(255,255,255,0.06)",
                   borderRadius: "14px",
-                  boxShadow: isFeatured ? "0 24px 60px -16px rgba(0,0,0,0.35), 0 0 60px -20px rgba(117,83,255,0.12)" : "0 2px 8px rgba(0,0,0,0.06)",
+                  boxShadow: isFeatured ? "0 24px 60px -16px rgba(0,0,0,0.35)" : "none",
                 }}
               >
                 {/* Badge */}
-                {col.badge && (
-                  <div
-                    className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider"
-                    style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", boxShadow: "0 4px 14px rgba(34,197,94,0.35)" }}
-                  >
-                    {col.badge}
+                {isFeatured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.20)", color: "#fafafa" }}>
+                    Melhor custo
                   </div>
                 )}
 
-                {/* Sheen */}
+                {/* Sheen animado no featured */}
                 {isFeatured && (
                   <div className="h-[2px] w-full rounded-t-[14px] overflow-hidden" style={{ background: "rgba(255,255,255,0.04)" }}>
-                    <div className="h-full w-1/2" style={{ background: "linear-gradient(90deg, transparent, #7553ff, #8f6fff, transparent)", animation: "pSheen 4s ease-in-out infinite" }} />
+                    <div className="h-full w-1/3" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)", animation: "pSheen 5s ease-in-out infinite" }} />
                   </div>
                 )}
 
                 <div className={`p-6 md:p-7 flex flex-col flex-1 ${isFeatured ? "pt-8 md:pt-9" : ""}`}>
-                  {/* Billing period label */}
-                  <p className="font-display font-semibold text-[11px] uppercase tracking-[.14em] mb-6" style={{ color: isFeatured ? "#8f6fff" : "rgba(255,255,255,0.30)" }}>
+                  {/* Period label */}
+                  <p className="font-display font-semibold text-[11px] uppercase tracking-[.14em] mb-6" style={{ color: isFeatured ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.30)" }}>
                     {col.label}
                   </p>
 
-                  {/* Plan prices */}
-                  <div className="space-y-5 mb-6">
-                    {plans.map((plan) => {
-                      const price = plan[col.key];
-                      const disc = col.key !== "mensal" ? discount(plan.mensal, price) : 0;
-                      return (
-                        <div key={plan.name}>
-                          <p className="text-[10px] uppercase tracking-[0.1em] text-white/40 font-medium mb-1.5">{plan.name}</p>
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            {disc > 0 && (
-                              <span className="text-[12px] text-white/25 line-through">{fmt(plan.mensal)}</span>
-                            )}
-                            <span className="font-display font-bold text-white" style={{ fontSize: isFeatured ? "32px" : "28px", lineHeight: 1, letterSpacing: "-0.02em" }}>
-                              {fmt(price)}
-                            </span>
-                            <span className="text-[12px] text-white/30">/mês</span>
-                            {disc > 0 && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.30)", color: "#6ee7b7" }}>
-                                -{disc}%
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  {/* Price */}
+                  <div className="mb-6">
+                    {disc > 0 && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[13px] text-white/25 line-through">{fmt(monthlyBase).main}{fmt(monthlyBase).dec}/mês</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#6ee7b7" }}>
+                          -{disc}%
+                        </span>
+                      </div>
+                    )}
+                    <span className="font-display font-bold" style={{ fontSize: isFeatured ? "46px" : "40px", color: "#fafafa", lineHeight: 1, letterSpacing: "-0.02em" }}>{main}</span>
+                    {dec && <span className="font-display font-bold text-[20px]" style={{ color: "rgba(250,250,250,0.35)" }}>{dec}</span>}
+                    <span className="text-[13px] ml-1.5 text-white/30">/mês</span>
                   </div>
 
-                  {/* Installment */}
-                  {col.installment ? (
-                    <p className="text-[11px] text-white/40 mb-5">Parcelável em até 12x</p>
-                  ) : (
-                    <p className="text-[11px] text-white/25 mb-5">Sem parcelamento</p>
-                  )}
-
                   {/* Divider */}
-                  <div className="mb-5" style={{ height: "1px", background: isFeatured ? "rgba(117,83,255,0.12)" : "rgba(255,255,255,0.06)" }} />
+                  <div className="mb-6" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
 
-                  {/* Key benefit */}
-                  <p className="text-[12px] text-white/50 mb-6 leading-relaxed">
-                    {col.key === "mensal" && "Flexibilidade total, pague mês a mês sem compromisso de longo prazo."}
-                    {col.key === "anual" && "O equilíbrio ideal entre economia e flexibilidade. Escolha mais popular entre nossos clientes."}
-                    {col.key === "bianual" && "A maior economia possível pra quem já sabe que a Conta Dev é o lugar certo."}
-                  </p>
+                  {/* Features */}
+                  <ul className="flex flex-col gap-3 mb-8">
+                    {data.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-[13px] leading-snug" style={{ color: "rgba(224,224,224,0.90)" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 mt-0.5">
+                          <path d="M20 6L9 17l-5-5" stroke={isFeatured ? "#fafafa" : "rgba(255,255,255,0.30)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
 
                   {/* CTA */}
                   <div className="mt-auto">
                     <button
                       onClick={openForm}
-                      className="w-full flex items-center justify-center gap-2 text-[14px] font-semibold py-3.5 rounded-xl transition-all duration-300 text-white"
+                      className={`w-full flex items-center justify-center gap-2 text-[14px] font-semibold py-3.5 rounded-xl transition-all duration-300 ${
+                        isFeatured
+                          ? "hover:shadow-[0_8px_24px_-8px_rgba(255,255,255,0.25)] hover:scale-[1.02]"
+                          : "hover:bg-white/[0.08] hover:border-white/20"
+                      }`}
                       style={isFeatured
-                        ? { background: "linear-gradient(135deg, #6644f2, #5129f0)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 6px 20px -6px rgba(102,68,242,0.45)" }
-                        : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)" }
+                        ? { background: "#fafafa", color: "#0e0d14", border: "none" }
+                        : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", color: "#fafafa" }
                       }
                     >
                       Começar agora
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-0.5">
-                        <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-                      </svg>
+                      {isFeatured && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-0.5">
+                          <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -208,9 +215,9 @@ export default function Pricing() {
       </div>
 
       <style jsx>{`
-        @keyframes pOrb1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-60px,40px) scale(1.15); } }
-        @keyframes pOrb2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(50px,-30px) scale(1.1); } }
-        @keyframes pSheen { 0% { transform: translateX(-100%); } 50% { transform: translateX(300%); } 100% { transform: translateX(-100%); } }
+        @keyframes pOrb1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-50px,30px) scale(1.1); } }
+        @keyframes pOrb2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px,-20px) scale(1.08); } }
+        @keyframes pSheen { 0% { transform: translateX(-200%); } 50% { transform: translateX(400%); } 100% { transform: translateX(-200%); } }
       `}</style>
     </section>
   );
