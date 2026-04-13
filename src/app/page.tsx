@@ -8,9 +8,8 @@ import Technology from "@/components/sections/Technology";
 import Team from "@/components/sections/Team";
 import Testimonials from "@/components/sections/Testimonials";
 import Pricing from "@/components/sections/Pricing";
-import ConsultoriaCTA from "@/components/sections/ConsultoriaCTA";
 import FAQ from "@/components/sections/FAQ";
-import Contact from "@/components/sections/Contact";
+import FinalCTA from "@/components/sections/FinalCTA";
 import Footer from "@/components/sections/Footer";
 import FloatingButton from "@/components/FloatingButton";
 import GridLines from "@/components/GridLines";
@@ -32,8 +31,7 @@ export default function Home() {
         <Testimonials />
         <Pricing />
         <FAQ />
-        <ConsultoriaCTA />
-        <Contact />
+        <FinalCTA />
       </main>
       <Footer />
     </div>

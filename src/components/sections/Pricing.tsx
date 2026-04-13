@@ -70,12 +70,12 @@ export default function Pricing() {
   const monthlyBase = data.prices.mensal;
 
   return (
-    <section id="precos" ref={ref} className="relative py-16 md:py-24 overflow-hidden">
-      {/* Background orbs sutis */}
-      <div className="absolute pointer-events-none" style={{ width: "550px", height: "550px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.025) 0%, transparent 70%)", top: "-180px", right: "-180px", animation: "pOrb1 25s ease-in-out infinite alternate" }} />
-      <div className="absolute pointer-events-none" style={{ width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)", bottom: "-120px", left: "-120px", animation: "pOrb2 30s ease-in-out infinite alternate" }} />
+    <section id="precos" ref={ref} className="relative py-16 md:py-24">
 
-      <div className="relative z-10 max-w-[1020px] mx-auto px-5 md:px-6">
+      <div className="relative max-w-[1020px] mx-auto px-5 md:px-6">
+        {/* Background orbs sutis — dentro do container pra não vazar das grid lines */}
+        <div className="absolute pointer-events-none" style={{ width: "550px", height: "550px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.025) 0%, transparent 70%)", top: "-180px", right: "-180px", animation: "pOrb1 25s ease-in-out infinite alternate" }} />
+        <div className="absolute pointer-events-none" style={{ width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)", bottom: "-120px", left: "-120px", animation: "pOrb2 30s ease-in-out infinite alternate" }} />
         {/* Header */}
         <div className="text-center mb-10 fade-up">
           <h2 className="font-display font-bold text-3xl md:text-[44px] leading-[1.1] tracking-tight text-white" style={{ letterSpacing: "-.3px" }}>
@@ -120,10 +120,10 @@ export default function Pricing() {
                 className={`fade-up group relative flex flex-col transition-transform duration-300 hover:-translate-y-1 ${isFeatured ? "md:-mt-6 md:mb-[-24px]" : ""}`}
                 style={{
                   transitionDelay: `${i * 100}ms`,
-                  background: isFeatured ? "rgba(15,14,20,0.98)" : "rgba(255,255,255,0.015)",
+                  background: isFeatured ? "#191919" : "rgba(255,255,255,0.015)",
                   border: isFeatured ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(255,255,255,0.06)",
                   borderRadius: "14px",
-                  boxShadow: isFeatured ? "0 24px 60px -16px rgba(0,0,0,0.35)" : "none",
+                  boxShadow: "none",
                 }}
               >
                 {/* Badge */}

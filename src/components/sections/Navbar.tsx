@@ -5,7 +5,7 @@ import { useFormModal } from "@/components/FormContext";
 const links = [
   { label: "Jornada",       href: "#jornada" },
   { label: "Plataforma",   href: "#tecnologia" },
-  { label: "Contato",        href: "#precos" },
+  { label: "Preços",        href: "#precos" },
   { label: "FAQ",           href: "#faq" },
 ];
 
