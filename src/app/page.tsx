@@ -7,6 +7,7 @@ import Calculator from "@/components/sections/Calculator";
 import Technology from "@/components/sections/Technology";
 import Team from "@/components/sections/Team";
 import Testimonials from "@/components/sections/Testimonials";
+import Pricing from "@/components/sections/Pricing";
 import ConsultoriaCTA from "@/components/sections/ConsultoriaCTA";
 import FAQ from "@/components/sections/FAQ";
 import Contact from "@/components/sections/Contact";
@@ -29,6 +30,7 @@ export default function Home() {
         <Technology />
         <Team />
         <Testimonials />
+        <Pricing />
         <ConsultoriaCTA />
         <FAQ />
         <Contact />
