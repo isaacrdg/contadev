@@ -43,7 +43,7 @@ const plans = [
     period: "/mês",
     originalPrice: "R$249,90",
     savings: "Economize R$600/ano",
-    desc: "Cobrado anualmente · Melhor custo-benefício",
+    desc: "Cobrado anualmente, sem reajuste no período",
     badge: "Economia de 20%",
     features: [
       "Todos os benefícios do plano Brasil",
@@ -107,14 +107,11 @@ export default function Pricing() {
       <div className="relative z-10 max-w-[1020px] mx-auto px-5 md:px-6">
         {/* Header */}
         <div className="text-center mb-12 fade-up">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/40 font-medium mb-4">
-            Preços
-          </p>
           <h2
             className="font-display font-bold text-3xl md:text-[44px] leading-[1.1] tracking-tight text-white"
             style={{ letterSpacing: "-.3px" }}
           >
-            Planos{" "}
+            Quanto custa simplificar{" "}
             <em
               className="not-italic"
               style={{
@@ -123,12 +120,12 @@ export default function Pricing() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              transparentes
+              sua PJ?
             </em>
           </h2>
           <p className="text-[15px] text-white/50 mt-4 max-w-[480px] mx-auto leading-relaxed">
-            O preço não muda com o seu faturamento. Se você ganha 5, 10 ou 100 mil
-            por mês — a mensalidade é a mesma.
+            Mensalidade fixa independente do seu faturamento. Sem taxa escondida,
+            sem 13ª mensalidade, sem reajuste surpresa.
           </p>
         </div>
 
@@ -350,10 +347,10 @@ export default function Pricing() {
           })}
         </div>
 
-        {/* Social proof + footer */}
+        {/* Footer */}
         <div className="text-center mt-10 space-y-2 fade-up" style={{ transitionDelay: "300ms" }}>
           <p className="text-[13px] text-white/50">
-            Mais de <span className="text-white/80 font-semibold">800 devs</span> já simplificaram sua contabilidade
+            Mais de <span className="text-white/80 font-semibold">800 devs</span> já simplificaram a contabilidade com a Conta Dev
           </p>
           <p className="text-[11px] text-white/25">
             Sem fidelidade · Sem multa · Cancele quando quiser
