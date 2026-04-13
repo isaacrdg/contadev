@@ -181,11 +181,11 @@ export default function Pricing() {
                       onClick={openForm}
                       className={`w-full flex items-center justify-center gap-2 text-[14px] font-semibold py-3.5 rounded-xl transition-all duration-300 ${
                         isFeatured
-                          ? "hover:shadow-[0_8px_24px_-8px_rgba(255,255,255,0.25)] hover:scale-[1.02]"
+                          ? "hover:shadow-[0_8px_24px_-8px_rgba(102,68,242,0.5)] hover:scale-[1.02]"
                           : "hover:bg-white/[0.08] hover:border-white/20"
                       }`}
                       style={isFeatured
-                        ? { background: "#fafafa", color: "#0e0d14", border: "none" }
+                        ? { background: "linear-gradient(135deg, #6644f2, #5129f0)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 6px 20px -6px rgba(102,68,242,0.45)" }
                         : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", color: "#fafafa" }
                       }
                     >
