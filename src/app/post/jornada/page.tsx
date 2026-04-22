@@ -99,11 +99,17 @@ export default function JornadaCarrosselPage() {
         Carrossel Instagram · 1080×1350 · 5 slides · zoom do browser em ~40% pra preview · 100% pra screenshot · aguarde ~5s pra animações das ilustrações chegarem no estado final antes de capturar
       </div>
 
-      {slides.map((s) => (
-        <SlideFrame key={s.index} label={`${s.index} / 05`}>
-          <Slide {...s} />
-        </SlideFrame>
-      ))}
+      {slides.map((s, i) =>
+        i === 0 ? (
+          <SlideFrame key={s.index} label={`${s.index} / 05`}>
+            <SlideCover Illustration={s.Illustration} />
+          </SlideFrame>
+        ) : (
+          <SlideFrame key={s.index} label={`${s.index} / 05`}>
+            <Slide {...s} />
+          </SlideFrame>
+        )
+      )}
 
       <SlideFrame label={"05 / 05"}>
         <SlideCTA />
@@ -148,7 +154,140 @@ function SlideFrame({ label, children }: { label: string; children: React.ReactN
 }
 
 /* ============================================================
-   Slide — slide padrão dos passos 01–04
+   SlideCover — slide 1, capa do feed
+   Sem eyebrow numerado, sem brand. Headline grande no topo,
+   ilustração como hero, sub curta + dica de swipe embaixo.
+   ============================================================ */
+function SlideCover({ Illustration }: { Illustration: React.ComponentType }) {
+  return (
+    <>
+      {/* Glow ambiente roxo, mais forte e centralizado pra dar peso de capa */}
+      <div
+        style={{
+          position: "absolute",
+          top: -150,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 900,
+          height: 700,
+          borderRadius: "50%",
+          background:
+            "radial-gradient(ellipse, rgba(117,83,255,0.18) 0%, rgba(117,83,255,0.05) 45%, transparent 75%)",
+          filter: "blur(70px)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Grid sutil */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          maskImage: "radial-gradient(ellipse at 50% 45%, #000 50%, transparent 90%)",
+          WebkitMaskImage: "radial-gradient(ellipse at 50% 45%, #000 50%, transparent 90%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          height: "100%",
+          padding: "100px 80px 70px",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Headline grande no topo — voz da capa */}
+        <h1
+          style={{
+            fontSize: 88,
+            lineHeight: 0.98,
+            letterSpacing: "-0.035em",
+            fontWeight: 700,
+            color: "#fafafa",
+            margin: 0,
+            maxWidth: 880,
+          }}
+        >
+          Começa com <em className="not-italic gradient-text">gente</em> que entende de tech.
+        </h1>
+
+        {/* Ilustração — hero */}
+        <div
+          style={{
+            marginTop: 56,
+            width: "100%",
+            aspectRatio: "4 / 3",
+            borderRadius: 20,
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+            position: "relative",
+            boxShadow: "0 30px 80px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(117,83,255,0.06)",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: "scale(2.6)",
+              transformOrigin: "center center",
+            }}
+          >
+            <Illustration />
+          </div>
+        </div>
+
+        {/* Rodapé — sub à esquerda, dica de swipe à direita */}
+        <div
+          style={{
+            marginTop: "auto",
+            paddingTop: 36,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            gap: 24,
+          }}
+        >
+          <p
+            style={{
+              fontSize: 22,
+              lineHeight: 1.4,
+              color: "rgba(224,224,224,0.85)",
+              fontWeight: 300,
+              maxWidth: 600,
+              margin: 0,
+            }}
+          >
+            Sem fila. Sem chatbot. Sem repetir sua história.
+          </p>
+          <span
+            style={{
+              fontSize: 16,
+              fontStyle: "italic",
+              color: "rgba(255,255,255,0.5)",
+              fontWeight: 400,
+              whiteSpace: "nowrap",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            uma jornada em 4 atos
+            <ArrowRight size={18} color="rgba(255,255,255,0.5)" />
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================
+   Slide — slide padrão dos passos 02–04
    ============================================================ */
 function Slide({ index, total, eyebrow, headline, sub, hint, Illustration }: Slide) {
   return (
@@ -192,41 +331,37 @@ function Slide({ index, total, eyebrow, headline, sub, hint, Illustration }: Sli
           flexDirection: "column",
         }}
       >
-        {/* Topo: eyebrow + branding */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "#fafafa",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {index}
-              <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 500 }}> / {total}</span>
-            </span>
-            <span
-              style={{
-                width: 28,
-                height: 1,
-                background: "rgba(255,255,255,0.2)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.5)",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-              }}
-            >
-              {eyebrow}
-            </span>
-          </div>
-
-          <BrandMark />
+        {/* Topo: eyebrow */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: "#fafafa",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {index}
+            <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 500 }}> / {total}</span>
+          </span>
+          <span
+            style={{
+              width: 28,
+              height: 1,
+              background: "rgba(255,255,255,0.2)",
+            }}
+          />
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.5)",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+            }}
+          >
+            {eyebrow}
+          </span>
         </div>
 
         {/* Ilustração — moldura 4:3 reaproveitando o componente do site */}
@@ -357,20 +492,21 @@ function SlideCTA() {
           flexDirection: "column",
         }}
       >
-        {/* Topo: brand + eyebrow */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <BrandMark />
+        {/* Topo: eyebrow centralizado, sem brand */}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
+          <span style={{ width: 40, height: 1, background: "rgba(255,255,255,0.15)" }} />
           <span
             style={{
               fontSize: 11,
               fontWeight: 600,
               color: "rgba(255,255,255,0.5)",
-              letterSpacing: "0.18em",
+              letterSpacing: "0.22em",
               textTransform: "uppercase",
             }}
           >
             Pra você que codifica
           </span>
+          <span style={{ width: 40, height: 1, background: "rgba(255,255,255,0.15)" }} />
         </div>
 
         {/* Centro */}
@@ -482,34 +618,6 @@ function SlideCTA() {
 /* ============================================================
    Pequenos componentes utilitários
    ============================================================ */
-function BrandMark() {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <div
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: 7,
-          background: "linear-gradient(135deg, #6644f2, #5129f0)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 800,
-          fontSize: 14,
-          color: "#fff",
-          letterSpacing: "-0.02em",
-          boxShadow: "0 6px 20px -6px rgba(102,68,242,0.6)",
-        }}
-      >
-        C
-      </div>
-      <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.01em", color: "#fafafa" }}>
-        Conta Dev
-      </span>
-    </div>
-  );
-}
-
 function ArrowRight({ color = "rgba(255,255,255,0.6)", size = 26 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
