@@ -271,23 +271,10 @@ export default async function BlogPostPage({
         </div>
       </div>
 
-      {/* CORPO DO POST */}
+      {/* CORPO DO POST — estilos no globals.css em .blog-content */}
       <article className="max-w-3xl mx-auto px-6 pb-16">
         <div
-          className="prose prose-invert max-w-none
-            [&>p]:text-[16px] [&>p]:leading-[1.75] [&>p]:mb-6 [&>p]:text-white/80
-            [&>h2]:text-[26px] [&>h2]:font-bold [&>h2]:tracking-tight [&>h2]:mt-14 [&>h2]:mb-5
-            [&>h3]:text-[20px] [&>h3]:font-semibold [&>h3]:tracking-tight [&>h3]:mt-10 [&>h3]:mb-4
-            [&>ul]:my-6 [&>ul]:pl-6 [&>ul>li]:text-[16px] [&>ul>li]:leading-[1.7] [&>ul>li]:text-white/80 [&>ul>li]:mb-2
-            [&>ol]:my-6 [&>ol]:pl-6 [&>ol>li]:text-[16px] [&>ol>li]:leading-[1.7] [&>ol>li]:text-white/80 [&>ol>li]:mb-2
-            [&>p>strong]:text-white [&>p>strong]:font-semibold
-            [&_a]:text-[#c4b1ff] [&_a]:underline [&_a]:underline-offset-[3px] [&_a]:decoration-[#c4b1ff]/40 hover:[&_a]:decoration-[#c4b1ff]
-            [&>p>code]:font-mono [&>p>code]:text-[14px] [&>p>code]:px-1.5 [&>p>code]:py-0.5 [&>p>code]:rounded [&>p>code]:bg-white/[0.07] [&>p>code]:text-[#c4b1ff]
-            [&>pre]:bg-black/40 [&>pre]:border [&>pre]:border-white/10 [&>pre]:rounded-xl [&>pre]:p-5 [&>pre]:my-7 [&>pre]:overflow-x-auto
-            [&>pre>code]:font-mono [&>pre>code]:text-[13px] [&>pre>code]:text-white/85
-            [&>blockquote]:border-l-2 [&>blockquote]:border-[#7553ff]/60 [&>blockquote]:pl-5 [&>blockquote]:py-1 [&>blockquote]:my-7 [&>blockquote]:text-white/70 [&>blockquote]:italic
-            [&>hr]:my-12 [&>hr]:border-white/10
-            [&_img]:rounded-xl [&_img]:my-8"
+          className="blog-content"
           dangerouslySetInnerHTML={{ __html: post.contentHtml }}
         />
 
