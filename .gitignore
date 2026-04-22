@@ -31,3 +31,4 @@ contadev/
 
 # leads storage local (dados de leads do form, sem persistência em deploy)
 data/
+.env*.local

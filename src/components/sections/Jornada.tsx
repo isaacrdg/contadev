@@ -115,7 +115,7 @@ function IllustrationBase({ children, tint }: { children: React.ReactNode; tint:
 }
 
 /* 01 — Conversa real no WhatsApp com a especialista Malu (venda consultiva) */
-function Step01() {
+export function Step01() {
   const DoubleCheck = () => (
     <svg width="13" height="9" viewBox="0 0 16 11" fill="none">
       <path d="M11.071 0.653a.5.5 0 0 1 .713.701l-5.5 5.6a.5.5 0 0 1-.713 0L3.222 4.515a.5.5 0 1 1 .713-.701L6 5.916z" fill="#53bdeb" />
@@ -430,7 +430,7 @@ function Step01() {
 }
 
 /* 02 — Mini dashboard com stats, line chart e donut animados */
-function Step02() {
+export function Step02() {
   return (
     <IllustrationBase tint="rgba(59,130,246,0.14)">
       <div className="dash-wrap">
@@ -719,7 +719,7 @@ function Step02() {
 }
 
 /* 03 — Especialista: avatar + cursor pulsando ao "clicar" */
-function Step03() {
+export function Step03() {
   return (
     <IllustrationBase tint="rgba(117,83,255,0.16)">
       <div className="spec-mock">
@@ -1003,7 +1003,7 @@ function Step03() {
 }
 
 /* 04 — Calendário com eventos automáticos + notificação do contador */
-function Step04() {
+export function Step04() {
   const days = Array.from({ length: 35 }, (_, i) => i - 2); // grid começando com offset
   const today = 17;
   const events: Record<number, "auto" | "decision"> = {

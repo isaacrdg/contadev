@@ -2,22 +2,78 @@ import { getPublishedPostsMeta } from "@/lib/blog";
 import Link from "next/link";
 import type { Metadata } from "next";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://conta-dev.com";
+const BLOG_URL = `${SITE_URL}/blog`;
+const BLOG_DESCRIPTION =
+  "Artigos sobre contabilidade pra devs, impostos PJ, planejamento tributário e muito mais.";
+
 export const metadata: Metadata = {
   title: "Blog · Conta Dev",
-  description:
-    "Artigos sobre contabilidade pra devs, impostos PJ, planejamento tributário e muito mais.",
+  description: BLOG_DESCRIPTION,
+  alternates: { canonical: BLOG_URL },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Blog · Conta Dev",
+    description: BLOG_DESCRIPTION,
+    url: BLOG_URL,
+    siteName: "Conta Dev",
+    locale: "pt_BR",
+    type: "website",
+    images: [
+      {
+        url: `${SITE_URL}/og?title=Blog+Conta+Dev&tag=ARTIGOS+%C2%B7+CONTA+DEV`,
+        width: 1200,
+        height: 630,
+        alt: "Blog Conta Dev",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog · Conta Dev",
+    description: BLOG_DESCRIPTION,
+  },
 };
 
-export const dynamic = "force-dynamic";
+// ISR — regenera no máximo a cada 60s; api/blog faz revalidatePath após mutações
+export const revalidate = 60;
 
 export default async function BlogPage() {
   const posts = await getPublishedPostsMeta();
+
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "Blog Conta Dev",
+    description: BLOG_DESCRIPTION,
+    url: BLOG_URL,
+    inLanguage: "pt-BR",
+    publisher: {
+      "@type": "Organization",
+      name: "Conta Dev",
+      url: SITE_URL,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` },
+    },
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      description: p.description,
+      url: `${BLOG_URL}/${p.slug}`,
+      datePublished: p.publishedAt,
+      dateModified: p.updatedAt,
+      author: { "@type": "Person", name: p.author },
+    })),
+  };
 
   return (
     <div
       className="min-h-screen"
       style={{ background: "#17151e", color: "#fafafa" }}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+      />
       <div className="max-w-3xl mx-auto px-6 py-16">
         <header className="mb-12">
           <Link

@@ -14,6 +14,10 @@ export interface PostMeta {
   title: string;
   description: string;
   publishedAt: string;
+  updatedAt: string;
+  tags: string[];
+  ogImage?: string;
+  author: string;
 }
 
 export interface Post extends PostMeta {
@@ -22,11 +26,15 @@ export interface Post extends PostMeta {
 
 export async function getPublishedPostsMeta(): Promise<PostMeta[]> {
   const posts = await getStorePosts();
-  return posts.map(({ slug, title, description, publishedAt }) => ({
+  return posts.map(({ slug, title, description, publishedAt, updatedAt, tags, ogImage, author }) => ({
     slug,
     title,
     description,
     publishedAt,
+    updatedAt: updatedAt ?? publishedAt,
+    tags: tags ?? [],
+    ogImage,
+    author: author ?? "Conta Dev",
   }));
 }
 
@@ -39,6 +47,10 @@ export async function getPostForRendering(slug: string): Promise<Post | null> {
     title: post.title,
     description: post.description,
     publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt ?? post.publishedAt,
+    tags: post.tags ?? [],
+    ogImage: post.ogImage,
+    author: post.author ?? "Conta Dev",
     contentHtml: post.content,
   };
 }

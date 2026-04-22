@@ -23,6 +23,12 @@ export default async function RedatorEditPostPage({
         publishedAt: post.publishedAt,
         status: post.status,
         content: post.content,
+        tags: post.tags,
+        ogImage: post.ogImage,
+        author: post.author,
+        writtenBy: post.writtenBy,
+        reviewedBy: post.reviewedBy,
+        publishedBy: post.publishedBy,
       }}
     />
   );

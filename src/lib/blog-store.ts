@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { readJson, writeJson } from "./kv";
+import { BlogPostCreateSchema, BlogPostUpdateSchema, type PostStatus } from "./blog-schema";
 
 export interface AuthorStep {
   name: string;
@@ -11,8 +12,11 @@ export interface BlogPost {
   title: string;
   description: string;
   publishedAt: string;
-  status: "draft" | "published";
+  status: PostStatus;
   content: string; // HTML from tiptap editor
+  tags: string[];
+  ogImage?: string;
+  author: string;
   writtenBy?: AuthorStep;  // quem escreveu
   reviewedBy?: AuthorStep; // quem revisou
   publishedBy?: AuthorStep; // quem publicou
@@ -24,7 +28,13 @@ const KEY = "blog-posts";
 
 export async function readPosts(): Promise<BlogPost[]> {
   const raw = await readJson<BlogPost[]>(KEY, []);
-  return Array.isArray(raw) ? raw : [];
+  if (!Array.isArray(raw)) return [];
+  // Backfill de campos novos em posts antigos — não persiste, só preenche em leitura
+  return raw.map((p) => ({
+    ...p,
+    tags: p.tags ?? [],
+    author: p.author ?? "Conta Dev",
+  }));
 }
 
 async function writePosts(posts: BlogPost[]): Promise<void> {
@@ -60,11 +70,17 @@ export async function createPost(data: {
   title: string;
   description: string;
   publishedAt: string;
-  status: "draft" | "published";
+  status: PostStatus;
   content: string;
+  tags?: string[];
+  ogImage?: string;
+  author?: string;
 }): Promise<BlogPost> {
+  // Valida campos obrigatórios via Zod
+  const validated = BlogPostCreateSchema.parse(data);
+
   const now = new Date().toISOString();
-  const slug = slugify(data.title) || crypto.randomUUID().slice(0, 8);
+  const slug = slugify(validated.title) || crypto.randomUUID().slice(0, 8);
   const posts = await readPosts();
 
   // Evita slug duplicado
@@ -77,11 +93,14 @@ export async function createPost(data: {
 
   const post: BlogPost = {
     slug: finalSlug,
-    title: data.title.trim(),
-    description: data.description.trim(),
-    publishedAt: data.publishedAt,
-    status: data.status,
-    content: data.content,
+    title: validated.title.trim(),
+    description: validated.description.trim(),
+    publishedAt: validated.publishedAt,
+    status: validated.status,
+    content: validated.content,
+    tags: validated.tags,
+    ogImage: validated.ogImage,
+    author: validated.author,
     createdAt: now,
     updatedAt: now,
   };
@@ -94,9 +113,12 @@ export async function createPost(data: {
 export async function updatePost(
   slug: string,
   data: Partial<
-    Pick<BlogPost, "title" | "description" | "publishedAt" | "status" | "content">
+    Pick<BlogPost, "title" | "description" | "publishedAt" | "status" | "content" | "tags" | "ogImage" | "author">
   >
 ): Promise<BlogPost | null> {
+  // Valida só os campos que vieram
+  BlogPostUpdateSchema.parse(data);
+
   const posts = await readPosts();
   const idx = posts.findIndex((p) => p.slug === slug);
   if (idx === -1) return null;

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 const AUTH_COOKIE = "cd_redator_auth";
 const USER_COOKIE = "cd_redator_user";
-const ONE_WEEK = 60 * 60 * 24 * 7;
+// Sessão curta — redator precisa relogar a cada 8h pra reduzir risco de cookie roubado em máquina compartilhada
+const EIGHT_HOURS = 60 * 60 * 8;
 
 export async function POST(req: Request) {
   const expected = process.env.REDATOR_PASSWORD;
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: ONE_WEEK,
+    maxAge: EIGHT_HOURS,
     path: "/",
   });
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
       httpOnly: false,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: ONE_WEEK,
+      maxAge: EIGHT_HOURS,
       path: "/",
     });
   }

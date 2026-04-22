@@ -13,6 +13,7 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 import { Underline } from "@tiptap/extension-underline";
 import { getTeamMembers } from "@/lib/team";
 import type { AuthorStep } from "@/lib/blog-store";
+import type { PostStatus } from "@/lib/blog-schema";
 import { usePalette } from "@/app/redator/ThemeContext";
 import { useRedatorUser } from "@/app/redator/useRedatorUser";
 
@@ -23,8 +24,11 @@ interface Props {
     title: string;
     description: string;
     publishedAt: string;
-    status: "draft" | "published";
+    status: PostStatus;
     content: string;
+    tags?: string[];
+    ogImage?: string;
+    author?: string;
     writtenBy?: AuthorStep;
     reviewedBy?: AuthorStep;
     publishedBy?: AuthorStep;
@@ -43,10 +47,24 @@ function slugify(text: string): string {
 
 const team = getTeamMembers();
 
+const STATUS_OPTIONS: { value: PostStatus; label: string; hint: string }[] = [
+  { value: "draft", label: "Rascunho", hint: "Só você vê — fica salvo pra continuar depois" },
+  { value: "review", label: "Revisão", hint: "Manda pro admin aprovar e publicar" },
+  { value: "published", label: "Publicado", hint: "Visível pra todo mundo no /blog" },
+];
+
+function statusColor(p: ReturnType<typeof usePalette>, s: PostStatus): { bg: string; border: string; text: string } {
+  if (s === "published") return { bg: p.pubBg, border: p.pubBorder, text: p.pubText };
+  if (s === "review") return { bg: p.reviewBg, border: p.reviewBorder, text: p.reviewText };
+  return { bg: p.draftBg, border: p.draftBorder, text: p.draftText };
+}
+
 export default function BlogEditor({ mode, slug, initial }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const basePath = pathname?.startsWith("/redator") ? "/redator" : "/admin/blog";
+  const isRedator = pathname?.startsWith("/redator") ?? false;
+  const isAdmin = !isRedator;
+  const basePath = isRedator ? "/redator" : "/admin/blog";
   const p = usePalette();
   const redatorUser = useRedatorUser();
 
@@ -57,8 +75,9 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
   const [publishedAt, setPublishedAt] = useState(
     initial?.publishedAt ?? new Date().toISOString().slice(0, 10)
   );
-  const [status, setStatus] = useState<"draft" | "published">(initial?.status ?? "draft");
+  const [status, setStatus] = useState<PostStatus>(initial?.status ?? "draft");
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   // Author tracking
   // Regra: em modo "create", quem tá logado é auto-preenchido como "Escreveu"
@@ -171,6 +190,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
 
   async function handleSave() {
     if (!title.trim() || saving || !editor) return;
+    setErrors([]);
     setSaving(true);
     const now = new Date().toISOString();
     try {
@@ -180,6 +200,10 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
         publishedAt,
         status,
         content: editor.getHTML(),
+        // tags/author/ogImage usam defaults do schema quando não enviados
+        tags: initial?.tags && initial.tags.length > 0 ? initial.tags : ["geral"],
+        author: initial?.author,
+        ogImage: initial?.ogImage,
         writtenBy: writtenById
           ? { name: writtenById, at: initial?.writtenBy?.at ?? now }
           : undefined,
@@ -197,11 +221,21 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("falhou");
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json.details && Array.isArray(json.details)) {
+          setErrors(json.details);
+        } else if (json.error) {
+          setErrors([json.error]);
+        } else {
+          setErrors(["Erro ao salvar. Tente novamente."]);
+        }
+        return;
+      }
       router.push(basePath);
       router.refresh();
     } catch {
-      alert("Erro ao salvar. Tente novamente.");
+      setErrors(["Erro de rede. Tente novamente."]);
     } finally {
       setSaving(false);
     }
@@ -246,10 +280,39 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
             className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors hover:bg-white/15 disabled:opacity-40"
             style={{ background: p.card, border: `1px solid ${p.cardBorder}`, color: p.text }}
           >
-            {saving ? "Salvando..." : mode === "create" ? "Criar post" : "Salvar"}
+            {saving
+              ? "Salvando..."
+              : status === "review"
+                ? "Enviar pra revisão"
+                : status === "published"
+                  ? mode === "create" ? "Publicar" : "Salvar e publicar"
+                  : mode === "create" ? "Criar rascunho" : "Salvar"}
           </button>
         </div>
       </div>
+
+      {errors.length > 0 && (
+        <div
+          className="mb-5 rounded-lg p-3.5"
+          style={{
+            background: "rgba(239, 68, 68, 0.08)",
+            border: "1px solid rgba(239, 68, 68, 0.35)",
+          }}
+        >
+          <div className="flex items-start gap-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.05em]" style={{ color: "#fca5a5" }}>
+              Faltam ajustes
+            </span>
+          </div>
+          <ul className="mt-2 space-y-1">
+            {errors.map((e, i) => (
+              <li key={i} className="text-[12px]" style={{ color: "#fecaca" }}>
+                · {e}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
         <div className="space-y-4">
@@ -370,22 +433,28 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
           <SidebarCard title="Publicação">
             <div>
               <label className="block text-[11px] mb-1.5" style={{ color: p.textMuted }}>Status</label>
-              <div className="flex gap-2">
-                {(["draft", "published"] as const).map((s) => (
+              <div className="flex flex-col gap-1.5">
+                {STATUS_OPTIONS.filter((s) => isAdmin || s.value !== "published").map((s) => (
                   <button
-                    key={s}
-                    onClick={() => setStatus(s)}
-                    className="flex-1 text-[11px] font-medium py-2 rounded-md transition-colors"
+                    key={s.value}
+                    onClick={() => setStatus(s.value)}
+                    className="text-[11px] font-medium py-2 rounded-md transition-colors text-left px-3"
                     style={{
-                      background: status === s ? (s === "published" ? p.pubBg : p.draftBg) : p.input,
-                      border: `1px solid ${status === s ? (s === "published" ? p.pubBorder : p.draftBorder) : p.inputBorder}`,
-                      color: status === s ? (s === "published" ? p.pubText : p.draftText) : p.textMuted,
+                      background: status === s.value ? statusColor(p, s.value).bg : p.input,
+                      border: `1px solid ${status === s.value ? statusColor(p, s.value).border : p.inputBorder}`,
+                      color: status === s.value ? statusColor(p, s.value).text : p.textMuted,
                     }}
                   >
-                    {s === "draft" ? "Rascunho" : "Publicado"}
+                    {s.label}
+                    <span className="block text-[9px] opacity-70 font-normal mt-0.5">{s.hint}</span>
                   </button>
                 ))}
               </div>
+              {!isAdmin && (
+                <p className="text-[9px] mt-2 italic" style={{ color: p.textDimmed }}>
+                  Só admin publica. Envie pra revisão e a gente cuida.
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-[11px] mb-1.5" style={{ color: p.textMuted }}>Data</label>

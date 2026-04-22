@@ -21,6 +21,9 @@ export interface ThemePalette {
   draftBg: string;
   draftBorder: string;
   draftText: string;
+  reviewBg: string;
+  reviewBorder: string;
+  reviewText: string;
   pubBg: string;
   pubBorder: string;
   pubText: string;
@@ -45,6 +48,9 @@ export const darkPalette: ThemePalette = {
   draftBg: "rgba(234, 179, 8, 0.15)",
   draftBorder: "rgba(234, 179, 8, 0.45)",
   draftText: "#fbbf24",
+  reviewBg: "rgba(117, 83, 255, 0.15)",
+  reviewBorder: "rgba(117, 83, 255, 0.45)",
+  reviewText: "#c4b1ff",
   pubBg: "rgba(34, 197, 94, 0.15)",
   pubBorder: "rgba(34, 197, 94, 0.45)",
   pubText: "#6ee7b7",
@@ -69,6 +75,9 @@ export const lightPalette: ThemePalette = {
   draftBg: "rgba(234, 179, 8, 0.12)",
   draftBorder: "rgba(234, 179, 8, 0.40)",
   draftText: "#b45309",
+  reviewBg: "rgba(117, 83, 255, 0.12)",
+  reviewBorder: "rgba(117, 83, 255, 0.40)",
+  reviewText: "#5b3ed6",
   pubBg: "rgba(34, 197, 94, 0.12)",
   pubBorder: "rgba(34, 197, 94, 0.40)",
   pubText: "#16a34a",

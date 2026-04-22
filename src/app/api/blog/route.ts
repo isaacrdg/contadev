@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { readPosts, createPost } from "@/lib/blog-store";
+import { BlogPostCreateSchema } from "@/lib/blog-schema";
+import { ZodError } from "zod";
+
+/**
+ * Detecta se quem chamou está logado como admin (pode publicar) ou só redator.
+ * Redator pode criar/editar como draft|review, mas não published direto.
+ */
+async function isAdmin(): Promise<boolean> {
+  const c = await cookies();
+  return !!c.get("cd_admin_auth");
+}
 
 export async function GET() {
   try {
@@ -14,22 +27,32 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { title, description, publishedAt, status, content } = body ?? {};
+    const data = BlogPostCreateSchema.parse(body);
 
-    if (typeof title !== "string" || title.trim().length < 2)
-      return NextResponse.json({ error: "title inválido" }, { status: 400 });
-    if (typeof description !== "string")
-      return NextResponse.json({ error: "description inválida" }, { status: 400 });
-    if (typeof publishedAt !== "string")
-      return NextResponse.json({ error: "publishedAt inválido" }, { status: 400 });
-    if (!["draft", "published"].includes(status))
-      return NextResponse.json({ error: "status inválido" }, { status: 400 });
-    if (typeof content !== "string")
-      return NextResponse.json({ error: "content inválido" }, { status: 400 });
+    // Redator não pode publicar direto — força draft ou review
+    if (data.status === "published" && !(await isAdmin())) {
+      return NextResponse.json(
+        { error: "Redator não pode publicar direto. Envie para revisão." },
+        { status: 403 },
+      );
+    }
 
-    const post = await createPost({ title, description, publishedAt, status, content });
+    const post = await createPost(data);
+
+    // Invalida ISR — listagem, sitemap e feed precisam refletir o novo post
+    if (post.status === "published") {
+      revalidatePath("/blog");
+      revalidatePath(`/blog/${post.slug}`);
+      revalidatePath("/sitemap.xml");
+      revalidatePath("/feed.xml");
+    }
+
     return NextResponse.json(post);
   } catch (err) {
+    if (err instanceof ZodError) {
+      const msgs = err.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+      return NextResponse.json({ error: "Validação falhou", details: msgs }, { status: 400 });
+    }
     console.error("[api/blog POST]", err);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
