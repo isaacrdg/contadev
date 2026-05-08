@@ -255,7 +255,7 @@ export default async function BlogPostPage({
             </div>
           </div>
 
-          <ShareButtons url={url} title={post.title} />
+          <ShareButtons url={url} title={post.title} postSlug={slug} />
         </div>
       </header>
 
@@ -288,7 +288,7 @@ export default async function BlogPostPage({
         />
 
         {/* CTA de conversão */}
-        <BlogCTA />
+        <BlogCTA postSlug={slug} />
 
         {/* Compartilhar de novo no fim — chance extra de share */}
         <div className="mt-10 pt-6 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
@@ -299,7 +299,7 @@ export default async function BlogPostPage({
           >
             ← voltar pro blog
           </Link>
-          <ShareButtons url={url} title={post.title} />
+          <ShareButtons url={url} title={post.title} postSlug={slug} />
         </div>
       </article>
 

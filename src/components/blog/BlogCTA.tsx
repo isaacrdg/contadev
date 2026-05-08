@@ -1,6 +1,13 @@
+"use client";
 import Link from "next/link";
+import { track } from "@vercel/analytics";
 
-export default function BlogCTA() {
+interface Props {
+  /** Slug do post pra rastrear de onde veio o clique. Opcional. */
+  postSlug?: string;
+}
+
+export default function BlogCTA({ postSlug }: Props) {
   return (
     <aside
       className="not-prose mt-16 rounded-2xl p-8 md:p-10 overflow-hidden relative"
@@ -35,6 +42,7 @@ export default function BlogCTA() {
         </p>
         <Link
           href="/?form=true"
+          onClick={() => track("blog_cta_click", { post: postSlug ?? "unknown" })}
           className="inline-flex items-center gap-2 mt-6 text-[13px] font-semibold px-5 py-3 rounded-full transition-all hover:opacity-90"
           style={{
             background: "linear-gradient(135deg, #6644f2, #5129f0)",

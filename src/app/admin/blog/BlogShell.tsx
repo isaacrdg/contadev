@@ -13,7 +13,8 @@ export default function BlogShell({ initialPosts }: { initialPosts: BlogPost[] }
   const [view, setView] = useState<View>("list");
   const p = usePalette();
   const pathname = usePathname();
-  const basePath = pathname?.startsWith("/redator") ? "/redator" : "/admin/blog";
+  const isRedator = pathname?.startsWith("/redator") ?? false;
+  const basePath = isRedator ? "/redator" : "/admin/blog";
 
   return (
     <div>
@@ -46,6 +47,19 @@ export default function BlogShell({ initialPosts }: { initialPosts: BlogPost[] }
               </button>
             ))}
           </div>
+          {!isRedator && (
+            <Link
+              href="/admin/blog/metrics"
+              className="text-[12px] font-medium px-3 py-2 rounded-md transition-colors flex items-center gap-1.5"
+              style={{ background: p.card, border: `1px solid ${p.cardBorder}`, color: p.textMuted }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3v18h18" />
+                <path d="M7 14l4-4 4 4 5-5" />
+              </svg>
+              Métricas
+            </Link>
+          )}
           <Link
             href={`${basePath}/novo`}
             className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors"

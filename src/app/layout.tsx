@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit, IBM_Plex_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { FormProvider } from "@/components/FormContext";
 import "./globals.css";
 
@@ -40,7 +42,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${outfit.variable} ${ibmPlexMono.variable}`} style={{ fontWeight: 300 }}>
-      <body><FormProvider>{children}</FormProvider></body>
+      <body>
+        <FormProvider>{children}</FormProvider>
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
