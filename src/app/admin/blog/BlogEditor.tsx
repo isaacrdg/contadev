@@ -12,11 +12,12 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { Underline } from "@tiptap/extension-underline";
 import { getTeamMembers } from "@/lib/team";
-import type { AuthorStep } from "@/lib/blog-store";
+import type { AuthorStep, BlogNote } from "@/lib/blog-store";
 import type { PostStatus, PostCategory } from "@/lib/blog-schema";
 import { BLOG_CATEGORIES, DEFAULT_CATEGORY } from "@/lib/blog-categories";
 import { usePalette } from "@/app/redator/ThemeContext";
 import { useRedatorUser } from "@/app/redator/useRedatorUser";
+import BlogNotes from "./BlogNotes";
 
 interface Props {
   mode: "create" | "edit";
@@ -26,11 +27,13 @@ interface Props {
     description: string;
     publishedAt: string;
     status: PostStatus;
+    scheduledFor?: string | null;
     content: string;
     category?: PostCategory;
     tags?: string[];
     ogImage?: string;
     author?: string;
+    notes?: BlogNote[];
     writtenBy?: AuthorStep;
     reviewedBy?: AuthorStep;
     publishedBy?: AuthorStep;
@@ -52,13 +55,23 @@ const team = getTeamMembers();
 const STATUS_OPTIONS: { value: PostStatus; label: string; hint: string }[] = [
   { value: "draft", label: "Rascunho", hint: "Só você vê — fica salvo pra continuar depois" },
   { value: "review", label: "Revisão", hint: "Manda pro admin aprovar e publicar" },
+  { value: "scheduled", label: "Agendado", hint: "Publica sozinho na data/hora que você marcar" },
   { value: "published", label: "Publicado", hint: "Visível pra todo mundo no /blog" },
 ];
 
 function statusColor(p: ReturnType<typeof usePalette>, s: PostStatus): { bg: string; border: string; text: string } {
   if (s === "published") return { bg: p.pubBg, border: p.pubBorder, text: p.pubText };
   if (s === "review") return { bg: p.reviewBg, border: p.reviewBorder, text: p.reviewText };
+  if (s === "scheduled") return { bg: "rgba(59,130,246,0.14)", border: "rgba(59,130,246,0.45)", text: "#93c5fd" };
   return { bg: p.draftBg, border: p.draftBorder, text: p.draftText };
+}
+
+function toLocalDatetimeInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function BlogEditor({ mode, slug, initial }: Props) {
@@ -78,6 +91,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
     initial?.publishedAt ?? new Date().toISOString().slice(0, 10)
   );
   const [status, setStatus] = useState<PostStatus>(initial?.status ?? "draft");
+  const [scheduledFor, setScheduledFor] = useState<string>(toLocalDatetimeInput(initial?.scheduledFor));
   const [category, setCategory] = useState<PostCategory>(initial?.category ?? DEFAULT_CATEGORY);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -197,11 +211,29 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
     setSaving(true);
     const now = new Date().toISOString();
     try {
+      // Validações cliente: agendado precisa de data futura
+      if (status === "scheduled") {
+        if (!scheduledFor) {
+          setErrors(["Status agendado precisa de data e hora pra publicar."]);
+          setSaving(false);
+          return;
+        }
+        if (new Date(scheduledFor).getTime() <= Date.now()) {
+          setErrors(["A data de agendamento precisa estar no futuro."]);
+          setSaving(false);
+          return;
+        }
+      }
+
       const body = {
         title,
         description,
         publishedAt,
         status,
+        scheduledFor:
+          status === "scheduled" && scheduledFor
+            ? new Date(scheduledFor).toISOString()
+            : null,
         category,
         content: editor.getHTML(),
         // tags/author/ogImage usam defaults do schema quando não enviados
@@ -288,9 +320,11 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
               ? "Salvando..."
               : status === "review"
                 ? "Enviar pra revisão"
-                : status === "published"
-                  ? mode === "create" ? "Publicar" : "Salvar e publicar"
-                  : mode === "create" ? "Criar rascunho" : "Salvar"}
+                : status === "scheduled"
+                  ? mode === "create" ? "Agendar publicação" : "Salvar e agendar"
+                  : status === "published"
+                    ? mode === "create" ? "Publicar" : "Salvar e publicar"
+                    : mode === "create" ? "Criar rascunho" : "Salvar"}
           </button>
         </div>
       </div>
@@ -470,6 +504,28 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
                 style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText, colorScheme: "auto" }}
               />
             </div>
+            {status === "scheduled" && (
+              <div>
+                <label className="block text-[11px] mb-1.5" style={{ color: p.textMuted }}>
+                  Publicar em
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledFor}
+                  onChange={(e) => setScheduledFor(e.target.value)}
+                  className="w-full text-[12px] text-inherit outline-none rounded-md px-3 py-2"
+                  style={{
+                    background: p.input,
+                    border: `1px solid ${p.inputBorder}`,
+                    color: p.inputText,
+                    colorScheme: "dark",
+                  }}
+                />
+                <p className="text-[9px] mt-1.5 italic" style={{ color: p.textDimmed }}>
+                  Cron roda a cada hora. O post vira público na próxima execução depois desse horário.
+                </p>
+              </div>
+            )}
           </SidebarCard>
 
           {/* Categoria — controlada pra organizar por taxonomia */}
@@ -532,6 +588,17 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
               />
             </div>
           </SidebarCard>
+
+          {/* Notas internas — só aparece em modo edit (precisa de slug salvo) */}
+          {mode === "edit" && slug && (
+            <SidebarCard title="Notas internas">
+              <BlogNotes
+                slug={slug}
+                initialNotes={initial?.notes ?? []}
+                currentAuthor={writtenById || reviewedById || publishedById || redatorUser?.name || "Admin"}
+              />
+            </SidebarCard>
+          )}
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CATEGORY_SLUGS } from "./blog-categories";
 
 /* ── Status do post ── */
-export const PostStatus = z.enum(["draft", "review", "published"]);
+export const PostStatus = z.enum(["draft", "review", "scheduled", "published"]);
 export type PostStatus = z.infer<typeof PostStatus>;
 
 /* ── Categoria (controlada, fechada — vem de blog-categories.ts) ── */
@@ -32,6 +32,13 @@ export const BlogPostSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}/, "Data deve ser ISO (YYYY-MM-DD…)"),
 
   status: PostStatus,
+
+  /** Data/hora ISO de quando o post deve virar published automaticamente. Só faz sentido com status="scheduled". */
+  scheduledFor: z
+    .string()
+    .datetime({ message: "scheduledFor deve ser ISO datetime (ex: 2026-04-23T15:00:00Z)" })
+    .optional()
+    .nullable(),
 
   content: z
     .string()

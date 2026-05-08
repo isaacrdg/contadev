@@ -13,16 +13,18 @@ type CategoryFilter = "all" | PostCategory;
 const STATUS_LABEL: Record<PostStatus, string> = {
   draft: "Rascunho",
   review: "Revisão",
+  scheduled: "Agendado",
   published: "Publicado",
 };
 
 function statusStyle(p: ReturnType<typeof usePalette>, s: PostStatus) {
   if (s === "published") return { bg: p.pubBg, border: p.pubBorder, text: p.pubText };
   if (s === "review") return { bg: p.reviewBg, border: p.reviewBorder, text: p.reviewText };
+  if (s === "scheduled") return { bg: "rgba(59,130,246,0.14)", border: "rgba(59,130,246,0.45)", text: "#93c5fd" };
   return { bg: p.draftBg, border: p.draftBorder, text: p.draftText };
 }
 
-export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
+export default function BlogList({ initialPosts, hideHeader = false }: { initialPosts: BlogPost[]; hideHeader?: boolean }) {
   const [posts, setPosts] = useState(initialPosts);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -36,6 +38,7 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
       all: posts.length,
       draft: posts.filter((p) => p.status === "draft").length,
       review: posts.filter((p) => p.status === "review").length,
+      scheduled: posts.filter((p) => p.status === "scheduled").length,
       published: posts.filter((p) => p.status === "published").length,
     };
   }, [posts]);
@@ -56,25 +59,27 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[22px] font-bold tracking-tight" style={{ color: p.textStrong }}>Blog</h1>
-          <p className="text-[12px] mt-1" style={{ color: p.textMuted }}>
-            {posts.length} {posts.length === 1 ? "post" : "posts"} no total
-          </p>
+      {!hideHeader && (
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-[22px] font-bold tracking-tight" style={{ color: p.textStrong }}>Blog</h1>
+            <p className="text-[12px] mt-1" style={{ color: p.textMuted }}>
+              {posts.length} {posts.length === 1 ? "post" : "posts"} no total
+            </p>
+          </div>
+          <Link
+            href={`${basePath}/novo`}
+            className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors"
+            style={{ background: p.card, border: `1px solid ${p.cardBorder}`, color: p.text }}
+          >
+            + Novo post
+          </Link>
         </div>
-        <Link
-          href={`${basePath}/novo`}
-          className="text-[12px] font-medium px-4 py-2 rounded-md transition-colors"
-          style={{ background: p.card, border: `1px solid ${p.cardBorder}`, color: p.text }}
-        >
-          + Novo post
-        </Link>
-      </div>
+      )}
 
       {/* Filtro por status */}
       <div className="flex gap-1.5 mb-4 flex-wrap">
-        {(["all", "draft", "review", "published"] as const).map((f) => {
+        {(["all", "draft", "review", "scheduled", "published"] as const).map((f) => {
           const active = filter === f;
           const count = counts[f];
           const isReviewQueue = f === "review" && isAdmin && count > 0;

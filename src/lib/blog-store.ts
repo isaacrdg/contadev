@@ -14,6 +14,8 @@ export interface BlogPost {
   description: string;
   publishedAt: string;
   status: PostStatus;
+  /** ISO datetime — quando status=scheduled, o cron publica nessa hora. Null/undefined caso contrário. */
+  scheduledFor?: string | null;
   content: string; // HTML from tiptap editor
   category: PostCategory;
   tags: string[];
@@ -22,8 +24,17 @@ export interface BlogPost {
   writtenBy?: AuthorStep;  // quem escreveu
   reviewedBy?: AuthorStep; // quem revisou
   publishedBy?: AuthorStep; // quem publicou
+  /** Notas internas (admin/redator conversam) — não vai pro post público. */
+  notes?: BlogNote[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BlogNote {
+  id: string;
+  author: string;
+  text: string;
+  at: string; // ISO timestamp
 }
 
 const KEY = "blog-posts";
@@ -74,6 +85,7 @@ export async function createPost(data: {
   description: string;
   publishedAt: string;
   status: PostStatus;
+  scheduledFor?: string | null;
   content: string;
   category: PostCategory;
   tags?: string[];
@@ -101,11 +113,13 @@ export async function createPost(data: {
     description: validated.description.trim(),
     publishedAt: validated.publishedAt,
     status: validated.status,
+    scheduledFor: validated.scheduledFor ?? null,
     content: validated.content,
     category: validated.category,
     tags: validated.tags,
     ogImage: validated.ogImage,
     author: validated.author,
+    notes: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -118,7 +132,7 @@ export async function createPost(data: {
 export async function updatePost(
   slug: string,
   data: Partial<
-    Pick<BlogPost, "title" | "description" | "publishedAt" | "status" | "content" | "category" | "tags" | "ogImage" | "author">
+    Pick<BlogPost, "title" | "description" | "publishedAt" | "status" | "scheduledFor" | "content" | "category" | "tags" | "ogImage" | "author">
   >
 ): Promise<BlogPost | null> {
   // Valida só os campos que vieram
@@ -143,4 +157,69 @@ export async function deletePost(slug: string): Promise<boolean> {
   if (filtered.length === posts.length) return false;
   await writePosts(filtered);
   return true;
+}
+
+/* ── Notas internas ── */
+
+export async function addNote(slug: string, author: string, text: string): Promise<BlogNote | null> {
+  const posts = await readPosts();
+  const idx = posts.findIndex((p) => p.slug === slug);
+  if (idx === -1) return null;
+  const note: BlogNote = {
+    id: crypto.randomUUID(),
+    author,
+    text: text.trim().slice(0, 2000),
+    at: new Date().toISOString(),
+  };
+  posts[idx] = {
+    ...posts[idx],
+    notes: [...(posts[idx].notes ?? []), note],
+    updatedAt: new Date().toISOString(),
+  };
+  await writePosts(posts);
+  return note;
+}
+
+export async function deleteNote(slug: string, noteId: string): Promise<boolean> {
+  const posts = await readPosts();
+  const idx = posts.findIndex((p) => p.slug === slug);
+  if (idx === -1) return false;
+  const before = posts[idx].notes?.length ?? 0;
+  posts[idx] = {
+    ...posts[idx],
+    notes: (posts[idx].notes ?? []).filter((n) => n.id !== noteId),
+    updatedAt: new Date().toISOString(),
+  };
+  if ((posts[idx].notes?.length ?? 0) === before) return false;
+  await writePosts(posts);
+  return true;
+}
+
+/* ── Cron: publica posts agendados que já chegaram na hora ── */
+
+export async function publishDuePosts(): Promise<{ published: string[] }> {
+  const posts = await readPosts();
+  const now = new Date();
+  const published: string[] = [];
+
+  const updated = posts.map((p) => {
+    if (
+      p.status === "scheduled" &&
+      p.scheduledFor &&
+      new Date(p.scheduledFor) <= now
+    ) {
+      published.push(p.slug);
+      return {
+        ...p,
+        status: "published" as const,
+        scheduledFor: null,
+        publishedAt: p.publishedAt ?? new Date().toISOString().slice(0, 10),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    return p;
+  });
+
+  if (published.length > 0) await writePosts(updated);
+  return { published };
 }

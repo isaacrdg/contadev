@@ -27,6 +27,8 @@ export default async function RedatorEditPostPage({
         tags: post.tags,
         ogImage: post.ogImage,
         author: post.author,
+        scheduledFor: post.scheduledFor,
+        notes: post.notes,
         writtenBy: post.writtenBy,
         reviewedBy: post.reviewedBy,
         publishedBy: post.publishedBy,
