@@ -152,6 +152,13 @@ export default async function BlogPage() {
                 </Link>
               );
             })}
+            <Link
+              href="/blog/categoria"
+              className="text-[11px] font-mono ml-1 transition-colors hover:text-white/80"
+              style={{ color: "rgba(250,250,250,0.45)" }}
+            >
+              ver todas →
+            </Link>
           </div>
         )}
 

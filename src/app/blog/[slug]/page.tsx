@@ -3,6 +3,7 @@ import { getCategory } from "@/lib/blog-categories";
 import { readingTime } from "@/lib/reading-time";
 import ShareButtons from "@/components/blog/ShareButtons";
 import BlogCTA from "@/components/blog/BlogCTA";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -178,22 +179,16 @@ export default async function BlogPostPage({
 
       {/* HERO / HEADER do post */}
       <header className="relative max-w-3xl mx-auto px-6 pt-14 pb-10">
-        {/* Breadcrumb com categoria */}
-        <nav className="flex items-center gap-2 font-mono text-[11px] mb-8 flex-wrap" style={{ color: "rgba(250,250,250,0.4)" }}>
-          <Link href="/" className="hover:text-white/80 transition-colors">~/</Link>
-          <span>›</span>
-          <Link href="/blog" className="hover:text-white/80 transition-colors">blog</Link>
-          {cat && (
-            <>
-              <span>›</span>
-              <Link href={`/blog/categoria/${cat.slug}`} className="hover:text-white/80 transition-colors">
-                {cat.slug}
-              </Link>
-            </>
-          )}
-          <span>›</span>
-          <span style={{ color: "rgba(250,250,250,0.65)" }} className="truncate">{slug}</span>
-        </nav>
+        <div className="mb-8">
+          <Breadcrumbs
+            items={[
+              { label: "~/", href: "/" },
+              { label: "blog", href: "/blog" },
+              ...(cat ? [{ label: cat.slug, href: `/blog/categoria/${cat.slug}` }] : []),
+              { label: slug },
+            ]}
+          />
+        </div>
 
         {/* Categoria pill (substitui tag) — clicável, leva pra listagem da categoria */}
         <div className="mb-6">

@@ -1,5 +1,6 @@
 import { getPostsByCategory } from "@/lib/blog";
 import { BLOG_CATEGORIES, getCategory } from "@/lib/blog-categories";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -61,8 +62,23 @@ export default async function CategoryPage({
 
   const posts = await getPostsByCategory(cat.slug);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      { "@type": "ListItem", position: 3, name: "Categorias", item: `${SITE_URL}/blog/categoria` },
+      { "@type": "ListItem", position: 4, name: cat.label, item: `${SITE_URL}/blog/categoria/${cat.slug}` },
+    ],
+  };
+
   return (
     <div className="min-h-screen relative" style={{ background: "#17151e", color: "#fafafa" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* glow ambiente colorido pela categoria */}
       <div
         aria-hidden
@@ -73,15 +89,16 @@ export default async function CategoryPage({
       />
 
       <header className="relative max-w-6xl mx-auto px-6 pt-14 pb-12">
-        <nav className="flex items-center gap-2 font-mono text-[11px] mb-8" style={{ color: "rgba(250,250,250,0.4)" }}>
-          <Link href="/" className="hover:text-white/80 transition-colors">~/</Link>
-          <span>›</span>
-          <Link href="/blog" className="hover:text-white/80 transition-colors">blog</Link>
-          <span>›</span>
-          <Link href="/blog/categoria" className="hover:text-white/80 transition-colors">categoria</Link>
-          <span>›</span>
-          <span style={{ color: "rgba(250,250,250,0.65)" }}>{cat.slug}</span>
-        </nav>
+        <div className="mb-8">
+          <Breadcrumbs
+            items={[
+              { label: "~/", href: "/" },
+              { label: "blog", href: "/blog" },
+              { label: "categoria", href: "/blog/categoria" },
+              { label: cat.slug },
+            ]}
+          />
+        </div>
 
         <div className="mb-2">
           <span
