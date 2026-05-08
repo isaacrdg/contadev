@@ -1,4 +1,5 @@
 import { getPublishedPostsMeta } from "@/lib/blog";
+import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -120,6 +121,40 @@ export default async function BlogPage() {
       </header>
 
       <main className="relative max-w-6xl mx-auto px-6 pb-20">
+        {/* CHIPS de categoria — filtro rápido */}
+        {posts.length > 0 && (
+          <div className="mb-10 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-mono uppercase tracking-[0.14em] mr-2" style={{ color: "rgba(250,250,250,0.4)" }}>
+              {`// categorias`}
+            </span>
+            {BLOG_CATEGORIES.map((c) => {
+              const count = posts.filter((p) => p.category === c.slug).length;
+              if (count === 0) return null;
+              return (
+                <Link
+                  key={c.slug}
+                  href={`/blog/categoria/${c.slug}`}
+                  className="text-[11px] font-medium px-3 py-1.5 rounded-md transition-all hover:bg-white/[0.05] flex items-center gap-1.5"
+                  style={{
+                    background: "rgba(255,255,255,0.025)",
+                    border: `1px solid rgba(255,255,255,0.08)`,
+                    color: "rgba(250,250,250,0.78)",
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: c.color }}
+                  />
+                  {c.label}
+                  <span className="text-[10px] tabular-nums" style={{ color: "rgba(250,250,250,0.4)" }}>
+                    {count}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
         {posts.length === 0 ? (
           <div
             className="rounded-2xl p-16 text-center"

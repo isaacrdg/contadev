@@ -1,8 +1,13 @@
 import { z } from "zod";
+import { CATEGORY_SLUGS } from "./blog-categories";
 
 /* ── Status do post ── */
 export const PostStatus = z.enum(["draft", "review", "published"]);
 export type PostStatus = z.infer<typeof PostStatus>;
+
+/* ── Categoria (controlada, fechada — vem de blog-categories.ts) ── */
+export const PostCategory = z.enum(CATEGORY_SLUGS);
+export type PostCategory = z.infer<typeof PostCategory>;
 
 /* ── Schema do frontmatter / campos obrigatórios ── */
 export const BlogPostSchema = z.object({
@@ -31,6 +36,8 @@ export const BlogPostSchema = z.object({
   content: z
     .string()
     .min(1, "Post sem conteúdo"),
+
+  category: PostCategory,
 
   tags: z
     .array(z.string().min(2).max(40))

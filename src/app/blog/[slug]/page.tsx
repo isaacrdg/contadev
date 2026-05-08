@@ -1,4 +1,5 @@
 import { getPostForRendering, getPublishedPostsMeta, getAllSlugs } from "@/lib/blog";
+import { getCategory } from "@/lib/blog-categories";
 import { readingTime } from "@/lib/reading-time";
 import ShareButtons from "@/components/blog/ShareButtons";
 import BlogCTA from "@/components/blog/BlogCTA";
@@ -88,6 +89,7 @@ export default async function BlogPostPage({
 
   const url = `${SITE_URL}/blog/${slug}`;
   const ogImage = post.ogImage ?? buildOgUrl(post);
+  const cat = getCategory(post.category);
 
   const blogPostingJsonLd = {
     "@context": "https://schema.org",
@@ -98,7 +100,7 @@ export default async function BlogPostPage({
     datePublished: post.publishedAt,
     dateModified: post.updatedAt,
     keywords: post.tags.join(", "),
-    articleSection: post.tags[0] ?? "Blog",
+    articleSection: cat?.label ?? "Blog",
     inLanguage: "pt-BR",
     author: {
       "@type": "Person",
@@ -125,7 +127,10 @@ export default async function BlogPostPage({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
-      { "@type": "ListItem", position: 3, name: post.title, item: url },
+      ...(cat
+        ? [{ "@type": "ListItem", position: 3, name: cat.label, item: `${SITE_URL}/blog/categoria/${cat.slug}` }]
+        : []),
+      { "@type": "ListItem", position: cat ? 4 : 3, name: post.title, item: url },
     ],
   };
 
@@ -173,28 +178,37 @@ export default async function BlogPostPage({
 
       {/* HERO / HEADER do post */}
       <header className="relative max-w-3xl mx-auto px-6 pt-14 pb-10">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 font-mono text-[11px] mb-8" style={{ color: "rgba(250,250,250,0.4)" }}>
+        {/* Breadcrumb com categoria */}
+        <nav className="flex items-center gap-2 font-mono text-[11px] mb-8 flex-wrap" style={{ color: "rgba(250,250,250,0.4)" }}>
           <Link href="/" className="hover:text-white/80 transition-colors">~/</Link>
           <span>›</span>
           <Link href="/blog" className="hover:text-white/80 transition-colors">blog</Link>
+          {cat && (
+            <>
+              <span>›</span>
+              <Link href={`/blog/categoria/${cat.slug}`} className="hover:text-white/80 transition-colors">
+                {cat.slug}
+              </Link>
+            </>
+          )}
           <span>›</span>
           <span style={{ color: "rgba(250,250,250,0.65)" }} className="truncate">{slug}</span>
         </nav>
 
-        {/* Tag pill */}
+        {/* Categoria pill (substitui tag) — clicável, leva pra listagem da categoria */}
         <div className="mb-6">
-          <span
-            className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] px-2.5 py-1 rounded"
+          <Link
+            href={cat ? `/blog/categoria/${cat.slug}` : "/blog"}
+            className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] px-2.5 py-1 rounded transition-all hover:opacity-80"
             style={{
-              background: "rgba(117,83,255,0.12)",
-              border: "1px solid rgba(117,83,255,0.4)",
-              color: "#c4b1ff",
+              background: cat ? `${cat.color}1f` : "rgba(117,83,255,0.12)",
+              border: `1px solid ${cat ? `${cat.color}66` : "rgba(117,83,255,0.4)"}`,
+              color: cat?.color ?? "#c4b1ff",
             }}
           >
             <span className="opacity-60">{`//`}</span>
-            {primaryTag}
-          </span>
+            {cat?.label ?? primaryTag}
+          </Link>
         </div>
 
         {/* Título grandão */}

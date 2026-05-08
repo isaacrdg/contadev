@@ -23,6 +23,7 @@ export default async function RedatorEditPostPage({
         publishedAt: post.publishedAt,
         status: post.status,
         content: post.content,
+        category: post.category,
         tags: post.tags,
         ogImage: post.ogImage,
         author: post.author,

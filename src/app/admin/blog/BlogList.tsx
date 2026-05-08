@@ -3,10 +3,12 @@ import Link from "next/link";
 import { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import type { BlogPost } from "@/lib/blog-store";
-import type { PostStatus } from "@/lib/blog-schema";
+import type { PostStatus, PostCategory } from "@/lib/blog-schema";
+import { BLOG_CATEGORIES, getCategoryLabel } from "@/lib/blog-categories";
 import { usePalette } from "@/app/redator/ThemeContext";
 
-type Filter = "all" | PostStatus;
+type StatusFilter = "all" | PostStatus;
+type CategoryFilter = "all" | PostCategory;
 
 const STATUS_LABEL: Record<PostStatus, string> = {
   draft: "Rascunho",
@@ -22,7 +24,8 @@ function statusStyle(p: ReturnType<typeof usePalette>, s: PostStatus) {
 
 export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] }) {
   const [posts, setPosts] = useState(initialPosts);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const pathname = usePathname();
   const p = usePalette();
   const basePath = pathname?.startsWith("/redator") ? "/redator" : "/admin/blog";
@@ -38,9 +41,12 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
   }, [posts]);
 
   const visiblePosts = useMemo(() => {
-    if (filter === "all") return posts;
-    return posts.filter((post) => post.status === filter);
-  }, [posts, filter]);
+    return posts.filter((post) => {
+      if (filter !== "all" && post.status !== filter) return false;
+      if (categoryFilter !== "all" && post.category !== categoryFilter) return false;
+      return true;
+    });
+  }, [posts, filter, categoryFilter]);
 
   async function handleDelete(slug: string) {
     if (!confirm("Tem certeza que quer deletar esse post?")) return;
@@ -99,6 +105,45 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
         })}
       </div>
 
+      {/* Filtro por categoria */}
+      <div className="flex gap-1.5 mb-6 flex-wrap items-center">
+        <span className="text-[10px] uppercase tracking-[0.08em] font-semibold mr-1" style={{ color: p.textDimmed }}>
+          Categoria
+        </span>
+        <button
+          onClick={() => setCategoryFilter("all")}
+          className="text-[11px] font-medium px-3 py-1.5 rounded-md transition-colors"
+          style={{
+            background: categoryFilter === "all" ? p.input : "transparent",
+            border: `1px solid ${categoryFilter === "all" ? p.inputBorder : p.cardBorder}`,
+            color: categoryFilter === "all" ? p.text : p.textMuted,
+          }}
+        >
+          Todas
+        </button>
+        {BLOG_CATEGORIES.map((c) => {
+          const active = categoryFilter === c.slug;
+          const count = posts.filter((post) => post.category === c.slug).length;
+          if (count === 0) return null;
+          return (
+            <button
+              key={c.slug}
+              onClick={() => setCategoryFilter(c.slug)}
+              className="text-[11px] font-medium px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5"
+              style={{
+                background: active ? p.input : "transparent",
+                border: `1px solid ${active ? p.inputBorder : p.cardBorder}`,
+                color: active ? p.text : p.textMuted,
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.color }} />
+              {c.label}
+              <span className="text-[10px] tabular-nums" style={{ color: p.textDimmed }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {visiblePosts.length === 0 ? (
         <div
           className="rounded-lg p-10 text-center"
@@ -139,8 +184,12 @@ export default function BlogList({ initialPosts }: { initialPosts: BlogPost[] })
                 <p className="text-[11.5px] truncate" style={{ color: p.textMuted }}>
                   {post.description}
                 </p>
-                <div className="text-[10px] mt-1.5 font-mono" style={{ color: p.textDimmed }}>
-                  {post.publishedAt} · /{post.slug}
+                <div className="text-[10px] mt-1.5 font-mono flex items-center gap-1.5 flex-wrap" style={{ color: p.textDimmed }}>
+                  <span>{post.publishedAt}</span>
+                  <span>·</span>
+                  <span>/{post.slug}</span>
+                  <span>·</span>
+                  <span style={{ color: p.textMuted }}>{getCategoryLabel(post.category)}</span>
                 </div>
               </div>
 

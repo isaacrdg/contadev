@@ -13,7 +13,8 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 import { Underline } from "@tiptap/extension-underline";
 import { getTeamMembers } from "@/lib/team";
 import type { AuthorStep } from "@/lib/blog-store";
-import type { PostStatus } from "@/lib/blog-schema";
+import type { PostStatus, PostCategory } from "@/lib/blog-schema";
+import { BLOG_CATEGORIES, DEFAULT_CATEGORY } from "@/lib/blog-categories";
 import { usePalette } from "@/app/redator/ThemeContext";
 import { useRedatorUser } from "@/app/redator/useRedatorUser";
 
@@ -26,6 +27,7 @@ interface Props {
     publishedAt: string;
     status: PostStatus;
     content: string;
+    category?: PostCategory;
     tags?: string[];
     ogImage?: string;
     author?: string;
@@ -76,6 +78,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
     initial?.publishedAt ?? new Date().toISOString().slice(0, 10)
   );
   const [status, setStatus] = useState<PostStatus>(initial?.status ?? "draft");
+  const [category, setCategory] = useState<PostCategory>(initial?.category ?? DEFAULT_CATEGORY);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -199,6 +202,7 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
         description,
         publishedAt,
         status,
+        category,
         content: editor.getHTML(),
         // tags/author/ogImage usam defaults do schema quando não enviados
         tags: initial?.tags && initial.tags.length > 0 ? initial.tags : ["geral"],
@@ -465,6 +469,31 @@ export default function BlogEditor({ mode, slug, initial }: Props) {
                 className="w-full text-[12px] text-inherit outline-none rounded-md px-3 py-2"
                 style={{ background: p.input, border: `1px solid ${p.inputBorder}`, color: p.inputText, colorScheme: "auto" }}
               />
+            </div>
+          </SidebarCard>
+
+          {/* Categoria — controlada pra organizar por taxonomia */}
+          <SidebarCard title="Categoria">
+            <div>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as PostCategory)}
+                className="w-full text-[12px] outline-none rounded-md px-3 py-2 cursor-pointer"
+                style={{
+                  background: p.input,
+                  border: `1px solid ${p.inputBorder}`,
+                  color: p.inputText,
+                }}
+              >
+                {BLOG_CATEGORIES.map((c) => (
+                  <option key={c.slug} value={c.slug} style={{ background: p.card }}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] mt-2 leading-snug" style={{ color: p.textDimmed }}>
+                {BLOG_CATEGORIES.find((c) => c.slug === category)?.description}
+              </p>
             </div>
           </SidebarCard>
 

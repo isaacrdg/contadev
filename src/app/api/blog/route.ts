@@ -39,10 +39,11 @@ export async function POST(req: Request) {
 
     const post = await createPost(data);
 
-    // Invalida ISR — listagem, sitemap e feed precisam refletir o novo post
+    // Invalida ISR — listagem, categoria, sitemap e feed precisam refletir o novo post
     if (post.status === "published") {
       revalidatePath("/blog");
       revalidatePath(`/blog/${post.slug}`);
+      revalidatePath(`/blog/categoria/${post.category}`);
       revalidatePath("/sitemap.xml");
       revalidatePath("/feed.xml");
     }

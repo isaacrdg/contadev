@@ -5,11 +5,12 @@ import { getPostBySlug, updatePost, deletePost } from "@/lib/blog-store";
 import { BlogPostUpdateSchema } from "@/lib/blog-schema";
 import { ZodError } from "zod";
 
-function bustBlogCache(slug?: string) {
+function bustBlogCache(slug?: string, category?: string) {
   revalidatePath("/blog");
   revalidatePath("/sitemap.xml");
   revalidatePath("/feed.xml");
   if (slug) revalidatePath(`/blog/${slug}`);
+  if (category) revalidatePath(`/blog/categoria/${category}`);
 }
 
 async function isAdmin(): Promise<boolean> {
@@ -48,7 +49,7 @@ export async function PATCH(
     if (!updated)
       return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
-    bustBlogCache(slug);
+    bustBlogCache(slug, updated.category);
 
     return NextResponse.json(updated);
   } catch (err) {
@@ -66,10 +67,12 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  // Lê antes de deletar pra saber a categoria (pra invalidar /blog/categoria/X)
+  const existing = await getPostBySlug(slug);
   const ok = await deletePost(slug);
   if (!ok) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
-  bustBlogCache(slug);
+  bustBlogCache(slug, existing?.category);
 
   return NextResponse.json({ ok: true });
 }

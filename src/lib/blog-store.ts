@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { readJson, writeJson } from "./kv";
-import { BlogPostCreateSchema, BlogPostUpdateSchema, type PostStatus } from "./blog-schema";
+import { BlogPostCreateSchema, BlogPostUpdateSchema, type PostStatus, type PostCategory } from "./blog-schema";
+import { DEFAULT_CATEGORY } from "./blog-categories";
 
 export interface AuthorStep {
   name: string;
@@ -14,6 +15,7 @@ export interface BlogPost {
   publishedAt: string;
   status: PostStatus;
   content: string; // HTML from tiptap editor
+  category: PostCategory;
   tags: string[];
   ogImage?: string;
   author: string;
@@ -34,6 +36,7 @@ export async function readPosts(): Promise<BlogPost[]> {
     ...p,
     tags: p.tags ?? [],
     author: p.author ?? "Conta Dev",
+    category: p.category ?? DEFAULT_CATEGORY,
   }));
 }
 
@@ -72,6 +75,7 @@ export async function createPost(data: {
   publishedAt: string;
   status: PostStatus;
   content: string;
+  category: PostCategory;
   tags?: string[];
   ogImage?: string;
   author?: string;
@@ -98,6 +102,7 @@ export async function createPost(data: {
     publishedAt: validated.publishedAt,
     status: validated.status,
     content: validated.content,
+    category: validated.category,
     tags: validated.tags,
     ogImage: validated.ogImage,
     author: validated.author,
@@ -113,7 +118,7 @@ export async function createPost(data: {
 export async function updatePost(
   slug: string,
   data: Partial<
-    Pick<BlogPost, "title" | "description" | "publishedAt" | "status" | "content" | "tags" | "ogImage" | "author">
+    Pick<BlogPost, "title" | "description" | "publishedAt" | "status" | "content" | "category" | "tags" | "ogImage" | "author">
   >
 ): Promise<BlogPost | null> {
   // Valida só os campos que vieram
