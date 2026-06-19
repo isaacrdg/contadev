@@ -26,12 +26,23 @@ export interface VendasFilters {
 }
 
 export interface ReceitaData {
-  valorAdquirido: number;
+  // Total de pagamentos recebidos no período (recorrentes + novos)
+  totalCobrado: number;
+  // Valor contratual de NOVAS assinaturas criadas no período
+  valorNovosContratos: number;
+  // MRR atual (equivalente mensal de todas as assinaturas ativas)
   mrr: number;
-  qtdAnuais: number;
-  valorAnuais: number;
-  qtdMensais: number;
-  valorMensais: number;
+  // Clientes com assinatura ativa agora (global, sem filtro de período)
+  clientesAtivos: number;
+  // Assinaturas past_due + canceled (em risco ou canceladas)
+  emRisco: number;
+  // Novos anuais no período
+  qtdNovosAnuais: number;
+  valorNovosAnuais: number;
+  // Novos mensais no período
+  qtdNovosMensais: number;
+  valorNovosMensais: number;
+  // Conversão contrato → billing
   assinou: number;
   pagou: number;
 }
@@ -85,9 +96,6 @@ const n = (v: unknown) => Number(v ?? 0);
 const toFloat = (v: unknown): number | null =>
   v === null || v === undefined ? null : Number(v);
 
-// UTM source extraction — try both camelCase and snake_case keys
-const UTM_SOURCE = `COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source')`;
-
 // ── RECEITA ───────────────────────────────────────────────────────────────────
 
 export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> {
@@ -97,38 +105,54 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
   const pv = f.pricingVariant || null;
 
   const [pagamentos, ciclos, contratos] = await Promise.all([
-    // Valor adquirido no período (pagamentos recebidos)
+    // Total cobrado no período (todos os pagamentos confirmados, incluindo recorrência)
     sql`
-      SELECT COALESCE(SUM(value)::float8, 0) as valor_adquirido
+      SELECT COALESCE(SUM(value)::float8, 0) as total_cobrado
       FROM subscription_payments
-      WHERE paid_at >= ${f.start}::date
+      WHERE status = 'paid'
+        AND paid_at >= ${f.start}::date
         AND paid_at < (${f.end}::date + interval '1 day')
     `,
-    // Breakdown por ciclo + MRR atual
+    // Novas assinaturas criadas no período + MRR atual
     sql`
       SELECT
-        COALESCE(SUM(CASE WHEN ls.cycle = 'annual'  THEN 1     ELSE 0 END), 0)::int      as qtd_anuais,
-        COALESCE(SUM(CASE WHEN ls.cycle = 'annual'  THEN ls.value ELSE 0 END)::float8, 0) as valor_anuais,
-        COALESCE(SUM(CASE WHEN ls.cycle = 'monthly' THEN 1     ELSE 0 END), 0)::int      as qtd_mensais,
-        COALESCE(SUM(CASE WHEN ls.cycle = 'monthly' THEN ls.value ELSE 0 END)::float8, 0) as valor_mensais,
+        COALESCE(SUM(ls.value)::float8, 0)                                              as valor_novos_contratos,
+        COALESCE(SUM(CASE WHEN ls.cycle = 'YEARLY'  THEN 1     ELSE 0 END), 0)::int     as qtd_anuais,
+        COALESCE(SUM(CASE WHEN ls.cycle = 'YEARLY'  THEN ls.value ELSE 0 END)::float8, 0) as valor_anuais,
+        COALESCE(SUM(CASE WHEN ls.cycle = 'MONTHLY' THEN 1     ELSE 0 END), 0)::int     as qtd_mensais,
+        COALESCE(SUM(CASE WHEN ls.cycle = 'MONTHLY' THEN ls.value ELSE 0 END)::float8, 0) as valor_mensais,
         COALESCE((
-          SELECT SUM(value)::float8
+          SELECT
+            SUM(CASE WHEN cycle = 'MONTHLY' THEN value
+                     WHEN cycle = 'YEARLY'  THEN value / 12
+                     ELSE 0 END)::float8
           FROM lead_subscriptions
           WHERE subscription_status = 'active'
-        ), 0) as mrr
+        ), 0) as mrr,
+        COALESCE((
+          SELECT COUNT(DISTINCT lead_id)::int
+          FROM lead_subscriptions
+          WHERE subscription_status = 'active'
+        ), 0) as clientes_ativos,
+        COALESCE((
+          SELECT COUNT(DISTINCT lead_id)::int
+          FROM lead_subscriptions
+          WHERE subscription_status IN ('past_due', 'canceled')
+        ), 0) as em_risco
       FROM lead_subscriptions ls
       JOIN leads l ON l.id = ls.lead_id
-      WHERE l.created_at >= ${f.start}::date
-        AND l.created_at < (${f.end}::date + interval '1 day')
+      WHERE ls.created_at >= ${f.start}::date
+        AND ls.created_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND (${src}::text IS NULL OR EXISTS (
           SELECT 1 FROM lead_form_submit lfs
           WHERE lfs.lead_id = l.id
-          AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+          AND lfs.utm_data->>'utm_source' = ${src}
         ))
     `,
-    // Conversão contrato → billing
+    // Conversão contrato → billing no período
     sql`
       SELECT
         COUNT(CASE WHEN has_contract = true THEN 1 END)::int as assinou,
@@ -136,25 +160,29 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
       FROM leads l
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND (${src}::text IS NULL OR EXISTS (
           SELECT 1 FROM lead_form_submit lfs
           WHERE lfs.lead_id = l.id
-          AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+          AND lfs.utm_data->>'utm_source' = ${src}
         ))
     `,
   ]);
 
   return {
-    valorAdquirido: n(pagamentos[0]?.valor_adquirido),
-    mrr:            n(ciclos[0]?.mrr),
-    qtdAnuais:      n(ciclos[0]?.qtd_anuais),
-    valorAnuais:    n(ciclos[0]?.valor_anuais),
-    qtdMensais:     n(ciclos[0]?.qtd_mensais),
-    valorMensais:   n(ciclos[0]?.valor_mensais),
-    assinou:        n(contratos[0]?.assinou),
-    pagou:          n(contratos[0]?.pagou),
+    totalCobrado:        n(pagamentos[0]?.total_cobrado),
+    valorNovosContratos: n(ciclos[0]?.valor_novos_contratos),
+    mrr:                 n(ciclos[0]?.mrr),
+    clientesAtivos:      n(ciclos[0]?.clientes_ativos),
+    emRisco:             n(ciclos[0]?.em_risco),
+    qtdNovosAnuais:      n(ciclos[0]?.qtd_anuais),
+    valorNovosAnuais:    n(ciclos[0]?.valor_anuais),
+    qtdNovosMensais:     n(ciclos[0]?.qtd_mensais),
+    valorNovosMensais:   n(ciclos[0]?.valor_mensais),
+    assinou:             n(contratos[0]?.assinou),
+    pagou:               n(contratos[0]?.pagou),
   };
 }
 
@@ -167,19 +195,19 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
   const pv = f.pricingVariant || null;
 
   const [principal, multiplos, reentradas, quicam] = await Promise.all([
-    // Funil + contagens principais
     sql`
       WITH period_leads AS (
-        SELECT l.id, l.has_contract, l.has_billing
+        SELECT l.id, l.has_contract, l.has_billing, l.has_started_chatwoot_conversation
         FROM leads l
         WHERE l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
+          AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
           AND (${src}::text IS NULL OR EXISTS (
             SELECT 1 FROM lead_form_submit lfs
             WHERE lfs.lead_id = l.id
-            AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+            AND lfs.utm_data->>'utm_source' = ${src}
           ))
       )
       SELECT
@@ -187,9 +215,7 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
         COUNT(CASE WHEN has_billing  = true               THEN 1 END)::int            as fechamentos,
         COUNT(CASE WHEN has_contract = true               THEN 1 END)::int            as tem_contrato,
         COUNT(CASE WHEN has_contract = true AND has_billing = false THEN 1 END)::int  as inadimplentes,
-        COUNT(CASE WHEN EXISTS (
-          SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = period_leads.id
-        ) THEN 1 END)::int                                                            as tem_conversa
+        COUNT(CASE WHEN has_started_chatwoot_conversation = true THEN 1 END)::int     as tem_conversa
       FROM period_leads
     `,
     // Leads com múltiplas submissões de formulário
@@ -201,6 +227,7 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
         JOIN leads l ON l.id = lfs.lead_id
         WHERE l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
+          AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         GROUP BY lfs.lead_id
@@ -214,24 +241,26 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
       JOIN leads l ON l.id = ll.lead_id
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND EXISTS (
           SELECT 1 FROM lead_form_submit lfs
           WHERE lfs.lead_id = ll.lead_id
-            AND lfs.created_at > ll.created_at
+            AND lfs.created_at::timestamp > ll.created_at
         )
     `,
-    // Clientes que quicam (assinatura cancelada em menos de 15 dias)
+    // Clientes que quicam: assinaturas congeladas em menos de 15 dias após criação
     sql`
       SELECT COUNT(*)::int as quicam
       FROM lead_subscriptions ls
       JOIN leads l ON l.id = ls.lead_id
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
-        AND ls.subscription_status NOT IN ('active', 'trial', 'pending')
-        AND ls.updated_at IS NOT NULL
-        AND ls.updated_at - ls.created_at < INTERVAL '15 days'
+        AND l.deleted_at IS NULL
+        AND ls.is_frozen = true
+        AND ls.frozen_at IS NOT NULL
+        AND ls.frozen_at - ls.created_at < INTERVAL '15 days'
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
     `,
@@ -273,16 +302,18 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
           ROW_NUMBER() OVER (PARTITION BY cm.lead_id ORDER BY cm.created_at) as rn
         FROM chatwoot_messages cm
         JOIN leads l ON l.id = cm.lead_id
-        WHERE cm.employee_id IS NOT NULL
+        WHERE cm.lead_id IS NOT NULL
+          AND cm.employee_id IS NOT NULL
           AND cm.ai_processed_at IS NULL
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
+          AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
           AND (${src}::text IS NULL OR EXISTS (
             SELECT 1 FROM lead_form_submit lfs
             WHERE lfs.lead_id = l.id
-            AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+            AND lfs.utm_data->>'utm_source' = ${src}
           ))
       ),
       frt_times AS (
@@ -316,10 +347,12 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
           LAG(cm.created_at) OVER (PARTITION BY cm.lead_id ORDER BY cm.created_at) as prev_at
         FROM chatwoot_messages cm
         JOIN leads l ON l.id = cm.lead_id
-        WHERE cm.employee_id IS NOT NULL
+        WHERE cm.lead_id IS NOT NULL
+          AND cm.employee_id IS NOT NULL
           AND cm.ai_processed_at IS NULL
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
+          AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
       ),
@@ -341,9 +374,11 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
         SELECT cm.lead_id, COUNT(*)::int as cnt
         FROM chatwoot_messages cm
         JOIN leads l ON l.id = cm.lead_id
-        WHERE l.has_billing = true
+        WHERE cm.lead_id IS NOT NULL
+          AND l.has_billing = true
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
+          AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         GROUP BY cm.lead_id
@@ -356,10 +391,12 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
         SELECT cm.lead_id, COUNT(*)::int as cnt
         FROM chatwoot_messages cm
         JOIN leads l ON l.id = cm.lead_id
-        WHERE l.has_billing = false
+        WHERE cm.lead_id IS NOT NULL
+          AND l.has_billing = false
           AND EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
+          AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         GROUP BY cm.lead_id
@@ -369,13 +406,13 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
   ]);
 
   return {
-    frtP50:           toFloat(frt[0]?.frt_p50),
-    frtP90:           toFloat(frt[0]?.frt_p90),
-    secondRespP50:    toFloat(frt[0]?.second_p50),
-    secondRespP90:    toFloat(frt[0]?.second_p90),
-    timeBetweenP50:   toFloat(timeBetween[0]?.p50),
-    timeBetweenP90:   toFloat(timeBetween[0]?.p90),
-    msgsAteFecharP50: toFloat(msgsFechar[0]?.p50),
+    frtP50:            toFloat(frt[0]?.frt_p50),
+    frtP90:            toFloat(frt[0]?.frt_p90),
+    secondRespP50:     toFloat(frt[0]?.second_p50),
+    secondRespP90:     toFloat(frt[0]?.second_p90),
+    timeBetweenP50:    toFloat(timeBetween[0]?.p50),
+    timeBetweenP90:    toFloat(timeBetween[0]?.p90),
+    msgsAteFecharP50:  toFloat(msgsFechar[0]?.p50),
     msgsAtePerdidoP50: toFloat(msgsPerdido[0]?.p50),
   };
 }
@@ -398,29 +435,31 @@ export async function getPerdaMetrics(
       JOIN leads l ON l.id = ll.lead_id
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND (${src}::text IS NULL OR EXISTS (
           SELECT 1 FROM lead_form_submit lfs
           WHERE lfs.lead_id = l.id
-          AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+          AND lfs.utm_data->>'utm_source' = ${src}
         ))
     `,
-    // Ghosting: sem billing, sem perda declarada, sem mensagem nos últimos 7 dias, mas com ao menos 1 mensagem
+    // Ghosting: sem billing, sem perda declarada, com ao menos 1 mensagem, sem msg nos últimos 7 dias
     sql`
       SELECT COUNT(*)::int as total
       FROM leads l
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
         AND l.has_billing = false
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND (${src}::text IS NULL OR EXISTS (
           SELECT 1 FROM lead_form_submit lfs
           WHERE lfs.lead_id = l.id
-          AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+          AND lfs.utm_data->>'utm_source' = ${src}
         ))
-        AND NOT EXISTS (SELECT 1 FROM lead_losses ll   WHERE ll.lead_id = l.id)
+        AND NOT EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
         AND EXISTS     (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
         AND NOT EXISTS (
           SELECT 1 FROM chatwoot_messages cm
@@ -434,12 +473,13 @@ export async function getPerdaMetrics(
       JOIN leads l ON l.id = ll.lead_id
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND EXISTS (
           SELECT 1 FROM lead_form_submit lfs
           WHERE lfs.lead_id = ll.lead_id
-            AND lfs.created_at > ll.created_at
+            AND lfs.created_at::timestamp > ll.created_at
         )
     `,
   ]);
@@ -465,19 +505,20 @@ export async function getLeadsPorDia(f: VendasFilters): Promise<LeadDia[]> {
 
   const rows = await sql`
     SELECT
-      TO_CHAR(DATE_TRUNC('day', l.created_at), 'YYYY-MM-DD') as date,
+      TO_CHAR(DATE_TRUNC('day', l.created_at AT TIME ZONE 'America/Sao_Paulo'), 'YYYY-MM-DD') as date,
       COUNT(*)::int as count
     FROM leads l
     WHERE l.created_at >= ${f.start}::date
       AND l.created_at < (${f.end}::date + interval '1 day')
+      AND l.deleted_at IS NULL
       AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
       AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
       AND (${src}::text IS NULL OR EXISTS (
         SELECT 1 FROM lead_form_submit lfs
         WHERE lfs.lead_id = l.id
-        AND COALESCE(lfs.utm_data->>'utmSource', lfs.utm_data->>'utm_source') = ${src}
+        AND lfs.utm_data->>'utm_source' = ${src}
       ))
-    GROUP BY DATE_TRUNC('day', l.created_at)
+    GROUP BY DATE_TRUNC('day', l.created_at AT TIME ZONE 'America/Sao_Paulo')
     ORDER BY 1
   `;
 
@@ -491,17 +532,17 @@ export async function getFilterOptions(): Promise<FilterOptions> {
 
   const [sources, variants] = await Promise.all([
     sql`
-      SELECT DISTINCT
-        COALESCE(utm_data->>'utmSource', utm_data->>'utm_source') as source
+      SELECT DISTINCT utm_data->>'utm_source' as source
       FROM lead_form_submit
-      WHERE utm_data->>'utmSource' IS NOT NULL
-         OR utm_data->>'utm_source' IS NOT NULL
+      WHERE utm_data->>'utm_source' IS NOT NULL
+        AND utm_data->>'utm_source' != ''
       ORDER BY 1
     `,
     sql`
       SELECT DISTINCT landing_variant, pricing_variant
       FROM leads
-      WHERE landing_variant IS NOT NULL OR pricing_variant IS NOT NULL
+      WHERE (landing_variant IS NOT NULL OR pricing_variant IS NOT NULL)
+        AND deleted_at IS NULL
     `,
   ]);
 

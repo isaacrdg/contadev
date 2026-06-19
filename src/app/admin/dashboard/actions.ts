@@ -38,7 +38,7 @@ export async function runSelectQuery(sql: string): Promise<QueryResult> {
 
   try {
     const db = neon(url);
-    const rawResult = await db.unsafe(sql);
+    const rawResult = await db`${db.unsafe(sql)}`;
     const result = rawResult as unknown as Record<string, unknown>[];
 
     if (!result.length) {

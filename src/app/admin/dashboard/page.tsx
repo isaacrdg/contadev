@@ -22,8 +22,9 @@ function defaultDates() {
 }
 
 const RECEITA_ZERO = {
-  valorAdquirido: 0, mrr: 0, qtdAnuais: 0, valorAnuais: 0,
-  qtdMensais: 0, valorMensais: 0, assinou: 0, pagou: 0,
+  totalCobrado: 0, valorNovosContratos: 0, mrr: 0, clientesAtivos: 0, emRisco: 0,
+  qtdNovosAnuais: 0, valorNovosAnuais: 0, qtdNovosMensais: 0, valorNovosMensais: 0,
+  assinou: 0, pagou: 0,
 };
 const CONVERSAO_ZERO = {
   leadsEntrados: 0, fechamentos: 0, closeRate: 0, multiplosEntradas: 0,
