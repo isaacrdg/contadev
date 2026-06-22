@@ -38,7 +38,7 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 | Msgs até perdido | idem + `lead_losses` | Total por lead `has_billing=false` **e** em `lead_losses`. p50 |
 | Perdidos que reentram | `lead_losses` + `lead_form_submit` | Perda → novo form depois |
 | Leads múltiplas entradas | `lead_form_submit` | `lead_id` com 2+ submissões |
-| Clientes que quicam | `lead_subscriptions` | `is_frozen=true` e `frozen_at − created_at < 15d` |
+| Clientes que quicam | `subscription_history` | `ended_reason='canceled'` e `ended_at − started_at < 15d` (cancelou em <15 dias) |
 | Valor adquirido | `subscription_payments` / `lead_subscriptions` | `SUM(value)` pago / `SUM` novos contratos |
 | Qtd. planos anuais / valor | `lead_subscriptions` | `cycle='YEARLY'` |
 | Qtd. planos mensais / valor | `lead_subscriptions` | `cycle='MONTHLY'` |
@@ -53,6 +53,9 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 - **`subscription_status`:** `pending` = não pagou ainda · `active` = pagou · `past_due` = inadimplente · `canceled` = cancelado.
 - **Tabela `contracts` é a ANTIGA** (não é o contrato atual da plataforma). **Não é usada** por nenhuma métrica.
 - **Ghosting (perda silenciosa):** mantido — lead que já mandou ≥1 mensagem, não fechou, não foi marcado perdido, e está 7+ dias sem mandar mensagem. Quem nunca respondeu **não** entra.
+- **Clientes que quicam = cancelou em <15 dias** (`subscription_history.ended_reason='canceled'`). `is_frozen` **NÃO** é churn — é uma pausa/congelamento temporário (84 assinaturas `frozen` ainda estão `active`). E **nem todo `ended_at` é churn**: `gateway_switch` (troca de gateway), `monthly_to_annual_promotion` (upgrade) e `admin_replace` são encerramentos técnicos, não saída do cliente — por isso filtra-se `ended_reason='canceled'`.
+- **`% page views → leads`:** vive no **Vercel Analytics** (não há PostHog no projeto). Vercel Analytics no plano atual não é consultável por API de forma limpa; entra como métrica manual ou via PostHog/instrumentação própria no futuro.
+- **Inadimplentes no 1º mês:** porta aberta — definição estrita ("até 30d após assinar") a refinar depois.
 
 ## Pontos em aberto / observações
 - **`% page views → leads`**: não está no banco (PostHog). Não é calculável aqui.

@@ -275,17 +275,20 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
             AND lfs.created_at::timestamp > ll.created_at
         )
     `,
-    // Clientes que quicam: assinaturas congeladas em menos de 15 dias após criação
+    // Clientes que quicam: assinou e CANCELOU em menos de 15 dias.
+    // Fonte: subscription_history (started_at/ended_at/ended_reason).
+    // IMPORTANTE: filtrar ended_reason='canceled' — os demais encerramentos
+    // (gateway_switch, monthly_to_annual_promotion, admin_replace) NÃO são churn.
     sql`
-      SELECT COUNT(*)::int as quicam
-      FROM lead_subscriptions ls
-      JOIN leads l ON l.id = ls.lead_id
+      SELECT COUNT(DISTINCT sh.lead_id)::int as quicam
+      FROM subscription_history sh
+      JOIN leads l ON l.id = sh.lead_id
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
         AND l.deleted_at IS NULL
-        AND ls.is_frozen = true
-        AND ls.frozen_at IS NOT NULL
-        AND ls.frozen_at - ls.created_at < INTERVAL '15 days'
+        AND sh.ended_at IS NOT NULL
+        AND sh.ended_reason = 'canceled'
+        AND sh.ended_at - sh.started_at < INTERVAL '15 days'
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
     `,

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T19:17:06.683Z",
+  "generatedAt": "2026-06-22T19:40:51.784Z",
   "filters": {
     "start": "2026-05-23",
     "end": "2026-06-22",
@@ -30,7 +30,7 @@
     "inadimplentes": 1,
     "multiplosEntradas": 22,
     "reentradas": 0,
-    "quicam": 1,
+    "quicam": 0,
     "funnelEntrados": 290,
     "funnelTemConversa": 266,
     "funnelAcesso": 31,
@@ -221,7 +221,7 @@
       "inadimplentes": 3,
       "multiplosEntradas": 7,
       "reentradas": 0,
-      "quicam": 2,
+      "quicam": 0,
       "funnelEntrados": 350,
       "funnelTemConversa": 231,
       "funnelAcesso": 47,
