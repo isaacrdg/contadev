@@ -70,7 +70,14 @@ export interface VelocidadeData {
   timeBetweenP90: number | null;
   msgsAteFecharP50: number | null;
   msgsAtePerdidoP50: number | null;
+  // Distribuição em 7 faixas: <5m, 5–15m, 15–30m, 30–60m, 1–4h, 4–24h, >1d
+  frtDist: number[];
+  secondDist: number[];
+  betweenDist: number[];
 }
+
+// Limiares (em minutos) das faixas de distribuição de tempo
+export const DIST_THRESHOLDS = [5, 15, 30, 60, 240, 1440];
 
 export interface PerdaData {
   perdidosDeclarados: number;
@@ -95,6 +102,11 @@ export interface FilterOptions {
 const n = (v: unknown) => Number(v ?? 0);
 const toFloat = (v: unknown): number | null =>
   v === null || v === undefined ? null : Number(v);
+// json_object_agg({bucket: count}) → array fixo de 7 faixas
+const toDist = (j: unknown): number[] => {
+  const o = (j ?? {}) as Record<string, number>;
+  return Array.from({ length: DIST_THRESHOLDS.length + 1 }, (_, i) => Number(o[i] ?? 0));
+};
 
 // ── RECEITA ───────────────────────────────────────────────────────────────────
 
@@ -332,11 +344,18 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
           AND hm.created_at - l.created_at < INTERVAL '30 days'
       )
       SELECT
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY frt.minutes) as frt_p50,
-        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY frt.minutes) as frt_p90,
+        (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY minutes) FROM frt_times)    as frt_p50,
+        (SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY minutes) FROM frt_times)    as frt_p90,
         (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY minutes) FROM second_times) as second_p50,
-        (SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY minutes) FROM second_times) as second_p90
-      FROM frt_times frt
+        (SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY minutes) FROM second_times) as second_p90,
+        (SELECT json_object_agg(b, c) FROM (
+          SELECT width_bucket(minutes, ARRAY[5,15,30,60,240,1440]) as b, COUNT(*) as c
+          FROM frt_times GROUP BY 1
+        ) fb) as frt_dist,
+        (SELECT json_object_agg(b, c) FROM (
+          SELECT width_bucket(minutes, ARRAY[5,15,30,60,240,1440]) as b, COUNT(*) as c
+          FROM second_times GROUP BY 1
+        ) sb) as second_dist
     `,
     // Tempo entre respostas humanas consecutivas
     sql`
@@ -364,9 +383,12 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
           AND created_at - prev_at > INTERVAL '30 seconds'
       )
       SELECT
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY minutes) as p50,
-        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY minutes) as p90
-      FROM intervals
+        (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY minutes) FROM intervals) as p50,
+        (SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY minutes) FROM intervals) as p90,
+        (SELECT json_object_agg(b, c) FROM (
+          SELECT width_bucket(minutes, ARRAY[5,15,30,60,240,1440]) as b, COUNT(*) as c
+          FROM intervals GROUP BY 1
+        ) ib) as dist
     `,
     // Qtd mensagens até fechamento
     sql`
@@ -414,6 +436,9 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
     timeBetweenP90:    toFloat(timeBetween[0]?.p90),
     msgsAteFecharP50:  toFloat(msgsFechar[0]?.p50),
     msgsAtePerdidoP50: toFloat(msgsPerdido[0]?.p50),
+    frtDist:           toDist(frt[0]?.frt_dist),
+    secondDist:        toDist(frt[0]?.second_dist),
+    betweenDist:       toDist(timeBetween[0]?.dist),
   };
 }
 

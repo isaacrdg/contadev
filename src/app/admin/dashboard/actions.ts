@@ -1,6 +1,16 @@
 "use server";
 
 import { neon } from "@neondatabase/serverless";
+import { cookies } from "next/headers";
+
+// Botão "Atualizar" do dashboard: gira o token de refresh (cookie).
+// O token entra na chave do cache das métricas — token novo = uma releitura do
+// banco; token igual = serve do cache. É a ÚNICA porta que faz o dashboard
+// reler o Neon (que cobra compute por query).
+export async function refreshVendas() {
+  const jar = await cookies();
+  jar.set("vendas-rev", String(Date.now()), { path: "/", sameSite: "lax" });
+}
 
 const FORBIDDEN = /\b(insert|update|delete|drop|create|alter|truncate|grant|revoke|execute|exec|call|copy|vacuum|analyze|cluster|reindex|reset|set|lock|notify|listen)\b/i;
 

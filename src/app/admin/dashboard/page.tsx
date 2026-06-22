@@ -8,8 +8,32 @@ import {
   type VendasFilters,
 } from "@/lib/vendas-db";
 import DashboardClient from "./DashboardClient";
+import { unstable_cache } from "next/cache";
+import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic";
+// ─────────────────────────────────────────────────────────────────────────────
+// CACHE MANUAL — o Neon cobra compute por query, e estas são pesadas.
+// Cada resultado é cacheado pela combinação (filtros + token de refresh `rev`).
+// Abrir/atualizar a página com o mesmo `rev` serve do cache → NÃO bate no banco.
+// O botão "Atualizar" gira o `rev` (cookie, via refreshVendas) → chave nova →
+// uma única releitura do banco. É a ÚNICA porta que consulta o Neon.
+// O parâmetro `rev` é só chave de cache; as funções não o utilizam.
+// ─────────────────────────────────────────────────────────────────────────────
+const cachedReceita = unstable_cache(
+  (f: VendasFilters, _rev: string) => getReceitaMetrics(f), ["vendas-receita"]);
+const cachedConversao = unstable_cache(
+  (f: VendasFilters, _rev: string) => getConversaoMetrics(f), ["vendas-conversao"]);
+const cachedVelocidade = unstable_cache(
+  (f: VendasFilters, _rev: string) => getVelocidadeMetrics(f), ["vendas-velocidade"]);
+const cachedPerda = unstable_cache(
+  (f: VendasFilters, leadsEntrados: number, _rev: string) => getPerdaMetrics(f, leadsEntrados), ["vendas-perda"]);
+const cachedLeadsPorDia = unstable_cache(
+  (f: VendasFilters, _rev: string) => getLeadsPorDia(f), ["vendas-leadsdia"]);
+const cachedFilterOptions = unstable_cache(
+  (_rev: string) => getFilterOptions(), ["vendas-filteropts"]);
+// Carimbo de quando o cache foi populado (= última leitura real do banco) por `rev`.
+const cachedStamp = unstable_cache(
+  async (_rev: string) => new Date().toISOString(), ["vendas-stamp"]);
 
 function defaultDates() {
   const end = new Date();
@@ -19,6 +43,20 @@ function defaultDates() {
     start: start.toISOString().split("T")[0],
     end: end.toISOString().split("T")[0],
   };
+}
+
+const iso = (d: Date) => d.toISOString().split("T")[0];
+
+// Período imediatamente anterior, de mesma duração (inclusiva).
+function previousPeriod(start: string, end: string) {
+  const s = new Date(start + "T00:00:00Z");
+  const e = new Date(end + "T00:00:00Z");
+  const days = Math.round((e.getTime() - s.getTime()) / 86_400_000) + 1;
+  const prevEnd = new Date(s);
+  prevEnd.setUTCDate(prevEnd.getUTCDate() - 1);
+  const prevStart = new Date(prevEnd);
+  prevStart.setUTCDate(prevStart.getUTCDate() - (days - 1));
+  return { start: iso(prevStart), end: iso(prevEnd) };
 }
 
 const RECEITA_ZERO = {
@@ -34,6 +72,7 @@ const CONVERSAO_ZERO = {
 const VELOCIDADE_ZERO = {
   frtP50: null, frtP90: null, secondRespP50: null, secondRespP90: null,
   timeBetweenP50: null, timeBetweenP90: null, msgsAteFecharP50: null, msgsAtePerdidoP50: null,
+  frtDist: [], secondDist: [], betweenDist: [],
 };
 const PERDA_ZERO = { perdidosDeclarados: 0, perdidosGhosting: 0, taxaPerda: 0, reentradas: 0 };
 
@@ -53,26 +92,50 @@ export default async function DashboardPage({
     pricingVariant: params.pv || null,
   };
 
+  // Token de refresh — só muda quando o usuário clica "Atualizar" (cookie).
+  const rev = (await cookies()).get("vendas-rev")?.value ?? "inicial";
+
   const [receita, conversao, velocidade, leadsPorDia, filterOptions] = await Promise.all([
-    getReceitaMetrics(filters).catch((e) => { console.error("[vendas] receita", e); return RECEITA_ZERO; }),
-    getConversaoMetrics(filters).catch((e) => { console.error("[vendas] conversao", e); return CONVERSAO_ZERO; }),
-    getVelocidadeMetrics(filters).catch((e) => { console.error("[vendas] velocidade", e); return VELOCIDADE_ZERO; }),
-    getLeadsPorDia(filters).catch(() => []),
-    getFilterOptions().catch(() => ({ sources: [], landingVariants: [], pricingVariants: [] })),
+    cachedReceita(filters, rev).catch((e) => { console.error("[vendas] receita", e); return RECEITA_ZERO; }),
+    cachedConversao(filters, rev).catch((e) => { console.error("[vendas] conversao", e); return CONVERSAO_ZERO; }),
+    cachedVelocidade(filters, rev).catch((e) => { console.error("[vendas] velocidade", e); return VELOCIDADE_ZERO; }),
+    cachedLeadsPorDia(filters, rev).catch(() => []),
+    cachedFilterOptions(rev).catch(() => ({ sources: [], landingVariants: [], pricingVariants: [] })),
   ]);
 
-  const perda = await getPerdaMetrics(filters, conversao.leadsEntrados)
+  const perda = await cachedPerda(filters, conversao.leadsEntrados, rev)
     .catch((e) => { console.error("[vendas] perda", e); return PERDA_ZERO; });
+
+  // ── Período anterior (mesma duração, imediatamente antes) ──
+  const pp = previousPeriod(filters.start, filters.end);
+  const prevFilters: VendasFilters = { ...filters, start: pp.start, end: pp.end };
+
+  const [prevReceita, prevConversao, prevVelocidade] = await Promise.all([
+    cachedReceita(prevFilters, rev).catch(() => RECEITA_ZERO),
+    cachedConversao(prevFilters, rev).catch(() => CONVERSAO_ZERO),
+    cachedVelocidade(prevFilters, rev).catch(() => VELOCIDADE_ZERO),
+  ]);
+  const prevPerda = await cachedPerda(prevFilters, prevConversao.leadsEntrados, rev)
+    .catch(() => PERDA_ZERO);
+
+  const dataStamp = await cachedStamp(rev).catch(() => new Date().toISOString());
 
   return (
     <DashboardClient
       filters={filters}
+      dataStamp={dataStamp}
       receita={receita}
       conversao={conversao}
       velocidade={velocidade}
       perda={perda}
       leadsPorDia={leadsPorDia}
       filterOptions={filterOptions}
+      prev={{
+        receita: prevReceita,
+        conversao: prevConversao,
+        velocidade: prevVelocidade,
+        perda: prevPerda,
+      }}
     />
   );
 }

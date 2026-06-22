@@ -12,7 +12,7 @@ import {
   CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import { runSelectQuery } from "./actions";
+import { runSelectQuery, refreshVendas } from "./actions";
 import type {
   VendasFilters, ReceitaData, ConversaoData,
   VelocidadeData, PerdaData, LeadDia, FilterOptions,
@@ -30,8 +30,17 @@ interface DashboardData {
   filterOptions: FilterOptions;
 }
 
+interface PrevData {
+  receita: ReceitaData;
+  conversao: ConversaoData;
+  velocidade: VelocidadeData;
+  perda: PerdaData;
+}
+
 interface Props extends DashboardData {
   filters: VendasFilters;
+  prev?: PrevData;
+  dataStamp: string;
 }
 
 export interface CustomQuery {
@@ -79,9 +88,9 @@ const WIDGET_CATALOG: WidgetDef[] = [
   { id: "inadimplentes_c",   title: "Assinou s/ Pagar",         category: "conversao",  w: 3, h: 2 },
   { id: "leads_dia",         title: "Leads por Dia",            category: "conversao",  w: 8, h: 4 },
   { id: "funil",             title: "Funil de Conversão",       category: "conversao",  w: 4, h: 4 },
-  { id: "frt",               title: "FRT — 1ª Resposta",        category: "velocidade", w: 4, h: 2 },
-  { id: "second_resp",       title: "2ª Resposta Humana",       category: "velocidade", w: 4, h: 2 },
-  { id: "time_between",      title: "Entre Respostas",          category: "velocidade", w: 4, h: 2 },
+  { id: "frt",               title: "FRT — 1ª Resposta",        category: "velocidade", w: 4, h: 3 },
+  { id: "second_resp",       title: "2ª Resposta Humana",       category: "velocidade", w: 4, h: 3 },
+  { id: "time_between",      title: "Entre Respostas",          category: "velocidade", w: 4, h: 3 },
   { id: "msgs_fechar",       title: "Msgs até Fechamento",      category: "velocidade", w: 3, h: 2 },
   { id: "msgs_perdido",      title: "Msgs até Perdido",         category: "velocidade", w: 3, h: 2 },
   { id: "perdidos_d",        title: "Perdidos Declarados",      category: "perda",      w: 3, h: 2 },
@@ -109,16 +118,16 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: "leads_dia",        x: 0,  y: 6,  w: 8, h: 4 } as LayoutItem,
   { i: "funil",            x: 8,  y: 6,  w: 4, h: 4 } as LayoutItem,
   // Velocidade
-  { i: "frt",              x: 0,  y: 10, w: 4, h: 2 } as LayoutItem,
-  { i: "second_resp",      x: 4,  y: 10, w: 4, h: 2 } as LayoutItem,
-  { i: "time_between",     x: 8,  y: 10, w: 4, h: 2 } as LayoutItem,
-  { i: "msgs_fechar",      x: 0,  y: 12, w: 3, h: 2 } as LayoutItem,
-  { i: "msgs_perdido",     x: 3,  y: 12, w: 3, h: 2 } as LayoutItem,
+  { i: "frt",              x: 0,  y: 10, w: 4, h: 3 } as LayoutItem,
+  { i: "second_resp",      x: 4,  y: 10, w: 4, h: 3 } as LayoutItem,
+  { i: "time_between",     x: 8,  y: 10, w: 4, h: 3 } as LayoutItem,
+  { i: "msgs_fechar",      x: 0,  y: 13, w: 3, h: 2 } as LayoutItem,
+  { i: "msgs_perdido",     x: 3,  y: 13, w: 3, h: 2 } as LayoutItem,
   // Perda
-  { i: "perdidos_d",       x: 0,  y: 14, w: 3, h: 2 } as LayoutItem,
-  { i: "perdidos_g",       x: 3,  y: 14, w: 3, h: 2 } as LayoutItem,
-  { i: "taxa_perda",       x: 6,  y: 14, w: 3, h: 2 } as LayoutItem,
-  { i: "reentradas_p",     x: 9,  y: 14, w: 3, h: 2 } as LayoutItem,
+  { i: "perdidos_d",       x: 0,  y: 15, w: 3, h: 2 } as LayoutItem,
+  { i: "perdidos_g",       x: 3,  y: 15, w: 3, h: 2 } as LayoutItem,
+  { i: "taxa_perda",       x: 6,  y: 15, w: 3, h: 2 } as LayoutItem,
+  { i: "reentradas_p",     x: 9,  y: 15, w: 3, h: 2 } as LayoutItem,
 ];
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
@@ -203,20 +212,138 @@ const ACCENT_HEX: Record<string, string> = {
   disabled: "rgba(255,255,255,0.2)",
 };
 
+// ── Period-over-period comparison ───────────────────────────────────────────────
+
+type Delta = { text: string; tone: "good" | "bad" | "flat" };
+
+// kind: como formatar a variação · dir: qual direção é "boa" · compare:false = sem comparação
+// (KPIs de estado atual, não atrelados ao período). raw: valor numérico comparável.
+type KpiMeta = {
+  kind: "count" | "money" | "rate" | "time" | "msgs";
+  dir: "up" | "down" | "none";
+  compare?: boolean;
+  raw: (d: DashboardData) => number | null;
+};
+
+const KPI_META: Record<string, KpiMeta> = {
+  clientes_ativos: { kind: "count", dir: "up",   compare: false, raw: (d) => d.receita.clientesAtivos },
+  mrr:             { kind: "money", dir: "up",   compare: false, raw: (d) => d.receita.mrr },
+  em_risco:        { kind: "count", dir: "down", compare: false, raw: (d) => d.receita.emRisco },
+  total_cobrado:   { kind: "money", dir: "up",   raw: (d) => d.receita.totalCobrado },
+  valor_novos:     { kind: "money", dir: "up",   raw: (d) => d.receita.valorNovosContratos },
+  pagou_pct:       { kind: "rate",  dir: "up",   raw: (d) => d.receita.assinou > 0 ? d.receita.pagou / d.receita.assinou : null },
+  qtd_anuais:      { kind: "count", dir: "up",   raw: (d) => d.receita.qtdNovosAnuais },
+  val_anuais:      { kind: "money", dir: "up",   raw: (d) => d.receita.valorNovosAnuais },
+  qtd_mensais:     { kind: "count", dir: "up",   raw: (d) => d.receita.qtdNovosMensais },
+  val_mensais:     { kind: "money", dir: "up",   raw: (d) => d.receita.valorNovosMensais },
+  leads:           { kind: "count", dir: "up",   raw: (d) => d.conversao.leadsEntrados },
+  fechamentos:     { kind: "count", dir: "up",   raw: (d) => d.conversao.fechamentos },
+  close_rate:      { kind: "rate",  dir: "up",   raw: (d) => d.conversao.closeRate },
+  multiplos:       { kind: "count", dir: "none", raw: (d) => d.conversao.multiplosEntradas },
+  reentradas_c:    { kind: "count", dir: "none", raw: (d) => d.conversao.reentradas },
+  quicam:          { kind: "count", dir: "down", raw: (d) => d.conversao.quicam },
+  inadimplentes_c: { kind: "count", dir: "down", raw: (d) => d.conversao.inadimplentes },
+  frt:             { kind: "time",  dir: "down", raw: (d) => d.velocidade.frtP50 },
+  second_resp:     { kind: "time",  dir: "down", raw: (d) => d.velocidade.secondRespP50 },
+  time_between:    { kind: "time",  dir: "down", raw: (d) => d.velocidade.timeBetweenP50 },
+  msgs_fechar:     { kind: "msgs",  dir: "down", raw: (d) => d.velocidade.msgsAteFecharP50 },
+  msgs_perdido:    { kind: "msgs",  dir: "none", raw: (d) => d.velocidade.msgsAtePerdidoP50 },
+  perdidos_d:      { kind: "count", dir: "down", raw: (d) => d.perda.perdidosDeclarados },
+  perdidos_g:      { kind: "count", dir: "down", raw: (d) => d.perda.perdidosGhosting },
+  taxa_perda:      { kind: "rate",  dir: "down", raw: (d) => d.perda.taxaPerda },
+  reentradas_p:    { kind: "count", dir: "none", raw: (d) => d.perda.reentradas },
+};
+
+function toneFor(dir: KpiMeta["dir"], positive: boolean): Delta["tone"] {
+  if (dir === "none") return "flat";
+  return positive === (dir === "up") ? "good" : "bad";
+}
+
+function computeDelta(meta: KpiMeta, cur: number | null, prev: number | null): Delta | null {
+  if (meta.compare === false) return null;
+  if (cur === null || prev === null) return null;
+
+  if (meta.kind === "rate") {
+    const pp = (cur - prev) * 100;
+    if (Math.abs(pp) < 0.05) return { text: "0,0pp", tone: "flat" };
+    return { text: `${pp > 0 ? "+" : "−"}${Math.abs(pp).toFixed(1).replace(".", ",")}pp`, tone: toneFor(meta.dir, pp > 0) };
+  }
+
+  if (prev === 0) {
+    if (cur === 0) return { text: "0%", tone: "flat" };
+    return { text: "novo", tone: meta.dir === "up" ? "good" : meta.dir === "down" ? "bad" : "flat" };
+  }
+
+  const r = (cur - prev) / Math.abs(prev);
+  if (Math.abs(r) < 0.005) return { text: "0%", tone: "flat" };
+  return { text: `${r > 0 ? "+" : "−"}${Math.abs(r * 100).toFixed(0)}%`, tone: toneFor(meta.dir, r > 0) };
+}
+
+const DELTA_HEX: Record<Delta["tone"], string> = {
+  good: "#22c55e",
+  bad:  "#ef4444",
+  flat: "rgba(255,255,255,0.35)",
+};
+
+function DeltaBadge({ delta }: { delta: Delta }) {
+  const hex = DELTA_HEX[delta.tone];
+  const arrow = delta.text.startsWith("+") ? "↑" : delta.text.startsWith("−") ? "↓" : "";
+  const body = delta.text.replace(/^[+−]/, "");
+  return (
+    <span
+      className="text-[9.5px] font-semibold tabular-nums px-1.5 py-0.5 rounded whitespace-nowrap"
+      style={{ color: hex, background: delta.tone === "flat" ? "rgba(255,255,255,0.04)" : `${DELTA_HEX[delta.tone]}1a` }}
+      title="vs. período anterior"
+    >
+      {arrow}{body}
+    </span>
+  );
+}
+
+// ── Time distribution histogram ─────────────────────────────────────────────────
+
+const DIST_LABELS = ["<5m", "5–15m", "15–30m", "30–60m", "1–4h", "4–24h", ">1d"];
+
+function DistBars({ dist, hex }: { dist: number[]; hex: string }) {
+  const max = Math.max(...dist, 1);
+  return (
+    <div className="mt-2">
+      <div className="flex items-end gap-[3px]" style={{ height: 24 }}>
+        {dist.map((v, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-sm"
+            title={`${DIST_LABELS[i]}: ${v}`}
+            style={{ height: `${Math.max(6, (v / max) * 100)}%`, background: hex, opacity: v > 0 ? 0.55 : 0.1 }}
+          />
+        ))}
+      </div>
+      <div className="flex justify-between mt-1" style={{ fontSize: 8, color: "rgba(255,255,255,0.25)" }}>
+        <span>{DIST_LABELS[0]}</span>
+        <span>{DIST_LABELS[DIST_LABELS.length - 1]}</span>
+      </div>
+    </div>
+  );
+}
+
 // ── KPI widget ─────────────────────────────────────────────────────────────────
 
-function KpiWidget({ kpi }: { kpi: KpiData }) {
+function KpiWidget({ kpi, delta, dist }: { kpi: KpiData; delta?: Delta | null; dist?: number[] }) {
   const hex = ACCENT_HEX[kpi.accent] ?? "rgba(255,255,255,0.75)";
   const hasDual = kpi.p50 !== undefined;
+  const showDist = !!dist && dist.some((x) => x > 0);
 
   return (
     <div className="flex flex-col h-full px-4 py-3.5">
-      <div className="text-[10px] font-medium tracking-wide mb-3 leading-tight" style={{ color: "rgba(255,255,255,0.42)" }}>
-        {kpi.label}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="text-[10px] font-medium tracking-wide leading-tight" style={{ color: "rgba(255,255,255,0.42)" }}>
+          {kpi.label}
+        </div>
+        {delta && <DeltaBadge delta={delta} />}
       </div>
 
       {hasDual ? (
-        <div className="flex gap-4 flex-1 items-end pb-1">
+        <div className="flex gap-4 items-end pb-1">
           <div>
             <div className="text-[9px] uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>p50</div>
             <div className="text-[22px] font-bold tabular-nums" style={{ color: hex }}>{kpi.p50}</div>
@@ -232,8 +359,10 @@ function KpiWidget({ kpi }: { kpi: KpiData }) {
         </div>
       )}
 
+      {showDist && <DistBars dist={dist!} hex={hex} />}
+
       {kpi.sub && (
-        <div className="text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <div className="text-[10px] mt-auto pt-2" style={{ color: "rgba(255,255,255,0.25)" }}>
           {kpi.sub}
         </div>
       )}
@@ -741,13 +870,35 @@ function AddWidgetPanel({ activeIds, onAdd, onNewQuery, onClose }: { activeIds: 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function DashboardClient({
-  filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions,
+  filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions, prev, dataStamp,
 }: Props) {
   const router   = useRouter();
   const pathname = usePathname();
   const sp       = useSearchParams();
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await refreshVendas();   // invalida o cache (única ida ao banco)
+      router.refresh();        // re-renderiza com os dados frescos
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  const fmtStamp = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+      });
+    } catch { return "—"; }
+  };
 
   const data: DashboardData = { receita, conversao, velocidade, perda, leadsPorDia, filterOptions };
+  const prevData: DashboardData | null = prev
+    ? { ...prev, leadsPorDia: [], filterOptions }
+    : null;
 
   const [layout, setLayout]               = useState<LayoutItem[]>(DEFAULT_LAYOUT);
   const [customQueries, setCustomQueries] = useState<CustomQuery[]>([]);
@@ -774,7 +925,7 @@ export default function DashboardClient({
   useEffect(() => {
     setMounted(true);
     try {
-      const sl = localStorage.getItem("vendas-layout-v3");
+      const sl = localStorage.getItem("vendas-layout-v4");
       if (sl) setLayout(JSON.parse(sl));
       const sq = localStorage.getItem("vendas-queries-v1");
       if (sq) setCustomQueries(JSON.parse(sq));
@@ -784,7 +935,7 @@ export default function DashboardClient({
   }, []);
 
   const persistLayout = useCallback((l: LayoutItem[]) => {
-    try { localStorage.setItem("vendas-layout-v3", JSON.stringify(l)); } catch {}
+    try { localStorage.setItem("vendas-layout-v4", JSON.stringify(l)); } catch {}
     setLayout(l);
   }, []);
 
@@ -857,7 +1008,16 @@ export default function DashboardClient({
     }
 
     const kpi = resolveKpi(id, data);
-    if (kpi) return <KpiWidget kpi={kpi} />;
+    if (kpi) {
+      const meta = KPI_META[id];
+      const delta = meta && prevData ? computeDelta(meta, meta.raw(data), meta.raw(prevData)) : null;
+      const dist =
+        id === "frt"          ? velocidade.frtDist
+        : id === "second_resp" ? velocidade.secondDist
+        : id === "time_between" ? velocidade.betweenDist
+        : undefined;
+      return <KpiWidget kpi={kpi} delta={delta} dist={dist} />;
+    }
     return null;
   }
 
@@ -873,13 +1033,20 @@ export default function DashboardClient({
 
   return (
     <div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       {/* ── Top bar ── */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
           <h1 className="text-[18px] font-semibold tracking-tight" style={{ color: "#fafafa" }}>Engenharia de Vendas</h1>
-          <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>{filters.start} → {filters.end} · leitura</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>{filters.start} → {filters.end} · variação vs. período anterior · atualizado {fmtStamp(dataStamp)}</p>
         </div>
         <div className="flex gap-2 items-center">
+          <button onClick={handleRefresh} disabled={refreshing} className="px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5"
+            style={{ background: refreshing ? "rgba(117,83,255,0.1)" : "rgba(117,83,255,0.15)", border: "1px solid rgba(117,83,255,0.4)", color: "#c4b1ff", opacity: refreshing ? 0.7 : 1, cursor: refreshing ? "default" : "pointer" }}
+            title="Consulta o banco e atualiza os dados (única ação que usa o banco)">
+            <span style={{ display: "inline-block", animation: refreshing ? "spin 0.8s linear infinite" : "none" }}>↻</span>
+            {refreshing ? "Atualizando..." : "Atualizar dados"}
+          </button>
           {editMode && (
             <>
               <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 rounded-lg text-[11px] font-medium" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.65)" }}>+ Widget</button>
