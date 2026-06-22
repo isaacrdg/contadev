@@ -1,0 +1,268 @@
+{
+  "generatedAt": "2026-06-22T15:51:59.925Z",
+  "filters": {
+    "start": "2026-05-23",
+    "end": "2026-06-22",
+    "source": null,
+    "landingVariant": null,
+    "pricingVariant": null
+  },
+  "receita": {
+    "totalCobrado": 201401.84,
+    "valorNovosContratos": 44495.54,
+    "mrr": 176019.89,
+    "clientesAtivos": 597,
+    "emRisco": 66,
+    "qtdNovosAnuais": 14,
+    "valorNovosAnuais": 36948.24,
+    "qtdNovosMensais": 27,
+    "valorNovosMensais": 7547.3,
+    "assinou": 32,
+    "pagou": 31
+  },
+  "conversao": {
+    "leadsEntrados": 290,
+    "fechamentos": 31,
+    "closeRate": 0.10689655172413794,
+    "multiplosEntradas": 22,
+    "reentradas": 0,
+    "quicam": 1,
+    "inadimplentes": 1,
+    "funnelEntrados": 290,
+    "funnelTemConversa": 266,
+    "funnelTemContrato": 32,
+    "funnelTemBilling": 31
+  },
+  "velocidade": {
+    "frtP50": 1248.4192907833333,
+    "frtP90": 6581.073471566667,
+    "secondRespP50": 1665.0481764333333,
+    "secondRespP90": 7301.448655726667,
+    "timeBetweenP50": 3.988204083333333,
+    "timeBetweenP90": 1048.2077156266666,
+    "msgsAteFecharP50": 96,
+    "msgsAtePerdidoP50": null,
+    "frtDist": [
+      1,
+      3,
+      5,
+      3,
+      19,
+      34,
+      56
+    ],
+    "secondDist": [
+      2,
+      1,
+      2,
+      2,
+      9,
+      28,
+      55
+    ],
+    "betweenDist": [
+      379,
+      70,
+      40,
+      35,
+      71,
+      87,
+      37
+    ]
+  },
+  "perda": {
+    "perdidosDeclarados": 0,
+    "perdidosGhosting": 143,
+    "taxaPerda": 0.49310344827586206,
+    "reentradas": 0
+  },
+  "leadsPorDia": [
+    {
+      "date": "2026-05-23",
+      "count": 4
+    },
+    {
+      "date": "2026-05-24",
+      "count": 6
+    },
+    {
+      "date": "2026-05-25",
+      "count": 20
+    },
+    {
+      "date": "2026-05-26",
+      "count": 11
+    },
+    {
+      "date": "2026-05-27",
+      "count": 15
+    },
+    {
+      "date": "2026-05-28",
+      "count": 10
+    },
+    {
+      "date": "2026-05-29",
+      "count": 11
+    },
+    {
+      "date": "2026-05-30",
+      "count": 1
+    },
+    {
+      "date": "2026-05-31",
+      "count": 4
+    },
+    {
+      "date": "2026-06-01",
+      "count": 16
+    },
+    {
+      "date": "2026-06-02",
+      "count": 18
+    },
+    {
+      "date": "2026-06-03",
+      "count": 11
+    },
+    {
+      "date": "2026-06-04",
+      "count": 5
+    },
+    {
+      "date": "2026-06-05",
+      "count": 14
+    },
+    {
+      "date": "2026-06-06",
+      "count": 9
+    },
+    {
+      "date": "2026-06-07",
+      "count": 4
+    },
+    {
+      "date": "2026-06-08",
+      "count": 12
+    },
+    {
+      "date": "2026-06-09",
+      "count": 24
+    },
+    {
+      "date": "2026-06-10",
+      "count": 5
+    },
+    {
+      "date": "2026-06-11",
+      "count": 14
+    },
+    {
+      "date": "2026-06-12",
+      "count": 15
+    },
+    {
+      "date": "2026-06-13",
+      "count": 4
+    },
+    {
+      "date": "2026-06-14",
+      "count": 1
+    },
+    {
+      "date": "2026-06-15",
+      "count": 28
+    },
+    {
+      "date": "2026-06-16",
+      "count": 17
+    },
+    {
+      "date": "2026-06-17",
+      "count": 11
+    }
+  ],
+  "filterOptions": {
+    "sources": [
+      "FacebookADS",
+      "ig"
+    ],
+    "landingVariants": [
+      "v2"
+    ],
+    "pricingVariants": [
+      "treatment"
+    ]
+  },
+  "prev": {
+    "receita": {
+      "totalCobrado": 182518.47,
+      "valorNovosContratos": 28009.46,
+      "mrr": 176019.89,
+      "clientesAtivos": 597,
+      "emRisco": 66,
+      "qtdNovosAnuais": 6,
+      "valorNovosAnuais": 15114.96,
+      "qtdNovosMensais": 46,
+      "valorNovosMensais": 12894.5,
+      "assinou": 49,
+      "pagou": 47
+    },
+    "conversao": {
+      "leadsEntrados": 350,
+      "fechamentos": 47,
+      "closeRate": 0.13428571428571429,
+      "multiplosEntradas": 7,
+      "reentradas": 0,
+      "quicam": 2,
+      "inadimplentes": 2,
+      "funnelEntrados": 350,
+      "funnelTemConversa": 231,
+      "funnelTemContrato": 49,
+      "funnelTemBilling": 47
+    },
+    "velocidade": {
+      "frtP50": 1367.3071890166666,
+      "frtP90": 20287.302066683333,
+      "secondRespP50": 1571.3584592833333,
+      "secondRespP90": 20886.54892654,
+      "timeBetweenP50": 62.68052715,
+      "timeBetweenP90": 1361.207157806667,
+      "msgsAteFecharP50": 75,
+      "msgsAtePerdidoP50": 7,
+      "frtDist": [
+        0,
+        1,
+        1,
+        3,
+        7,
+        19,
+        30
+      ],
+      "secondDist": [
+        0,
+        1,
+        1,
+        0,
+        6,
+        15,
+        24
+      ],
+      "betweenDist": [
+        61,
+        13,
+        10,
+        15,
+        47,
+        39,
+        18
+      ]
+    },
+    "perda": {
+      "perdidosDeclarados": 3,
+      "perdidosGhosting": 222,
+      "taxaPerda": 0.6428571428571429,
+      "reentradas": 0
+    }
+  }
+}

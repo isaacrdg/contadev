@@ -6,10 +6,31 @@ import {
   getLeadsPorDia,
   getFilterOptions,
   type VendasFilters,
+  type ReceitaData,
+  type ConversaoData,
+  type VelocidadeData,
+  type PerdaData,
+  type LeadDia,
+  type FilterOptions,
 } from "@/lib/vendas-db";
 import DashboardClient from "./DashboardClient";
 import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
+import snapshotData from "@/lib/vendas-snapshot.json";
+
+// Snapshot gravado por `npm run snapshot` (leitura única do banco). É o que o
+// dashboard mostra por padrão — abrir a página NÃO consulta o Neon.
+const snapshot = snapshotData as unknown as {
+  generatedAt: string;
+  filters: VendasFilters;
+  receita: ReceitaData;
+  conversao: ConversaoData;
+  velocidade: VelocidadeData;
+  perda: PerdaData;
+  leadsPorDia: LeadDia[];
+  filterOptions: FilterOptions;
+  prev: { receita: ReceitaData; conversao: ConversaoData; velocidade: VelocidadeData; perda: PerdaData };
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CACHE MANUAL — o Neon cobra compute por query, e estas são pesadas.
@@ -94,6 +115,28 @@ export default async function DashboardPage({
 
   // Token de refresh — só muda quando o usuário clica "Atualizar" (cookie).
   const rev = (await cookies()).get("vendas-rev")?.value ?? "inicial";
+
+  // Visão padrão (sem filtros, sem datas custom) e antes de qualquer "Atualizar":
+  // serve o SNAPSHOT salvo, sem tocar no banco. Filtros ou o botão Atualizar
+  // levam ao caminho ao vivo (cacheado) abaixo.
+  const isDefaultView =
+    !params.source && !params.lv && !params.pv && !params.start && !params.end;
+
+  if (rev === "inicial" && isDefaultView) {
+    return (
+      <DashboardClient
+        filters={snapshot.filters}
+        dataStamp={snapshot.generatedAt}
+        receita={snapshot.receita}
+        conversao={snapshot.conversao}
+        velocidade={snapshot.velocidade}
+        perda={snapshot.perda}
+        leadsPorDia={snapshot.leadsPorDia}
+        filterOptions={snapshot.filterOptions}
+        prev={snapshot.prev}
+      />
+    );
+  }
 
   const [receita, conversao, velocidade, leadsPorDia, filterOptions] = await Promise.all([
     cachedReceita(filters, rev).catch((e) => { console.error("[vendas] receita", e); return RECEITA_ZERO; }),

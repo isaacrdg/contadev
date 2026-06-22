@@ -304,19 +304,24 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
   const lv = f.landingVariant || null;
   const pv = f.pricingVariant || null;
 
+  // Respostas HUMANAS do vendedor ficam em chatwoot_outgoing_message_requests
+  // (ligadas ao lead via chatwoot_conversations). source distingue humano
+  // (conversation_text/attachments) de automação (scheduled_message/welcome).
+  // chatwoot_messages guarda só as mensagens de ENTRADA (do lead).
+  const HUMAN_SOURCES = ["conversation_text", "conversation_attachments"];
+
   const [frt, timeBetween, msgsFechar, msgsPerdido] = await Promise.all([
-    // FRT p50/p90 + 2ª resposta p50/p90
+    // FRT p50/p90 + 2ª resposta p50/p90 + distribuições
     sql`
       WITH human_msgs AS (
         SELECT
-          cm.lead_id,
-          cm.created_at,
-          ROW_NUMBER() OVER (PARTITION BY cm.lead_id ORDER BY cm.created_at) as rn
-        FROM chatwoot_messages cm
-        JOIN leads l ON l.id = cm.lead_id
-        WHERE cm.lead_id IS NOT NULL
-          AND cm.employee_id IS NOT NULL
-          AND cm.ai_processed_at IS NULL
+          c.lead_id,
+          r.created_at,
+          ROW_NUMBER() OVER (PARTITION BY c.lead_id ORDER BY r.created_at) as rn
+        FROM chatwoot_outgoing_message_requests r
+        JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+        JOIN leads l ON l.id = c.lead_id
+        WHERE r.source = ANY(${HUMAN_SOURCES})
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
           AND l.deleted_at IS NULL
@@ -361,14 +366,13 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
     sql`
       WITH human_msgs AS (
         SELECT
-          cm.lead_id,
-          cm.created_at,
-          LAG(cm.created_at) OVER (PARTITION BY cm.lead_id ORDER BY cm.created_at) as prev_at
-        FROM chatwoot_messages cm
-        JOIN leads l ON l.id = cm.lead_id
-        WHERE cm.lead_id IS NOT NULL
-          AND cm.employee_id IS NOT NULL
-          AND cm.ai_processed_at IS NULL
+          c.lead_id,
+          r.created_at,
+          LAG(r.created_at) OVER (PARTITION BY c.lead_id ORDER BY r.created_at) as prev_at
+        FROM chatwoot_outgoing_message_requests r
+        JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+        JOIN leads l ON l.id = c.lead_id
+        WHERE r.source = ANY(${HUMAN_SOURCES})
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
           AND l.deleted_at IS NULL
@@ -390,38 +394,40 @@ export async function getVelocidadeMetrics(f: VendasFilters): Promise<Velocidade
           FROM intervals GROUP BY 1
         ) ib) as dist
     `,
-    // Qtd mensagens até fechamento
+    // Qtd mensagens até fechamento — total da conversa (entrada + saída)
     sql`
       WITH msg_counts AS (
-        SELECT cm.lead_id, COUNT(*)::int as cnt
-        FROM chatwoot_messages cm
-        JOIN leads l ON l.id = cm.lead_id
-        WHERE cm.lead_id IS NOT NULL
-          AND l.has_billing = true
+        SELECT
+          (SELECT COUNT(*) FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
+          + (SELECT COUNT(*) FROM chatwoot_outgoing_message_requests r
+             JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+             WHERE c.lead_id = l.id) as cnt
+        FROM leads l
+        WHERE l.has_billing = true
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
           AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
-        GROUP BY cm.lead_id
       )
       SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY cnt) as p50 FROM msg_counts
     `,
-    // Qtd mensagens até perdido
+    // Qtd mensagens até perdido — total da conversa, leads perdidos (declarados)
     sql`
       WITH msg_counts AS (
-        SELECT cm.lead_id, COUNT(*)::int as cnt
-        FROM chatwoot_messages cm
-        JOIN leads l ON l.id = cm.lead_id
-        WHERE cm.lead_id IS NOT NULL
-          AND l.has_billing = false
+        SELECT
+          (SELECT COUNT(*) FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
+          + (SELECT COUNT(*) FROM chatwoot_outgoing_message_requests r
+             JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+             WHERE c.lead_id = l.id) as cnt
+        FROM leads l
+        WHERE l.has_billing = false
           AND EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
           AND l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
           AND l.deleted_at IS NULL
           AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
           AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
-        GROUP BY cm.lead_id
       )
       SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY cnt) as p50 FROM msg_counts
     `,
