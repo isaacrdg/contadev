@@ -86,9 +86,10 @@ const RECEITA_ZERO = {
   assinou: 0, pagou: 0,
 };
 const CONVERSAO_ZERO = {
-  leadsEntrados: 0, fechamentos: 0, closeRate: 0, multiplosEntradas: 0,
-  reentradas: 0, quicam: 0, inadimplentes: 0,
-  funnelEntrados: 0, funnelTemConversa: 0, funnelTemContrato: 0, funnelTemBilling: 0,
+  leadsEntrados: 0, fechamentos: 0, closeRate: 0,
+  acessos: 0, taxaPagamento: 0, perdaPagamento: 0, inadimplentes: 0,
+  multiplosEntradas: 0, reentradas: 0, quicam: 0,
+  funnelEntrados: 0, funnelTemConversa: 0, funnelAcesso: 0, funnelPagou: 0,
 };
 const VELOCIDADE_ZERO = {
   frtP50: null, frtP90: null, secondRespP50: null, secondRespP90: null,

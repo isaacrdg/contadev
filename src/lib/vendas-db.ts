@@ -49,16 +49,19 @@ export interface ReceitaData {
 
 export interface ConversaoData {
   leadsEntrados: number;
-  fechamentos: number;
-  closeRate: number;
+  fechamentos: number;       // pagaram (subscription_status='active')
+  closeRate: number;         // pagaram / leads
+  acessos: number;           // recebeu acesso (has_billing = billing criado)
+  taxaPagamento: number;     // pagaram / acessos (conversão acesso→pagamento)
+  perdaPagamento: number;    // entrou e NÃO pagou (pending, sem active)
+  inadimplentes: number;     // cliente que parou de pagar (past_due, sem active)
   multiplosEntradas: number;
   reentradas: number;
   quicam: number;
-  inadimplentes: number;
   funnelEntrados: number;
   funnelTemConversa: number;
-  funnelTemContrato: number;
-  funnelTemBilling: number;
+  funnelAcesso: number;      // has_billing
+  funnelPagou: number;       // active
 }
 
 export interface VelocidadeData {
@@ -164,11 +167,14 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
           AND lfs.utm_data->>'utm_source' = ${src}
         ))
     `,
-    // Conversão contrato → billing no período
+    // Conversão acesso (billing criado) → pagamento (assinatura active) no período
     sql`
       SELECT
-        COUNT(CASE WHEN has_contract = true THEN 1 END)::int as assinou,
-        COUNT(CASE WHEN has_billing  = true THEN 1 END)::int as pagou
+        COUNT(*) FILTER (WHERE has_billing = true)::int as assinou,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM lead_subscriptions ls
+          WHERE ls.lead_id = l.id AND ls.subscription_status = 'active'
+        ))::int as pagou
       FROM leads l
       WHERE l.created_at >= ${f.start}::date
         AND l.created_at < (${f.end}::date + interval '1 day')
@@ -209,7 +215,13 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
   const [principal, multiplos, reentradas, quicam] = await Promise.all([
     sql`
       WITH period_leads AS (
-        SELECT l.id, l.has_contract, l.has_billing, l.has_started_chatwoot_conversation
+        SELECT
+          l.id,
+          l.has_billing,
+          l.has_started_chatwoot_conversation,
+          EXISTS (SELECT 1 FROM lead_subscriptions ls WHERE ls.lead_id = l.id AND ls.subscription_status = 'active')   as is_active,
+          EXISTS (SELECT 1 FROM lead_subscriptions ls WHERE ls.lead_id = l.id AND ls.subscription_status = 'pending')  as is_pending,
+          EXISTS (SELECT 1 FROM lead_subscriptions ls WHERE ls.lead_id = l.id AND ls.subscription_status = 'past_due') as is_past_due
         FROM leads l
         WHERE l.created_at >= ${f.start}::date
           AND l.created_at < (${f.end}::date + interval '1 day')
@@ -223,11 +235,12 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
           ))
       )
       SELECT
-        COUNT(*)::int                                                                  as total,
-        COUNT(CASE WHEN has_billing  = true               THEN 1 END)::int            as fechamentos,
-        COUNT(CASE WHEN has_contract = true               THEN 1 END)::int            as tem_contrato,
-        COUNT(CASE WHEN has_contract = true AND has_billing = false THEN 1 END)::int  as inadimplentes,
-        COUNT(CASE WHEN has_started_chatwoot_conversation = true THEN 1 END)::int     as tem_conversa
+        COUNT(*)::int                                                            as total,
+        COUNT(*) FILTER (WHERE is_active)::int                                   as pagaram,
+        COUNT(*) FILTER (WHERE has_billing = true)::int                          as acessos,
+        COUNT(*) FILTER (WHERE is_pending  AND NOT is_active)::int               as perda_pagamento,
+        COUNT(*) FILTER (WHERE is_past_due AND NOT is_active)::int               as inadimplentes,
+        COUNT(*) FILTER (WHERE has_started_chatwoot_conversation = true)::int    as tem_conversa
       FROM period_leads
     `,
     // Leads com múltiplas submissões de formulário
@@ -279,20 +292,24 @@ export async function getConversaoMetrics(f: VendasFilters): Promise<ConversaoDa
   ]);
 
   const leadsEntrados = n(principal[0]?.total);
-  const fechamentos   = n(principal[0]?.fechamentos);
+  const fechamentos   = n(principal[0]?.pagaram);   // pagaram (active)
+  const acessos       = n(principal[0]?.acessos);   // has_billing
 
   return {
     leadsEntrados,
     fechamentos,
     closeRate:         leadsEntrados > 0 ? fechamentos / leadsEntrados : 0,
+    acessos,
+    taxaPagamento:     acessos > 0 ? fechamentos / acessos : 0,
+    perdaPagamento:    n(principal[0]?.perda_pagamento),
+    inadimplentes:     n(principal[0]?.inadimplentes),
     multiplosEntradas: n(multiplos[0]?.multiplos),
     reentradas:        n(reentradas[0]?.reentradas),
     quicam:            n(quicam[0]?.quicam),
-    inadimplentes:     n(principal[0]?.inadimplentes),
     funnelEntrados:    leadsEntrados,
     funnelTemConversa: n(principal[0]?.tem_conversa),
-    funnelTemContrato: n(principal[0]?.tem_contrato),
-    funnelTemBilling:  fechamentos,
+    funnelAcesso:      acessos,
+    funnelPagou:       fechamentos,
   };
 }
 

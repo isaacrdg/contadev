@@ -81,11 +81,14 @@ const WIDGET_CATALOG: WidgetDef[] = [
   { id: "planos_mix",        title: "Mix Anual / Mensal",       category: "receita",    w: 6, h: 2 },
   { id: "leads",             title: "Leads Entrados",           category: "conversao",  w: 3, h: 2 },
   { id: "fechamentos",       title: "Novos Fechamentos",        category: "conversao",  w: 3, h: 2 },
-  { id: "close_rate",        title: "Close Rate",               category: "conversao",  w: 3, h: 2 },
+  { id: "close_rate",        title: "Close Rate (pagos)",       category: "conversao",  w: 3, h: 2 },
+  { id: "acessos",           title: "Acessos (billing)",        category: "conversao",  w: 3, h: 2 },
+  { id: "taxa_pagamento",    title: "Acesso → Pagamento",       category: "conversao",  w: 3, h: 2 },
+  { id: "perda_pagamento",   title: "Entrou e não Pagou",       category: "conversao",  w: 3, h: 2 },
   { id: "multiplos",         title: "Múltiplas Entradas",       category: "conversao",  w: 3, h: 2 },
   { id: "reentradas_c",      title: "Reentradas no Funil",      category: "conversao",  w: 3, h: 2 },
   { id: "quicam",            title: "Quicaram (<15d)",          category: "conversao",  w: 3, h: 2 },
-  { id: "inadimplentes_c",   title: "Assinou s/ Pagar",         category: "conversao",  w: 3, h: 2 },
+  { id: "inadimplentes_c",   title: "Inadimplentes (past_due)", category: "conversao",  w: 3, h: 2 },
   { id: "leads_dia",         title: "Leads por Dia",            category: "conversao",  w: 8, h: 4 },
   { id: "funil",             title: "Funil de Conversão",       category: "conversao",  w: 4, h: 4 },
   { id: "frt",               title: "FRT — 1ª Resposta",        category: "velocidade", w: 4, h: 3 },
@@ -114,20 +117,24 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: "leads",            x: 0,  y: 4,  w: 3, h: 2 } as LayoutItem,
   { i: "fechamentos",      x: 3,  y: 4,  w: 3, h: 2 } as LayoutItem,
   { i: "close_rate",       x: 6,  y: 4,  w: 3, h: 2 } as LayoutItem,
-  { i: "inadimplentes_c",  x: 9,  y: 4,  w: 3, h: 2 } as LayoutItem,
-  { i: "leads_dia",        x: 0,  y: 6,  w: 8, h: 4 } as LayoutItem,
-  { i: "funil",            x: 8,  y: 6,  w: 4, h: 4 } as LayoutItem,
+  { i: "acessos",          x: 9,  y: 4,  w: 3, h: 2 } as LayoutItem,
+  { i: "taxa_pagamento",   x: 0,  y: 6,  w: 3, h: 2 } as LayoutItem,
+  { i: "perda_pagamento",  x: 3,  y: 6,  w: 3, h: 2 } as LayoutItem,
+  { i: "inadimplentes_c",  x: 6,  y: 6,  w: 3, h: 2 } as LayoutItem,
+  { i: "quicam",           x: 9,  y: 6,  w: 3, h: 2 } as LayoutItem,
+  { i: "leads_dia",        x: 0,  y: 8,  w: 8, h: 4 } as LayoutItem,
+  { i: "funil",            x: 8,  y: 8,  w: 4, h: 4 } as LayoutItem,
   // Velocidade
-  { i: "frt",              x: 0,  y: 10, w: 4, h: 3 } as LayoutItem,
-  { i: "second_resp",      x: 4,  y: 10, w: 4, h: 3 } as LayoutItem,
-  { i: "time_between",     x: 8,  y: 10, w: 4, h: 3 } as LayoutItem,
-  { i: "msgs_fechar",      x: 0,  y: 13, w: 3, h: 2 } as LayoutItem,
-  { i: "msgs_perdido",     x: 3,  y: 13, w: 3, h: 2 } as LayoutItem,
+  { i: "frt",              x: 0,  y: 12, w: 4, h: 3 } as LayoutItem,
+  { i: "second_resp",      x: 4,  y: 12, w: 4, h: 3 } as LayoutItem,
+  { i: "time_between",     x: 8,  y: 12, w: 4, h: 3 } as LayoutItem,
+  { i: "msgs_fechar",      x: 0,  y: 15, w: 3, h: 2 } as LayoutItem,
+  { i: "msgs_perdido",     x: 3,  y: 15, w: 3, h: 2 } as LayoutItem,
   // Perda
-  { i: "perdidos_d",       x: 0,  y: 15, w: 3, h: 2 } as LayoutItem,
-  { i: "perdidos_g",       x: 3,  y: 15, w: 3, h: 2 } as LayoutItem,
-  { i: "taxa_perda",       x: 6,  y: 15, w: 3, h: 2 } as LayoutItem,
-  { i: "reentradas_p",     x: 9,  y: 15, w: 3, h: 2 } as LayoutItem,
+  { i: "perdidos_d",       x: 0,  y: 17, w: 3, h: 2 } as LayoutItem,
+  { i: "perdidos_g",       x: 3,  y: 17, w: 3, h: 2 } as LayoutItem,
+  { i: "taxa_perda",       x: 6,  y: 17, w: 3, h: 2 } as LayoutItem,
+  { i: "reentradas_p",     x: 9,  y: 17, w: 3, h: 2 } as LayoutItem,
 ];
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
@@ -176,7 +183,7 @@ function resolveKpi(id: string, d: DashboardData): KpiData | null {
     total_cobrado:   () => ({ value: fmtBRL(r.totalCobrado),            label: "Total Cobrado",            sub: "pagamentos confirmados período",  accent: "green" }),
     valor_novos:     () => ({ value: fmtBRL(r.valorNovosContratos),     label: "Valor Novos Contratos",    sub: "novas assinaturas no período",   accent: "green" }),
     em_risco:        () => ({ value: fmtNum(r.emRisco),                 label: "Em Risco",                 sub: "past_due + canceladas",          accent: r.emRisco > 10 ? "red" : "neutral" }),
-    pagou_pct:       () => ({ value: r.assinou > 0 ? fmtPct(r.pagou / r.assinou) : "—", label: "% Assinou → Pagou", sub: `${r.assinou} assinaram`, accent: r.assinou > 0 && r.pagou / r.assinou > 0.7 ? "green" : "red" }),
+    pagou_pct:       () => ({ value: r.assinou > 0 ? fmtPct(r.pagou / r.assinou) : "—", label: "% Acesso → Pagou", sub: `${r.pagou} pagaram / ${r.assinou} acessos`, accent: r.assinou > 0 && r.pagou / r.assinou > 0.85 ? "green" : "red" }),
     qtd_anuais:      () => ({ value: fmtNum(r.qtdNovosAnuais),          label: "Novos Anuais",             sub: fmtBRL(r.valorNovosAnuais),       accent: "purple" }),
     val_anuais:      () => ({ value: fmtBRL(r.valorNovosAnuais),        label: "Valor Anuais",             sub: `${r.qtdNovosAnuais} contratos`,  accent: "neutral" }),
     qtd_mensais:     () => ({ value: fmtNum(r.qtdNovosMensais),         label: "Novos Mensais",            sub: fmtBRL(r.valorNovosMensais),      accent: "neutral" }),
@@ -187,7 +194,10 @@ function resolveKpi(id: string, d: DashboardData): KpiData | null {
     multiplos:       () => ({ value: fmtNum(c.multiplosEntradas),       label: "Múltiplas Entradas",       sub: "leads com 2+ formulários",       accent: "neutral" }),
     reentradas_c:    () => ({ value: fmtNum(c.reentradas),              label: "Reentradas no Funil",      sub: "perdido → novo formulário",      accent: c.reentradas > 0 ? "green" : "neutral" }),
     quicam:          () => ({ value: fmtNum(c.quicam),                  label: "Quicaram (<15d)",          sub: "congelados em <15 dias",         accent: c.quicam > 0 ? "red" : "neutral" }),
-    inadimplentes_c: () => ({ value: fmtNum(c.inadimplentes),           label: "Assinou sem Pagar",        sub: "has_contract=true, billing=false", accent: c.inadimplentes > 0 ? "red" : "neutral" }),
+    acessos:         () => ({ value: fmtNum(c.acessos),                 label: "Acessos (billing criado)", sub: "receberam acesso à plataforma",   accent: "purple" }),
+    taxa_pagamento:  () => ({ value: c.acessos > 0 ? fmtPct(c.taxaPagamento) : "—", label: "Acesso → Pagamento", sub: `${c.fechamentos} pagaram / ${c.acessos} acessos`, accent: c.taxaPagamento > 0.85 ? "green" : c.taxaPagamento > 0.7 ? "neutral" : "red" }),
+    perda_pagamento: () => ({ value: fmtNum(c.perdaPagamento),          label: "Entrou e não Pagou",       sub: "acesso sem pagamento (pending)", accent: c.perdaPagamento > 0 ? "red" : "neutral" }),
+    inadimplentes_c: () => ({ value: fmtNum(c.inadimplentes),           label: "Inadimplentes (past_due)", sub: "eram ativos e pararam de pagar", accent: c.inadimplentes > 0 ? "red" : "neutral" }),
     frt:             () => ({ value: fmtMin(v.frtP50),                  label: "FRT — 1ª Resposta",        sub: "tempo até 1ª msg humana",        accent: "blue", p50: fmtMin(v.frtP50), p90: fmtMin(v.frtP90) }),
     second_resp:     () => ({ value: fmtMin(v.secondRespP50),           label: "2ª Resposta Humana",       sub: "tempo até 2ª msg humana",        accent: "blue", p50: fmtMin(v.secondRespP50), p90: fmtMin(v.secondRespP90) }),
     time_between:    () => ({ value: fmtMin(v.timeBetweenP50),          label: "Entre Respostas",          sub: "intervalo entre msgs humanas",   accent: "blue", p50: fmtMin(v.timeBetweenP50), p90: fmtMin(v.timeBetweenP90) }),
@@ -239,6 +249,9 @@ const KPI_META: Record<string, KpiMeta> = {
   leads:           { kind: "count", dir: "up",   raw: (d) => d.conversao.leadsEntrados },
   fechamentos:     { kind: "count", dir: "up",   raw: (d) => d.conversao.fechamentos },
   close_rate:      { kind: "rate",  dir: "up",   raw: (d) => d.conversao.closeRate },
+  acessos:         { kind: "count", dir: "up",   raw: (d) => d.conversao.acessos },
+  taxa_pagamento:  { kind: "rate",  dir: "up",   raw: (d) => d.conversao.taxaPagamento },
+  perda_pagamento: { kind: "count", dir: "down", raw: (d) => d.conversao.perdaPagamento },
   multiplos:       { kind: "count", dir: "none", raw: (d) => d.conversao.multiplosEntradas },
   reentradas_c:    { kind: "count", dir: "none", raw: (d) => d.conversao.reentradas },
   quicam:          { kind: "count", dir: "down", raw: (d) => d.conversao.quicam },
@@ -473,8 +486,8 @@ function FunilWidget({ c }: { c: ConversaoData }) {
   const stages = [
     { label: "Entrados",    value: c.funnelEntrados,    color: "#7553ff" },
     { label: "Tem conversa",value: c.funnelTemConversa, color: "#3b82f6" },
-    { label: "Tem contrato",value: c.funnelTemContrato, color: "#eab308" },
-    { label: "Pagou",       value: c.funnelTemBilling,  color: "#22c55e" },
+    { label: "Acesso (billing)", value: c.funnelAcesso, color: "#eab308" },
+    { label: "Pagou (active)",   value: c.funnelPagou,  color: "#22c55e" },
   ];
   const max = stages[0].value || 1;
   return (
@@ -925,7 +938,7 @@ export default function DashboardClient({
   useEffect(() => {
     setMounted(true);
     try {
-      const sl = localStorage.getItem("vendas-layout-v4");
+      const sl = localStorage.getItem("vendas-layout-v5");
       if (sl) setLayout(JSON.parse(sl));
       const sq = localStorage.getItem("vendas-queries-v1");
       if (sq) setCustomQueries(JSON.parse(sq));
@@ -935,7 +948,7 @@ export default function DashboardClient({
   }, []);
 
   const persistLayout = useCallback((l: LayoutItem[]) => {
-    try { localStorage.setItem("vendas-layout-v4", JSON.stringify(l)); } catch {}
+    try { localStorage.setItem("vendas-layout-v5", JSON.stringify(l)); } catch {}
     setLayout(l);
   }, []);
 
