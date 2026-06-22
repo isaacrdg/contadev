@@ -42,9 +42,11 @@ export interface ReceitaData {
   // Novos mensais no período
   qtdNovosMensais: number;
   valorNovosMensais: number;
-  // Conversão contrato → billing
+  // Conversão acesso → pagamento
   assinou: number;
   pagou: number;
+  // Upgrades mensal → anual no período (expansão)
+  upgrades: number;
 }
 
 export interface ConversaoData {
@@ -87,6 +89,8 @@ export interface PerdaData {
   perdidosGhosting: number;
   taxaPerda: number;
   reentradas: number;
+  // Cancelamentos de assinatura no período (churn real, ended_reason='canceled')
+  cancelamentos: number;
 }
 
 export interface LeadDia {
@@ -119,7 +123,7 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
   const lv = f.landingVariant || null;
   const pv = f.pricingVariant || null;
 
-  const [pagamentos, ciclos, contratos] = await Promise.all([
+  const [pagamentos, ciclos, contratos, upgradesQ] = await Promise.all([
     // Total cobrado no período (todos os pagamentos confirmados, incluindo recorrência)
     sql`
       SELECT COALESCE(SUM(value)::float8, 0) as total_cobrado
@@ -187,6 +191,18 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
           AND lfs.utm_data->>'utm_source' = ${src}
         ))
     `,
+    // Upgrades mensal → anual no período (subscription_history)
+    sql`
+      SELECT COUNT(DISTINCT sh.lead_id)::int as upgrades
+      FROM subscription_history sh
+      JOIN leads l ON l.id = sh.lead_id
+      WHERE sh.ended_reason = 'monthly_to_annual_promotion'
+        AND sh.ended_at >= ${f.start}::date
+        AND sh.ended_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
+        AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+        AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+    `,
   ]);
 
   return {
@@ -201,6 +217,7 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
     valorNovosMensais:   n(ciclos[0]?.valor_mensais),
     assinou:             n(contratos[0]?.assinou),
     pagou:               n(contratos[0]?.pagou),
+    upgrades:            n(upgradesQ[0]?.upgrades),
   };
 }
 
@@ -479,7 +496,7 @@ export async function getPerdaMetrics(
   const lv = f.landingVariant || null;
   const pv = f.pricingVariant || null;
 
-  const [declarados, ghosting, reentradas] = await Promise.all([
+  const [declarados, ghosting, reentradas, canceladasQ] = await Promise.all([
     sql`
       SELECT COUNT(*)::int as total
       FROM lead_losses ll
@@ -533,6 +550,18 @@ export async function getPerdaMetrics(
             AND lfs.created_at::timestamp > ll.created_at
         )
     `,
+    // Cancelamentos de assinatura no período (churn real) — quando ocorreu (ended_at)
+    sql`
+      SELECT COUNT(DISTINCT sh.lead_id)::int as cancelamentos
+      FROM subscription_history sh
+      JOIN leads l ON l.id = sh.lead_id
+      WHERE sh.ended_reason = 'canceled'
+        AND sh.ended_at >= ${f.start}::date
+        AND sh.ended_at < (${f.end}::date + interval '1 day')
+        AND l.deleted_at IS NULL
+        AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+        AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+    `,
   ]);
 
   const pdecl  = n(declarados[0]?.total);
@@ -543,6 +572,7 @@ export async function getPerdaMetrics(
     perdidosGhosting:   pghost,
     taxaPerda: leadsEntrados > 0 ? (pdecl + pghost) / leadsEntrados : 0,
     reentradas: n(reentradas[0]?.reentradas),
+    cancelamentos: n(canceladasQ[0]?.cancelamentos),
   };
 }
 

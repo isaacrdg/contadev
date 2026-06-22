@@ -42,6 +42,8 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 | Valor adquirido | `subscription_payments` / `lead_subscriptions` | `SUM(value)` pago / `SUM` novos contratos |
 | Qtd. planos anuais / valor | `lead_subscriptions` | `cycle='YEARLY'` |
 | Qtd. planos mensais / valor | `lead_subscriptions` | `cycle='MONTHLY'` |
+| **Upgrades → Anual** | `subscription_history` | `ended_reason='monthly_to_annual_promotion'` no período (expansão) |
+| **Cancelamentos (churn)** | `subscription_history` | `ended_reason='canceled'`, por `ended_at` no período |
 | Perdidos declarados | `lead_losses` | `COUNT(*)` no período |
 | Perdidos (ghosting 7d) | `leads` + `chatwoot_messages` | sem billing, sem perda declarada, com msg, sem msg há 7d |
 
@@ -56,6 +58,7 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 - **Clientes que quicam = cancelou em <15 dias** (`subscription_history.ended_reason='canceled'`). `is_frozen` **NÃO** é churn — é uma pausa/congelamento temporário (84 assinaturas `frozen` ainda estão `active`). E **nem todo `ended_at` é churn**: `gateway_switch` (troca de gateway), `monthly_to_annual_promotion` (upgrade) e `admin_replace` são encerramentos técnicos, não saída do cliente — por isso filtra-se `ended_reason='canceled'`.
 - **`% page views → leads`:** vive no **Vercel Analytics** (não há PostHog no projeto). Vercel Analytics no plano atual não é consultável por API de forma limpa; entra como métrica manual ou via PostHog/instrumentação própria no futuro.
 - **Inadimplentes no 1º mês:** porta aberta — definição estrita ("até 30d após assinar") a refinar depois.
+- **Migração de gateway:** as assinaturas ativas estão majoritariamente no **asaas (508)**, com stripe (76) e pagbank (22) — migração em andamento. `gateway_switch` em `subscription_history` é o registro dessa troca; é métrica **operacional** (progresso de migração), não de vendas, então fica fora do dashboard comercial por ora.
 
 ## Pontos em aberto / observações
 - **`% page views → leads`**: não está no banco (PostHog). Não é calculável aqui.

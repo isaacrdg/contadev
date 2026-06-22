@@ -79,6 +79,7 @@ const WIDGET_CATALOG: WidgetDef[] = [
   { id: "qtd_mensais",       title: "Novos Planos Mensais",     category: "receita",    w: 3, h: 2 },
   { id: "val_mensais",       title: "Valor Mensais",            category: "receita",    w: 3, h: 2 },
   { id: "planos_mix",        title: "Mix Anual / Mensal",       category: "receita",    w: 6, h: 2 },
+  { id: "upgrades",          title: "Upgrades → Anual",         category: "receita",    w: 3, h: 2 },
   { id: "leads",             title: "Leads Entrados",           category: "conversao",  w: 3, h: 2 },
   { id: "fechamentos",       title: "Novos Fechamentos",        category: "conversao",  w: 3, h: 2 },
   { id: "close_rate",        title: "Close Rate (pagos)",       category: "conversao",  w: 3, h: 2 },
@@ -100,6 +101,7 @@ const WIDGET_CATALOG: WidgetDef[] = [
   { id: "perdidos_g",        title: "Perdidos (Ghosting 7d)",   category: "perda",      w: 3, h: 2 },
   { id: "taxa_perda",        title: "Taxa de Perda",            category: "perda",      w: 3, h: 2 },
   { id: "reentradas_p",      title: "Reentradas pós-Perda",     category: "perda",      w: 3, h: 2 },
+  { id: "cancelamentos",     title: "Cancelamentos (churn)",    category: "perda",      w: 3, h: 2 },
 ];
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
@@ -108,9 +110,10 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: "mrr",              x: 3,  y: 0,  w: 3, h: 2 } as LayoutItem,
   { i: "total_cobrado",    x: 6,  y: 0,  w: 3, h: 2 } as LayoutItem,
   { i: "valor_novos",      x: 9,  y: 0,  w: 3, h: 2 } as LayoutItem,
-  { i: "planos_mix",       x: 0,  y: 2,  w: 5, h: 2 } as LayoutItem,
-  { i: "qtd_anuais",       x: 5,  y: 2,  w: 2, h: 2 } as LayoutItem,
-  { i: "qtd_mensais",      x: 7,  y: 2,  w: 2, h: 2 } as LayoutItem,
+  { i: "planos_mix",       x: 0,  y: 2,  w: 3, h: 2 } as LayoutItem,
+  { i: "qtd_anuais",       x: 3,  y: 2,  w: 2, h: 2 } as LayoutItem,
+  { i: "qtd_mensais",      x: 5,  y: 2,  w: 2, h: 2 } as LayoutItem,
+  { i: "upgrades",         x: 7,  y: 2,  w: 2, h: 2 } as LayoutItem,
   { i: "pagou_pct",        x: 9,  y: 2,  w: 2, h: 2 } as LayoutItem,
   { i: "em_risco",         x: 11, y: 2,  w: 1, h: 2 } as LayoutItem,
   // Conversão
@@ -134,7 +137,8 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: "perdidos_d",       x: 0,  y: 17, w: 3, h: 2 } as LayoutItem,
   { i: "perdidos_g",       x: 3,  y: 17, w: 3, h: 2 } as LayoutItem,
   { i: "taxa_perda",       x: 6,  y: 17, w: 3, h: 2 } as LayoutItem,
-  { i: "reentradas_p",     x: 9,  y: 17, w: 3, h: 2 } as LayoutItem,
+  { i: "cancelamentos",    x: 9,  y: 17, w: 3, h: 2 } as LayoutItem,
+  { i: "reentradas_p",     x: 0,  y: 19, w: 3, h: 2 } as LayoutItem,
 ];
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
@@ -188,6 +192,7 @@ function resolveKpi(id: string, d: DashboardData): KpiData | null {
     val_anuais:      () => ({ value: fmtBRL(r.valorNovosAnuais),        label: "Valor Anuais",             sub: `${r.qtdNovosAnuais} contratos`,  accent: "neutral" }),
     qtd_mensais:     () => ({ value: fmtNum(r.qtdNovosMensais),         label: "Novos Mensais",            sub: fmtBRL(r.valorNovosMensais),      accent: "neutral" }),
     val_mensais:     () => ({ value: fmtBRL(r.valorNovosMensais),       label: "Valor Mensais",            sub: `${r.qtdNovosMensais} contratos`, accent: "neutral" }),
+    upgrades:        () => ({ value: fmtNum(r.upgrades),                label: "Upgrades → Anual",         sub: "mensal virou anual (expansão)",  accent: r.upgrades > 0 ? "green" : "neutral" }),
     leads:           () => ({ value: fmtNum(c.leadsEntrados),           label: "Leads Entrados",           sub: "entradas no período",            accent: "purple" }),
     fechamentos:     () => ({ value: fmtNum(c.fechamentos),             label: "Novos Fechamentos",        sub: "pagamento confirmado",           accent: "green" }),
     close_rate:      () => ({ value: fmtPct(c.closeRate),               label: "Close Rate",               sub: `${c.fechamentos} / ${c.leadsEntrados}`, accent: c.closeRate > 0.15 ? "green" : "red" }),
@@ -207,6 +212,7 @@ function resolveKpi(id: string, d: DashboardData): KpiData | null {
     perdidos_g:      () => ({ value: fmtNum(p.perdidosGhosting),        label: "Ghosting (7d s/ msg)",     sub: "sem billing, sem resposta 7d",   accent: p.perdidosGhosting > 5 ? "red" : "neutral" }),
     taxa_perda:      () => ({ value: fmtPct(p.taxaPerda),               label: "Taxa de Perda",            sub: "(declarados + ghosting) / leads", accent: p.taxaPerda > 0.4 ? "red" : p.taxaPerda > 0.2 ? "neutral" : "green" }),
     reentradas_p:    () => ({ value: fmtNum(p.reentradas),              label: "Reentradas pós-Perda",     sub: "perdido → voltou ao funil",      accent: p.reentradas > 0 ? "green" : "neutral" }),
+    cancelamentos:   () => ({ value: fmtNum(p.cancelamentos),          label: "Cancelamentos (churn)",    sub: "assinaturas canceladas no período", accent: p.cancelamentos > 0 ? "red" : "neutral" }),
   };
   return map[id]?.() ?? null;
 }
@@ -246,6 +252,7 @@ const KPI_META: Record<string, KpiMeta> = {
   val_anuais:      { kind: "money", dir: "up",   raw: (d) => d.receita.valorNovosAnuais },
   qtd_mensais:     { kind: "count", dir: "up",   raw: (d) => d.receita.qtdNovosMensais },
   val_mensais:     { kind: "money", dir: "up",   raw: (d) => d.receita.valorNovosMensais },
+  upgrades:        { kind: "count", dir: "up",   raw: (d) => d.receita.upgrades },
   leads:           { kind: "count", dir: "up",   raw: (d) => d.conversao.leadsEntrados },
   fechamentos:     { kind: "count", dir: "up",   raw: (d) => d.conversao.fechamentos },
   close_rate:      { kind: "rate",  dir: "up",   raw: (d) => d.conversao.closeRate },
@@ -265,6 +272,7 @@ const KPI_META: Record<string, KpiMeta> = {
   perdidos_g:      { kind: "count", dir: "down", raw: (d) => d.perda.perdidosGhosting },
   taxa_perda:      { kind: "rate",  dir: "down", raw: (d) => d.perda.taxaPerda },
   reentradas_p:    { kind: "count", dir: "none", raw: (d) => d.perda.reentradas },
+  cancelamentos:   { kind: "count", dir: "down", raw: (d) => d.perda.cancelamentos },
 };
 
 function toneFor(dir: KpiMeta["dir"], positive: boolean): Delta["tone"] {
@@ -938,7 +946,7 @@ export default function DashboardClient({
   useEffect(() => {
     setMounted(true);
     try {
-      const sl = localStorage.getItem("vendas-layout-v5");
+      const sl = localStorage.getItem("vendas-layout-v6");
       if (sl) setLayout(JSON.parse(sl));
       const sq = localStorage.getItem("vendas-queries-v1");
       if (sq) setCustomQueries(JSON.parse(sq));
@@ -948,7 +956,7 @@ export default function DashboardClient({
   }, []);
 
   const persistLayout = useCallback((l: LayoutItem[]) => {
-    try { localStorage.setItem("vendas-layout-v5", JSON.stringify(l)); } catch {}
+    try { localStorage.setItem("vendas-layout-v6", JSON.stringify(l)); } catch {}
     setLayout(l);
   }, []);
 

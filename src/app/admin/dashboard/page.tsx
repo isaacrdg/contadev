@@ -83,7 +83,7 @@ function previousPeriod(start: string, end: string) {
 const RECEITA_ZERO = {
   totalCobrado: 0, valorNovosContratos: 0, mrr: 0, clientesAtivos: 0, emRisco: 0,
   qtdNovosAnuais: 0, valorNovosAnuais: 0, qtdNovosMensais: 0, valorNovosMensais: 0,
-  assinou: 0, pagou: 0,
+  assinou: 0, pagou: 0, upgrades: 0,
 };
 const CONVERSAO_ZERO = {
   leadsEntrados: 0, fechamentos: 0, closeRate: 0,
@@ -96,7 +96,7 @@ const VELOCIDADE_ZERO = {
   timeBetweenP50: null, timeBetweenP90: null, msgsAteFecharP50: null, msgsAtePerdidoP50: null,
   frtDist: [], secondDist: [], betweenDist: [],
 };
-const PERDA_ZERO = { perdidosDeclarados: 0, perdidosGhosting: 0, taxaPerda: 0, reentradas: 0 };
+const PERDA_ZERO = { perdidosDeclarados: 0, perdidosGhosting: 0, taxaPerda: 0, reentradas: 0, cancelamentos: 0 };
 
 export default async function DashboardPage({
   searchParams,

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T19:40:51.784Z",
+  "generatedAt": "2026-06-22T20:05:10.340Z",
   "filters": {
     "start": "2026-05-23",
     "end": "2026-06-22",
@@ -18,7 +18,8 @@
     "qtdNovosMensais": 27,
     "valorNovosMensais": 7547.3,
     "assinou": 31,
-    "pagou": 28
+    "pagou": 28,
+    "upgrades": 0
   },
   "conversao": {
     "leadsEntrados": 290,
@@ -77,7 +78,8 @@
     "perdidosDeclarados": 0,
     "perdidosGhosting": 147,
     "taxaPerda": 0.506896551724138,
-    "reentradas": 0
+    "reentradas": 0,
+    "cancelamentos": 3
   },
   "leadsPorDia": [
     {
@@ -209,7 +211,8 @@
       "qtdNovosMensais": 46,
       "valorNovosMensais": 12894.5,
       "assinou": 47,
-      "pagou": 39
+      "pagou": 39,
+      "upgrades": 3
     },
     "conversao": {
       "leadsEntrados": 350,
@@ -266,9 +269,10 @@
     },
     "perda": {
       "perdidosDeclarados": 3,
-      "perdidosGhosting": 225,
-      "taxaPerda": 0.6514285714285715,
-      "reentradas": 0
+      "perdidosGhosting": 226,
+      "taxaPerda": 0.6542857142857142,
+      "reentradas": 0,
+      "cancelamentos": 0
     }
   }
 }
