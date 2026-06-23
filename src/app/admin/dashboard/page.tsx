@@ -4,8 +4,10 @@ import {
   getVelocidadeMetrics,
   getPerdaMetrics,
   getLeadsPorDia,
+  getReceitaPorDia,
   getFilterOptions,
   type VendasFilters,
+  type ReceitaDia,
   type ReceitaData,
   type ConversaoData,
   type VelocidadeData,
@@ -14,7 +16,7 @@ import {
   type FilterOptions,
 } from "@/lib/vendas-db";
 import { getAquisicaoMetrics, AQUISICAO_ZERO, type AquisicaoData } from "@/lib/posthog-db";
-import DashboardClient from "./DashboardClient";
+import DashboardGrid from "./DashboardGrid";
 import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
 import snapshotData from "@/lib/vendas-snapshot.json";
@@ -29,6 +31,7 @@ const snapshot = snapshotData as unknown as {
   velocidade: VelocidadeData;
   perda: PerdaData;
   leadsPorDia: LeadDia[];
+  receitaPorDia: ReceitaDia[];
   filterOptions: FilterOptions;
   aquisicao: AquisicaoData;
   prev: { receita: ReceitaData; conversao: ConversaoData; velocidade: VelocidadeData; perda: PerdaData };
@@ -52,6 +55,8 @@ const cachedPerda = unstable_cache(
   (f: VendasFilters, leadsEntrados: number, _rev: string) => getPerdaMetrics(f, leadsEntrados), ["vendas-perda"]);
 const cachedLeadsPorDia = unstable_cache(
   (f: VendasFilters, _rev: string) => getLeadsPorDia(f), ["vendas-leadsdia"]);
+const cachedReceitaPorDia = unstable_cache(
+  (f: VendasFilters, _rev: string) => getReceitaPorDia(f), ["vendas-receitadia"]);
 const cachedFilterOptions = unstable_cache(
   (_rev: string) => getFilterOptions(), ["vendas-filteropts"]);
 const cachedAquisicao = unstable_cache(
@@ -129,7 +134,7 @@ export default async function DashboardPage({
 
   if (rev === "inicial" && isDefaultView) {
     return (
-      <DashboardClient
+      <DashboardGrid
         filters={snapshot.filters}
         dataStamp={snapshot.generatedAt}
         receita={snapshot.receita}
@@ -137,6 +142,7 @@ export default async function DashboardPage({
         velocidade={snapshot.velocidade}
         perda={snapshot.perda}
         leadsPorDia={snapshot.leadsPorDia}
+        receitaPorDia={snapshot.receitaPorDia}
         filterOptions={snapshot.filterOptions}
         aquisicao={snapshot.aquisicao}
         prev={snapshot.prev}
@@ -144,13 +150,14 @@ export default async function DashboardPage({
     );
   }
 
-  const [receita, conversao, velocidade, leadsPorDia, filterOptions, aquisicao] = await Promise.all([
+  const [receita, conversao, velocidade, leadsPorDia, filterOptions, aquisicao, receitaPorDia] = await Promise.all([
     cachedReceita(filters, rev).catch((e) => { console.error("[vendas] receita", e); return RECEITA_ZERO; }),
     cachedConversao(filters, rev).catch((e) => { console.error("[vendas] conversao", e); return CONVERSAO_ZERO; }),
     cachedVelocidade(filters, rev).catch((e) => { console.error("[vendas] velocidade", e); return VELOCIDADE_ZERO; }),
     cachedLeadsPorDia(filters, rev).catch(() => []),
     cachedFilterOptions(rev).catch(() => ({ sources: [], landingVariants: [], pricingVariants: [] })),
     cachedAquisicao(filters.start, filters.end, rev).catch((e) => { console.error("[posthog]", e); return AQUISICAO_ZERO; }),
+    cachedReceitaPorDia(filters, rev).catch(() => []),
   ]);
 
   const perda = await cachedPerda(filters, conversao.leadsEntrados, rev)
@@ -171,7 +178,7 @@ export default async function DashboardPage({
   const dataStamp = await cachedStamp(rev).catch(() => new Date().toISOString());
 
   return (
-    <DashboardClient
+    <DashboardGrid
       filters={filters}
       dataStamp={dataStamp}
       receita={receita}
@@ -179,6 +186,7 @@ export default async function DashboardPage({
       velocidade={velocidade}
       perda={perda}
       leadsPorDia={leadsPorDia}
+      receitaPorDia={receitaPorDia}
       filterOptions={filterOptions}
       aquisicao={aquisicao}
       prev={{

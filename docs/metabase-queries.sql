@@ -26,15 +26,21 @@ WITH novos AS (
   JOIN leads l ON l.id = ls.lead_id
   WHERE ls.created_at >= {{start}} AND ls.created_at < ({{end}}::date + interval '1 day')
     AND l.deleted_at IS NULL
+    -- Só a PRIMEIRA assinatura de cada lead conta como contrato novo
+    -- (exclui migração de gateway e upgrade, que criam nova assinatura do mesmo cliente)
+    AND NOT EXISTS (SELECT 1 FROM lead_subscriptions x WHERE x.lead_id = ls.lead_id AND x.created_at < ls.created_at)
 )
 SELECT
   (SELECT COALESCE(SUM(value),0)::float8 FROM subscription_payments
      WHERE status='paid' AND paid_at >= {{start}} AND paid_at < ({{end}}::date + interval '1 day')) AS total_cobrado,
   n.valor_novos_contratos, n.qtd_anuais, n.valor_anuais, n.qtd_mensais, n.valor_mensais,
+  -- MRR: uma assinatura ativa por cliente (a mais recente), pra não contar assinatura duplicada
   (SELECT SUM(CASE WHEN cycle='MONTHLY' THEN value WHEN cycle='YEARLY' THEN value/12 ELSE 0 END)::float8
-     FROM lead_subscriptions WHERE subscription_status='active')                AS mrr,
+     FROM (SELECT DISTINCT ON (lead_id) lead_id, cycle, value FROM lead_subscriptions
+           WHERE subscription_status='active' ORDER BY lead_id, created_at DESC) ativa_por_cliente) AS mrr,
   (SELECT COUNT(DISTINCT lead_id) FROM lead_subscriptions WHERE subscription_status='active')               AS clientes_ativos,
-  (SELECT COUNT(DISTINCT lead_id) FROM lead_subscriptions WHERE subscription_status IN ('past_due','canceled')) AS em_risco,
+  -- Em risco = atrasados no pagamento hoje (past_due). Cancelados é outra métrica
+  (SELECT COUNT(DISTINCT lead_id) FROM lead_subscriptions WHERE subscription_status='past_due')             AS em_risco,
   (SELECT COUNT(DISTINCT sh.lead_id) FROM subscription_history sh
      WHERE sh.ended_reason='monthly_to_annual_promotion'
        AND sh.ended_at >= {{start}} AND sh.ended_at < ({{end}}::date + interval '1 day')) AS upgrades_anual
@@ -151,3 +157,66 @@ SELECT etapa, valor FROM (
     ('3. Acesso (billing)',  (SELECT COUNT(*) FROM pl WHERE has_billing)),
     ('4. Pagou (active)',    (SELECT COUNT(*) FROM pl WHERE is_active))
 ) t(etapa, valor) ORDER BY etapa;
+
+
+-- ══ MENSAGENS ATÉ FECHAMENTO (mediana, conversa inteira: entrada + saída) ═════
+WITH msgs AS (
+  SELECT (SELECT COUNT(*) FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
+       + (SELECT COUNT(*) FROM chatwoot_outgoing_message_requests r
+          JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+          WHERE c.lead_id = l.id) AS total
+  FROM leads l
+  WHERE l.has_billing = true
+    AND l.created_at >= {{start}} AND l.created_at < ({{end}}::date + interval '1 day') AND l.deleted_at IS NULL
+)
+SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY total) AS mediana_msgs FROM msgs;
+
+
+-- ══ MENSAGENS ATÉ PERDIDO (mediana) ══════════════════════════════════════════
+-- Espelha o vendas-db: aqui "perdido" usa lead_losses (perda declarada).
+-- ATENÇÃO: a definição de "perdido" está em aberto (ver doc). Mantido igual ao /admin.
+-- Hoje quase não há perda declarada, então pode vir vazio. Não inventar.
+WITH msgs AS (
+  SELECT (SELECT COUNT(*) FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
+       + (SELECT COUNT(*) FROM chatwoot_outgoing_message_requests r
+          JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+          WHERE c.lead_id = l.id) AS total
+  FROM leads l
+  WHERE l.has_billing = false
+    AND EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
+    AND l.created_at >= {{start}} AND l.created_at < ({{end}}::date + interval '1 day') AND l.deleted_at IS NULL
+)
+SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY total) AS mediana_msgs FROM msgs;
+
+
+-- ══ LEADS QUE ENTRAM MÚLTIPLAS VEZES ═════════════════════════════════════════
+SELECT COUNT(*) AS leads_multiplas_entradas FROM (
+  SELECT lfs.lead_id
+  FROM lead_form_submit lfs JOIN leads l ON l.id = lfs.lead_id
+  WHERE l.created_at >= {{start}} AND l.created_at < ({{end}}::date + interval '1 day') AND l.deleted_at IS NULL
+  GROUP BY lfs.lead_id HAVING COUNT(*) > 1
+) s;
+
+
+-- ══ PERDIDOS QUE REENTRAM NO FUNIL ═══════════════════════════════════════════
+SELECT COUNT(DISTINCT ll.lead_id) AS perdidos_que_reentram
+FROM lead_losses ll JOIN leads l ON l.id = ll.lead_id
+WHERE l.created_at >= {{start}} AND l.created_at < ({{end}}::date + interval '1 day') AND l.deleted_at IS NULL
+  AND EXISTS (SELECT 1 FROM lead_form_submit lfs WHERE lfs.lead_id = ll.lead_id AND lfs.created_at::timestamp > ll.created_at);
+
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- FILTROS DE ORIGEM E TESTE A/B (o doc exige; aplique em qualquer query acima)
+-- No Metabase, configure como Field Filters / variáveis e adicione ao WHERE.
+-- Use a sintaxe opcional [[ AND ... {{var}} ]] pra valer só quando preenchido.
+--
+--   Origem (utm_source):
+--     [[ AND EXISTS (SELECT 1 FROM lead_form_submit lfs
+--           WHERE lfs.lead_id = l.id AND lfs.utm_data->>'utm_source' = {{origem}}) ]]
+--
+--   Teste A/B (variantes da landing e do preço):
+--     [[ AND l.landing_variant = {{landing_variant}} ]]
+--     [[ AND l.pricing_variant = {{pricing_variant}} ]]
+--
+-- Mantém o alias `l` (leads) que as queries já usam.
+-- ═════════════════════════════════════════════════════════════════════════════

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T13:37:47.960Z",
+  "generatedAt": "2026-06-23T16:12:21.749Z",
   "filters": {
     "start": "2026-05-24",
     "end": "2026-06-23",
@@ -10,9 +10,9 @@
   "receita": {
     "totalCobrado": 198452.94,
     "valorNovosContratos": 44495.54,
-    "mrr": 176019.89,
+    "mrr": 173470.79,
     "clientesAtivos": 597,
-    "emRisco": 66,
+    "emRisco": 63,
     "qtdNovosAnuais": 14,
     "valorNovosAnuais": 36948.24,
     "qtdNovosMensais": 27,
@@ -76,8 +76,8 @@
   },
   "perda": {
     "perdidosDeclarados": 0,
-    "perdidosGhosting": 152,
-    "taxaPerda": 0.5314685314685315,
+    "perdidosGhosting": 169,
+    "taxaPerda": 0.5909090909090909,
     "reentradas": 0,
     "cancelamentos": 3
   },
@@ -183,6 +183,76 @@
       "count": 11
     }
   ],
+  "receitaPorDia": [
+    {
+      "date": "2026-05-25",
+      "valor": 599.8
+    },
+    {
+      "date": "2026-05-26",
+      "valor": 2349.06
+    },
+    {
+      "date": "2026-05-27",
+      "valor": 3438.96
+    },
+    {
+      "date": "2026-05-28",
+      "valor": 4698.12
+    },
+    {
+      "date": "2026-05-29",
+      "valor": 3438.96
+    },
+    {
+      "date": "2026-06-01",
+      "valor": 3289.06
+    },
+    {
+      "date": "2026-06-02",
+      "valor": 5538.12
+    },
+    {
+      "date": "2026-06-03",
+      "valor": 249.9
+    },
+    {
+      "date": "2026-06-04",
+      "valor": 3189.06
+    },
+    {
+      "date": "2026-06-05",
+      "valor": 3189.06
+    },
+    {
+      "date": "2026-06-08",
+      "valor": 249.9
+    },
+    {
+      "date": "2026-06-09",
+      "valor": 3888.86
+    },
+    {
+      "date": "2026-06-10",
+      "valor": 3189.06
+    },
+    {
+      "date": "2026-06-11",
+      "valor": 2948.86
+    },
+    {
+      "date": "2026-06-15",
+      "valor": 599.8
+    },
+    {
+      "date": "2026-06-16",
+      "valor": 3289.06
+    },
+    {
+      "date": "2026-06-17",
+      "valor": 349.9
+    }
+  ],
   "filterOptions": {
     "sources": [
       "FacebookADS",
@@ -196,26 +266,26 @@
     ]
   },
   "aquisicao": {
-    "pageviews": 3697,
-    "visitantes": 2741,
-    "leadsCriados": 323,
-    "pvToLead": 0.11784020430499817,
+    "pageviews": 3715,
+    "visitantes": 2747,
+    "leadsCriados": 325,
+    "pvToLead": 0.11831088460138332,
     "porCanal": [
       {
         "nome": "www.youtube.com",
-        "valor": 968
+        "valor": 970
       },
       {
         "nome": "$direct",
-        "valor": 899
+        "valor": 906
       },
       {
         "nome": "www.google.com",
-        "valor": 810
+        "valor": 812
       },
       {
         "nome": "instagram.com",
-        "valor": 551
+        "valor": 552
       },
       {
         "nome": "l.instagram.com",
@@ -230,18 +300,18 @@
         "valor": 39
       },
       {
-        "nome": "www.bing.com",
-        "valor": 31
+        "nome": "localhost:3002",
+        "valor": 33
       }
     ],
     "porDevice": [
       {
         "nome": "Desktop",
-        "valor": 2036
+        "valor": 2051
       },
       {
         "nome": "Mobile",
-        "valor": 1653
+        "valor": 1656
       },
       {
         "nome": "Tablet",
@@ -251,7 +321,7 @@
     "porPais": [
       {
         "nome": "Brazil",
-        "valor": 3521
+        "valor": 3538
       },
       {
         "nome": "United States",
@@ -266,11 +336,11 @@
         "valor": 10
       },
       {
-        "nome": "Germany",
-        "valor": 9
+        "nome": "The Netherlands",
+        "valor": 10
       },
       {
-        "nome": "The Netherlands",
+        "nome": "Germany",
         "valor": 9
       },
       {
@@ -282,19 +352,177 @@
         "valor": 8
       }
     ],
-    "funilPageview": 3697,
-    "funilFormStep1": 358,
-    "funilFormCompleto": 341,
-    "funilLead": 323,
-    "funilCliente": 14
+    "conversaoCanal": [
+      {
+        "canal": "www.google.com",
+        "leads": 77,
+        "clientes": 7
+      },
+      {
+        "canal": "www.youtube.com",
+        "leads": 66,
+        "clientes": 1
+      },
+      {
+        "canal": "instagram.com",
+        "leads": 55,
+        "clientes": 0
+      },
+      {
+        "canal": "$direct",
+        "leads": 44,
+        "clientes": 0
+      },
+      {
+        "canal": "l.instagram.com",
+        "leads": 19,
+        "clientes": 1
+      },
+      {
+        "canal": "m.facebook.com",
+        "leads": 8,
+        "clientes": 0
+      }
+    ],
+    "pageviewsPorDia": [
+      {
+        "date": "2026-05-24",
+        "count": 51
+      },
+      {
+        "date": "2026-05-25",
+        "count": 153
+      },
+      {
+        "date": "2026-05-26",
+        "count": 168
+      },
+      {
+        "date": "2026-05-27",
+        "count": 100
+      },
+      {
+        "date": "2026-05-28",
+        "count": 89
+      },
+      {
+        "date": "2026-05-29",
+        "count": 107
+      },
+      {
+        "date": "2026-05-30",
+        "count": 51
+      },
+      {
+        "date": "2026-05-31",
+        "count": 48
+      },
+      {
+        "date": "2026-06-01",
+        "count": 137
+      },
+      {
+        "date": "2026-06-02",
+        "count": 184
+      },
+      {
+        "date": "2026-06-03",
+        "count": 120
+      },
+      {
+        "date": "2026-06-04",
+        "count": 135
+      },
+      {
+        "date": "2026-06-05",
+        "count": 176
+      },
+      {
+        "date": "2026-06-06",
+        "count": 62
+      },
+      {
+        "date": "2026-06-07",
+        "count": 90
+      },
+      {
+        "date": "2026-06-08",
+        "count": 118
+      },
+      {
+        "date": "2026-06-09",
+        "count": 188
+      },
+      {
+        "date": "2026-06-10",
+        "count": 104
+      },
+      {
+        "date": "2026-06-11",
+        "count": 186
+      },
+      {
+        "date": "2026-06-12",
+        "count": 159
+      },
+      {
+        "date": "2026-06-13",
+        "count": 57
+      },
+      {
+        "date": "2026-06-14",
+        "count": 54
+      },
+      {
+        "date": "2026-06-15",
+        "count": 168
+      },
+      {
+        "date": "2026-06-16",
+        "count": 205
+      },
+      {
+        "date": "2026-06-17",
+        "count": 267
+      },
+      {
+        "date": "2026-06-18",
+        "count": 146
+      },
+      {
+        "date": "2026-06-19",
+        "count": 103
+      },
+      {
+        "date": "2026-06-20",
+        "count": 42
+      },
+      {
+        "date": "2026-06-21",
+        "count": 50
+      },
+      {
+        "date": "2026-06-22",
+        "count": 119
+      },
+      {
+        "date": "2026-06-23",
+        "count": 78
+      }
+    ],
+    "funilPageview": 3715,
+    "funilFormStep1": 360,
+    "funilFormCompleto": 343,
+    "funilLead": 325,
+    "funilCliente": 15
   },
   "prev": {
     "receita": {
       "totalCobrado": 178387.75,
       "valorNovosContratos": 26809.86,
-      "mrr": 176019.89,
+      "mrr": 173470.79,
       "clientesAtivos": 597,
-      "emRisco": 66,
+      "emRisco": 63,
       "qtdNovosAnuais": 6,
       "valorNovosAnuais": 15114.96,
       "qtdNovosMensais": 42,
@@ -358,8 +586,8 @@
     },
     "perda": {
       "perdidosDeclarados": 3,
-      "perdidosGhosting": 225,
-      "taxaPerda": 0.6647230320699709,
+      "perdidosGhosting": 96,
+      "taxaPerda": 0.2886297376093295,
       "reentradas": 0,
       "cancelamentos": 0
     }

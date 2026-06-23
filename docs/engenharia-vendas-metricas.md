@@ -60,6 +60,17 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 - **Inadimplentes no 1º mês:** porta aberta — definição estrita ("até 30d após assinar") a refinar depois.
 - **Migração de gateway:** as assinaturas ativas estão majoritariamente no **asaas (508)**, com stripe (76) e pagbank (22) — migração em andamento. `gateway_switch` em `subscription_history` é o registro dessa troca; é métrica **operacional** (progresso de migração), não de vendas, então fica fora do dashboard comercial por ora.
 
+## Auditoria de correção (consolidação da base)
+Cada métrica responde uma pergunta, com uma definição, sem ambiguidade.
+- **MRR:** uma assinatura ativa por cliente (a mais recente). Antes somava todas as ativas e contava cliente duplicado (sobra de migração): 606 assinaturas para 597 clientes inflavam o MRR em ~R$ 2,5k. Corrigido.
+- **Em Risco:** passa a ser só `past_due` (atrasados no pagamento hoje). Antes misturava `past_due` + `canceled`, que são coisas diferentes. Cancelados é métrica própria.
+- **Novos contratos / anuais / mensais / valor:** contam só a PRIMEIRA assinatura de cada lead. Antes incluíam assinaturas criadas por migração de gateway e upgrade (mesmo cliente, não é venda nova).
+- **Ghosting (perda silenciosa):** janela de 7 dias relativa ao FIM do período, não a "hoje". Antes o mesmo período histórico mudava com o passar dos dias.
+- **Notas de leitura (não são erro, mas precisam ser entendidas):**
+  - `Taxa de perda` é a união de duas formas de perda (declarada + silenciosa) sobre os leads do período. Responde "que % dos leads do período se perderam".
+  - `Fechamentos` e `close rate` são por coorte: contam os leads que entraram no período e que pagaram, mesmo que tenham pago depois. O número de um período passado pode subir conforme mais leads daquela coorte pagam.
+  - `MRR`, `Clientes ativos` e `Em risco` são estado de HOJE, não mudam com o período selecionado (por isso o rótulo "hoje").
+
 ## Pontos em aberto / observações
 - **`% page views → leads`**: não está no banco (PostHog). Não é calculável aqui.
 - **Msgs até perdido**: fica `null` quando não há **perda declarada** (`lead_losses`) no período — hoje os perdidos são quase todos por **ghosting**. Decidir se "perdido" oficial deve incluir ghosting.

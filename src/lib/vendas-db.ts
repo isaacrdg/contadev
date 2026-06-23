@@ -98,6 +98,11 @@ export interface LeadDia {
   count: number;
 }
 
+export interface ReceitaDia {
+  date: string;
+  valor: number;
+}
+
 export interface FilterOptions {
   sources: string[];
   landingVariants: string[];
@@ -141,12 +146,17 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
         COALESCE(SUM(CASE WHEN ls.cycle = 'MONTHLY' THEN 1     ELSE 0 END), 0)::int     as qtd_mensais,
         COALESCE(SUM(CASE WHEN ls.cycle = 'MONTHLY' THEN ls.value ELSE 0 END)::float8, 0) as valor_mensais,
         COALESCE((
-          SELECT
-            SUM(CASE WHEN cycle = 'MONTHLY' THEN value
-                     WHEN cycle = 'YEARLY'  THEN value / 12
-                     ELSE 0 END)::float8
-          FROM lead_subscriptions
-          WHERE subscription_status = 'active'
+          -- MRR: uma assinatura ativa por cliente (a mais recente), pra não contar
+          -- assinatura duplicada (sobra de migração) do mesmo lead.
+          SELECT SUM(CASE WHEN cycle = 'MONTHLY' THEN value
+                          WHEN cycle = 'YEARLY'  THEN value / 12
+                          ELSE 0 END)::float8
+          FROM (
+            SELECT DISTINCT ON (lead_id) lead_id, cycle, value
+            FROM lead_subscriptions
+            WHERE subscription_status = 'active'
+            ORDER BY lead_id, created_at DESC
+          ) ativa_por_cliente
         ), 0) as mrr,
         COALESCE((
           SELECT COUNT(DISTINCT lead_id)::int
@@ -154,15 +164,22 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
           WHERE subscription_status = 'active'
         ), 0) as clientes_ativos,
         COALESCE((
+          -- Em risco = atrasados no pagamento hoje (past_due). Cancelados é outra métrica.
           SELECT COUNT(DISTINCT lead_id)::int
           FROM lead_subscriptions
-          WHERE subscription_status IN ('past_due', 'canceled')
+          WHERE subscription_status = 'past_due'
         ), 0) as em_risco
       FROM lead_subscriptions ls
       JOIN leads l ON l.id = ls.lead_id
       WHERE ls.created_at >= ${f.start}::date
         AND ls.created_at < (${f.end}::date + interval '1 day')
         AND l.deleted_at IS NULL
+        -- Só a PRIMEIRA assinatura de cada lead conta como contrato novo
+        -- (exclui migração de gateway e upgrade, que criam nova assinatura do mesmo cliente).
+        AND NOT EXISTS (
+          SELECT 1 FROM lead_subscriptions x
+          WHERE x.lead_id = ls.lead_id AND x.created_at < ls.created_at
+        )
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
         AND (${src}::text IS NULL OR EXISTS (
@@ -530,9 +547,10 @@ export async function getPerdaMetrics(
         AND NOT EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
         AND EXISTS     (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
         AND NOT EXISTS (
+          -- Determinístico: 7 dias relativos ao FIM do período, não a "hoje".
           SELECT 1 FROM chatwoot_messages cm
           WHERE cm.lead_id = l.id
-            AND cm.created_at > NOW() - INTERVAL '7 days'
+            AND cm.created_at > (${f.end}::date + interval '1 day') - INTERVAL '7 days'
         )
     `,
     sql`
@@ -604,6 +622,37 @@ export async function getLeadsPorDia(f: VendasFilters): Promise<LeadDia[]> {
   `;
 
   return rows.map((r) => ({ date: String(r.date), count: n(r.count) }));
+}
+
+// ── RECEITA NOVA POR DIA ──────────────────────────────────────────────────────
+
+export async function getReceitaPorDia(f: VendasFilters): Promise<ReceitaDia[]> {
+  const sql = getSql();
+  const src = f.source || null;
+  const lv = f.landingVariant || null;
+  const pv = f.pricingVariant || null;
+
+  const rows = await sql`
+    SELECT
+      TO_CHAR(DATE_TRUNC('day', ls.created_at AT TIME ZONE 'America/Sao_Paulo'), 'YYYY-MM-DD') as date,
+      COALESCE(SUM(ls.value)::float8, 0) as valor
+    FROM lead_subscriptions ls
+    JOIN leads l ON l.id = ls.lead_id
+    WHERE ls.created_at >= ${f.start}::date
+      AND ls.created_at < (${f.end}::date + interval '1 day')
+      AND l.deleted_at IS NULL
+      -- só primeira assinatura de cada lead (igual aos novos contratos)
+      AND NOT EXISTS (SELECT 1 FROM lead_subscriptions x WHERE x.lead_id = ls.lead_id AND x.created_at < ls.created_at)
+      AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+      AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      AND (${src}::text IS NULL OR EXISTS (
+        SELECT 1 FROM lead_form_submit lfs
+        WHERE lfs.lead_id = l.id AND lfs.utm_data->>'utm_source' = ${src}
+      ))
+    GROUP BY DATE_TRUNC('day', ls.created_at AT TIME ZONE 'America/Sao_Paulo')
+    ORDER BY 1
+  `;
+  return rows.map((r) => ({ date: String(r.date), valor: n(r.valor) }));
 }
 
 // ── FILTER OPTIONS ────────────────────────────────────────────────────────────

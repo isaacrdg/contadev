@@ -8,9 +8,13 @@ export interface AquisicaoData {
   visitantes: number;
   leadsCriados: number;     // evento lead_created
   pvToLead: number;         // leadsCriados / visitantes
-  porCanal: Bucket[];       // $referring_domain
+  porCanal: Bucket[];       // $referring_domain (visitantes)
   porDevice: Bucket[];      // $device_type
   porPais: Bucket[];        // $geoip_country_name
+  // Conversão por canal: do canal de origem da pessoa, quantos viraram lead e cliente
+  conversaoCanal: { canal: string; leads: number; clientes: number }[];
+  // Page views por dia (série temporal)
+  pageviewsPorDia: { date: string; count: number }[];
   // Funil web: pageview → form etapa 1 → form completo → lead → cliente
   funilPageview: number;
   funilFormStep1: number;
@@ -21,7 +25,7 @@ export interface AquisicaoData {
 
 export const AQUISICAO_ZERO: AquisicaoData = {
   pageviews: 0, visitantes: 0, leadsCriados: 0, pvToLead: 0,
-  porCanal: [], porDevice: [], porPais: [],
+  porCanal: [], porDevice: [], porPais: [], conversaoCanal: [], pageviewsPorDia: [],
   funilPageview: 0, funilFormStep1: 0, funilFormCompleto: 0, funilLead: 0, funilCliente: 0,
 };
 
@@ -52,7 +56,7 @@ export async function getAquisicaoMetrics(start: string, end: string): Promise<A
   // Janela por dia (timezone do projeto), inclusiva nas duas pontas.
   const W = `toDate(timestamp) >= toDate('${start}') AND toDate(timestamp) <= toDate('${end}')`;
 
-  const [vol, funil, canal, device, pais] = await Promise.all([
+  const [vol, funil, canal, device, pais, convCanal, pvDia] = await Promise.all([
     hogql(`SELECT count() AS pv, count(DISTINCT person_id) AS vis
            FROM events WHERE event = '$pageview' AND ${W}`),
     hogql(`SELECT
@@ -68,6 +72,15 @@ export async function getAquisicaoMetrics(start: string, end: string): Promise<A
            FROM events WHERE event='$pageview' AND ${W} GROUP BY k ORDER BY c DESC`),
     hogql(`SELECT properties.$geoip_country_name AS k, count() AS c
            FROM events WHERE event='$pageview' AND ${W} GROUP BY k ORDER BY c DESC LIMIT 8`),
+    // Conversão por canal: atribui pelo canal de ORIGEM da pessoa (primeiro toque)
+    hogql(`SELECT person.properties.$initial_referring_domain AS canal,
+             countIf(event='lead_created')          AS leads,
+             countIf(event='lead_became_customer')  AS clientes
+           FROM events
+           WHERE ${W} AND person.properties.$initial_referring_domain IS NOT NULL
+           GROUP BY canal HAVING leads > 0 ORDER BY leads DESC LIMIT 6`),
+    hogql(`SELECT toString(toDate(timestamp)) AS dia, count() AS c
+           FROM events WHERE event='$pageview' AND ${W} GROUP BY dia ORDER BY dia`),
   ]);
 
   const pageviews   = num(vol[0]?.[0]);
@@ -82,6 +95,8 @@ export async function getAquisicaoMetrics(start: string, end: string): Promise<A
     porCanal: buckets(canal),
     porDevice: buckets(device),
     porPais: buckets(pais),
+    conversaoCanal: convCanal.map((r) => ({ canal: String(r[0] ?? "outros"), leads: num(r[1]), clientes: num(r[2]) })),
+    pageviewsPorDia: pvDia.map((r) => ({ date: String(r[0]).slice(0, 10), count: num(r[1]) })),
     funilPageview:     num(funil[0]?.[0]),
     funilFormStep1:    num(funil[0]?.[1]),
     funilFormCompleto: num(funil[0]?.[2]),

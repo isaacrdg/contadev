@@ -22,12 +22,13 @@ async function main() {
     source: null, landingVariant: null, pricingVariant: null,
   };
 
-  const [receita, conversao, velocidade, leadsPorDia, filterOptions] = await Promise.all([
+  const [receita, conversao, velocidade, leadsPorDia, filterOptions, receitaPorDia] = await Promise.all([
     db.getReceitaMetrics(filters),
     db.getConversaoMetrics(filters),
     db.getVelocidadeMetrics(filters),
     db.getLeadsPorDia(filters),
     db.getFilterOptions(),
+    db.getReceitaPorDia(filters),
   ]);
   const perda = await db.getPerdaMetrics(filters, conversao.leadsEntrados);
   const aquisicao = await ph.getAquisicaoMetrics(filters.start, filters.end)
@@ -48,7 +49,7 @@ async function main() {
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
-    filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions, aquisicao,
+    filters, receita, conversao, velocidade, perda, leadsPorDia, receitaPorDia, filterOptions, aquisicao,
     prev: { receita: pReceita, conversao: pConversao, velocidade: pVelocidade, perda: pPerda },
   };
 
