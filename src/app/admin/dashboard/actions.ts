@@ -2,6 +2,12 @@
 
 import { neon } from "@neondatabase/serverless";
 import { cookies } from "next/headers";
+import { getLeadsDrill, type VendasFilters } from "@/lib/vendas-db";
+
+// Drill-down: leads por trás de uma métrica (somente leitura).
+export async function drillLeads(tipo: string, filters: VendasFilters) {
+  return getLeadsDrill(tipo, filters);
+}
 
 // Botão "Atualizar" do dashboard: gira o token de refresh (cookie).
 // O token entra na chave do cache das métricas — token novo = uma releitura do

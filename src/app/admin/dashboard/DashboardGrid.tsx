@@ -9,7 +9,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
-import { refreshVendas, runSelectQuery } from "./actions";
+import { refreshVendas, runSelectQuery, drillLeads } from "./actions";
 import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData } from "@/lib/vendas-db";
 import type { AquisicaoData } from "@/lib/posthog-db";
 
@@ -150,11 +150,13 @@ function resolveKpi(id: string, d: Data): { valor: string; resposta: string; com
   return map[id]?.() ?? null;
 }
 
-function KpiView({ k }: { k: { valor: string; resposta: string; comp?: Delta | null; pendente?: string } }) {
+function KpiView({ k, onDrill }: { k: { valor: string; resposta: string; comp?: Delta | null; pendente?: string }; onDrill?: () => void }) {
   const [open, setOpen] = useState(false);
+  const click = k.pendente ? (e: React.MouseEvent) => { e.stopPropagation(); setOpen((o) => !o); } : onDrill ? (e: React.MouseEvent) => { e.stopPropagation(); onDrill(); } : undefined;
   return (
-    <div onClick={k.pendente ? (e) => { e.stopPropagation(); setOpen((o) => !o); } : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", padding: "14px 16px", cursor: k.pendente ? "pointer" : "default" }}>
+    <div onClick={click} style={{ height: "100%", display: "flex", flexDirection: "column", padding: "14px 16px", cursor: click ? "pointer" : "default" }}>
       {k.pendente && <span style={{ position: "absolute", top: 12, right: 14, fontSize: 9.5, fontWeight: 600, color: "#b45309", background: "#fef3c7", borderRadius: 5, padding: "2px 6px" }}>pendente</span>}
+      {onDrill && !k.pendente && <span style={{ position: "absolute", top: 13, right: 14, fontSize: 10, color: C.muted }}>ver leads ↗</span>}
       <div style={{ fontSize: 28, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1, marginTop: 4 }}>{k.valor}</div>
       {open && k.pendente
         ? <div style={{ fontSize: 11, color: "#92400e", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, padding: "7px 9px", marginTop: 8, lineHeight: 1.35 }}>{k.pendente}</div>
@@ -353,6 +355,36 @@ function SqlModal({ inicial, onSalvar, onFechar }: { inicial?: SqlQuery; onSalva
   );
 }
 
+// KPIs que suportam drill-down (clicar e ver os leads por trás) -> tipo da consulta
+const DRILL: Record<string, string> = {
+  leads: "leads", pagaram: "pagaram", acessos: "acessos",
+  inad_primeiro: "entrou_nao_pagou", inad_recorrente: "inadimplentes", perda_silenciosa: "perda_silenciosa",
+};
+
+function DrillModal({ tipo, titulo, filters, onClose }: { tipo: string; titulo: string; filters: VendasFilters; onClose: () => void }) {
+  const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { setLoading(true); drillLeads(tipo, filters).then((r) => { setRes(r); setLoading(false); }); }, [tipo, filters]);
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div style={{ width: "min(92vw, 760px)", maxHeight: "86vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>{titulo}</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>leads por trás do número{res ? ` · ${res.rows.length}${res.rows.length >= 300 ? "+" : ""}` : ""}</div></div>
+          <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: 8 }}>
+          {loading ? <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Carregando...</div>
+            : !res || res.rows.length === 0 ? <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Nenhum lead.</div>
+            : <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead><tr>{res.columns.map((c) => <th key={c} style={{ textAlign: "left", padding: "6px 10px", color: C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, background: "#fff" }}>{c}</th>)}</tr></thead>
+                <tbody>{res.rows.map((row, ri) => <tr key={ri} style={{ borderBottom: `1px solid ${C.track}` }}>{row.map((cell, ci) => <td key={ci} style={{ padding: "6px 10px", color: C.title }}>{cell === null ? "—" : String(cell)}</td>)}</tr>)}</tbody>
+              </table>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardGrid({ filters, dataStamp, filterOptions, ...data }: Props) {
   const router = useRouter(); const pathname = usePathname(); const sp = useSearchParams();
   const [layout, setLayout] = useState<LayoutItem[]>(DEFAULT_LAYOUT);
@@ -362,6 +394,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
   const [sqlModal, setSqlModal] = useState<SqlQuery | "new" | null>(null);
   const [edit, setEdit] = useState(false);
+  const [drill, setDrill] = useState<{ tipo: string; titulo: string } | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [nome, setNome] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -509,7 +542,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(item.i, data2); return k ? <KpiView k={k} /> : null; })() : renderChart(item.i, data2, curViz, gran[item.i] ?? "dia")}
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(item.i, data2); return k ? <KpiView k={k} onDrill={!edit && DRILL[item.i] ? () => setDrill({ tipo: DRILL[item.i], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(item.i, data2, curViz, gran[item.i] ?? "dia")}
                 </div>
               </div>
             );
@@ -518,6 +551,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       </div>
 
       {sqlModal && <SqlModal inicial={sqlModal === "new" ? undefined : sqlModal} onSalvar={saveSql} onFechar={() => setSqlModal(null)} />}
+      {drill && <DrillModal tipo={drill.tipo} titulo={drill.titulo} filters={filters} onClose={() => setDrill(null)} />}
     </div>
   );
 }

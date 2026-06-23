@@ -787,6 +787,46 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
   };
 }
 
+// ── DRILL-DOWN: leads por trás de uma métrica ────────────────────────────────
+
+export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ columns: string[]; rows: unknown[][] }> {
+  const sql = getSql();
+  const lv = f.landingVariant || null;
+  const pv = f.pricingVariant || null;
+  const all = await sql`
+    SELECT l.name as nome, l.phone as telefone,
+      TO_CHAR(l.created_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YY HH24:MI') as entrou,
+      cs.name as estagio, l.has_billing,
+      EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'active')   as is_active,
+      EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'pending')  as is_pending,
+      EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'past_due') as is_past_due,
+      (l.has_billing = false
+        AND NOT EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
+        AND EXISTS     (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
+        AND NOT EXISTS (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id AND cm.created_at > now() - interval '7 days')) as is_ghost
+    FROM leads l LEFT JOIN crm_stages cs ON cs.id = l.crm_stage_id
+    WHERE l.created_at >= ${f.start}::date AND l.created_at < (${f.end}::date + interval '1 day')
+      AND l.deleted_at IS NULL
+      AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+      AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+    ORDER BY l.created_at DESC LIMIT 2000
+  `;
+  const pred: Record<string, (r: Row) => boolean> = {
+    leads: () => true,
+    pagaram: (r) => !!r.is_active,
+    acessos: (r) => !!r.has_billing,
+    entrou_nao_pagou: (r) => !!r.is_pending && !r.is_active,
+    inadimplentes: (r) => !!r.is_past_due && !r.is_active,
+    perda_silenciosa: (r) => !!r.is_ghost,
+  };
+  const status = (r: Row) => r.is_active ? "pagou" : r.is_past_due ? "inadimplente" : r.is_pending ? "não pagou" : r.has_billing ? "acesso" : r.is_ghost ? "sumiu 7d+" : "lead";
+  const filtered = all.filter(pred[tipo] ?? (() => true)).slice(0, 300);
+  return {
+    columns: ["nome", "telefone", "entrou", "estágio", "status"],
+    rows: filtered.map((r) => [r.nome, r.telefone, r.entrou, r.estagio ?? "—", status(r)]),
+  };
+}
+
 // ── EXPLORADOR DE BANCO (schema, read-only) ──────────────────────────────────
 
 export interface TabelaInfo {
