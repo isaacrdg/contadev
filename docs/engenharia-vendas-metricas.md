@@ -33,7 +33,8 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 | **Acessos (billing criado)** | `leads` | `has_billing=true` (recebeu acesso à plataforma) |
 | **Acesso → Pagamento (taxa)** | idem | pagaram (`active`) ÷ acessos (`has_billing`) |
 | **Entrou e não pagou** | `leads` + `lead_subscriptions` | tem `pending` e **não** tem `active` (perdido no fluxo de pagamento) |
-| **Inadimplentes** | `leads` + `lead_subscriptions` | tem `past_due` e **não** tem `active` (era ativo e parou) |
+| **Clientes com faturas em atraso** | `overdue_billings` + `subscription_payments` | tem fatura vencida em aberto (`paid_at IS NULL`, não excluída, não isenta, `due_date < now()`) **e** já pagou ≥1 fatura. Estado de hoje, dinâmico |
+| **Calote de 1º pagamento** | `leads` + `lead_subscriptions` | tem `pending`, **nunca** teve `active` (recebeu acesso e nunca pagou) |
 | Msgs até fechamento | `chatwoot_messages` + `outgoing_requests` | Total (entrada+saída) por lead que pagou. p50 |
 | Msgs até perdido | idem + `lead_losses` | Total por lead `has_billing=false` **e** em `lead_losses`. p50 |
 | Perdidos que reentram | `lead_losses` + `lead_form_submit` | Perda → novo form depois |
@@ -51,7 +52,9 @@ dos dados (`npm run snapshot`). Tudo é **somente leitura**.
 - **Fluxo real:** atendimento com especialista → quer ser cliente e **recebe acesso à plataforma (aqui se cria o billing → `lead_subscriptions` com status `pending`)** → dentro da plataforma efetua o pagamento (→ `active`).
 - **"Pagou" = `subscription_status='active'`**, NÃO `has_billing`. `has_billing=true` só significa "recebeu acesso/billing criado" e **inflava os fechamentos em ~14%** (incluía `pending`/`past_due`/`canceled`).
 - **Acesso → Pagamento é uma métrica-chave:** mede quanto se perde entre receber acesso e pagar. A perda nesse caminho são os leads `pending` ("entrou e não pagou").
-- **Duas inadimplências, separadas:** `pending` (entrou e nunca pagou — perda no fluxo) vs `past_due` (era ativo e parou de pagar). Ambas importam.
+- **Inadimplência = faturas em atraso (revisado):** a fonte é `overdue_billings`, a tabela que o sistema mantém para cobranças vencidas (junto de `overdue_notifications`, o ciclo de cobrança). "Cliente com fatura em atraso" = tem fatura vencida em aberto (não paga, não excluída, não isenta) **e** já pagou ≥1 fatura (já virou cliente). É um **estado momentâneo da carteira**, dinâmico: a pessoa entra ao vencer e sai ao regularizar — não é um grupo fixo de "inadimplentes permanentes". Hoje: 70 clientes / 167 faturas / R$ 47k. O `lead_subscriptions.past_due` (antigo "Em risco") é um sinal mais lento de assinatura e foi substituído por esta leitura por fatura.
+- **Calote de 1º pagamento (separado):** quem recebeu acesso (`pending`) e **nunca** pagou nenhuma fatura. É a perda no fluxo de pagamento, conceito distinto de quem é cliente e atrasou. Threshold de dias a validar com o Gabriel.
+- **Duas inadimplências, separadas:** `pending` (entrou e nunca pagou — perda no fluxo) vs fatura em atraso de cliente (já pagou e atrasou). Ambas importam, mas são coisas diferentes.
 - **`subscription_status`:** `pending` = não pagou ainda · `active` = pagou · `past_due` = inadimplente · `canceled` = cancelado.
 - **Tabela `contracts` é a ANTIGA** (não é o contrato atual da plataforma). **Não é usada** por nenhuma métrica.
 - **Ghosting (perda silenciosa):** mantido — lead que já mandou ≥1 mensagem, não fechou, não foi marcado perdido, e está 7+ dias sem mandar mensagem. Quem nunca respondeu **não** entra.
