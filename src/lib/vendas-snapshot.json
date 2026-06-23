@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T17:29:49.590Z",
+  "generatedAt": "2026-06-23T17:32:30.376Z",
   "filters": {
     "start": "2026-05-24",
     "end": "2026-06-23",
@@ -659,6 +659,33 @@
         "pagou7d": 1,
         "pagou14d": 1,
         "pagou30d": 1
+      }
+    ],
+    "frtConversao": [
+      {
+        "faixa": "até 1h",
+        "leads": 12,
+        "pagantes": 6
+      },
+      {
+        "faixa": "1 a 4h",
+        "leads": 19,
+        "pagantes": 5
+      },
+      {
+        "faixa": "4 a 24h",
+        "leads": 34,
+        "pagantes": 9
+      },
+      {
+        "faixa": "mais de 1 dia",
+        "leads": 55,
+        "pagantes": 8
+      },
+      {
+        "faixa": "sem resposta humana",
+        "leads": 166,
+        "pagantes": 0
       }
     ]
   },

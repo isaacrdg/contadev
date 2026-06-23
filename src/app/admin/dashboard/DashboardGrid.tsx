@@ -79,6 +79,7 @@ const CATALOG: WDef[] = [
   { id: "motivos_perda", titulo: "Motivos de perda", ...CHART_BOX, w: 4, h: 4, grupo: "complementar" },
   { id: "conversao_canal_real", titulo: "Conversão por canal (canal × pagamento)", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
   { id: "coorte", titulo: "Coorte: pagamento por semana de entrada", ...CHART_BOX, w: 6, h: 5, grupo: "complementar" },
+  { id: "frt_conversao", titulo: "Velocidade × conversão (tese)", ...CHART_BOX, w: 5, h: 4, grupo: "complementar" },
   { id: "leads_dia", titulo: "Leads por dia", ...CHART_BOX, viz: ["area", "bar", "line"] },
   { id: "receita_dia", titulo: "Receita nova por dia", ...CHART_BOX, viz: ["area", "bar", "line"] },
   { id: "pv_leads", titulo: "Page views e leads por dia", ...CHART_BOX },
@@ -221,6 +222,15 @@ function renderChart(id: string, d: Data, viz: string) {
       const taxa = ch.leads > 0 ? ch.pagantes / ch.leads : 0;
       return <div key={ch.canal}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}><span style={{ color: "#475569" }}>{ch.canal}</span><span style={{ color: C.answer }}><span style={{ color: C.big, fontWeight: 600 }}>{num(ch.leads)}</span> leads · <span style={{ color: taxa >= 0.05 ? C.up : C.title, fontWeight: 600 }}>{num(ch.pagantes)} pagaram ({pct(taxa)})</span></span></div><div style={{ height: 7, borderRadius: 3, background: C.track, overflow: "hidden", position: "relative" }}><div style={{ width: `${(ch.leads / max) * 100}%`, height: "100%", background: C.accentSoft }} /><div style={{ position: "absolute", top: 0, left: 0, width: `${(ch.pagantes / max) * 100}%`, height: "100%", background: C.accent }} /></div></div>;
     })}</div>;
+  }
+  if (id === "frt_conversao") {
+    const fc = d.complementar.frtConversao;
+    if (fc.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem dados no período</div>;
+    const maxTaxa = Math.max(...fc.map((x) => x.leads > 0 ? x.pagantes / x.leads : 0), 0.01);
+    return <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "center", height: "100%" }}>{fc.map((s) => {
+      const taxa = s.leads > 0 ? s.pagantes / s.leads : 0;
+      return <div key={s.faixa}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}><span style={{ color: "#475569" }}>{s.faixa}</span><span style={{ color: C.answer }}><span style={{ color: C.big, fontWeight: 600 }}>{pct(taxa)}</span> ({num(s.pagantes)}/{num(s.leads)})</span></div><div style={{ height: 8, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${(taxa / maxTaxa) * 100}%`, height: "100%", background: C.accent, opacity: 0.85 }} /></div></div>;
+    })}<div style={{ fontSize: 10.5, color: C.muted, marginTop: 2 }}>close rate por faixa de tempo da 1ª resposta humana</div></div>;
   }
   if (id === "coorte") {
     const co = d.complementar.coorte;

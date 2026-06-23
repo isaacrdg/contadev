@@ -167,7 +167,7 @@ export default async function DashboardPage({
   ]);
 
   const complementar = await cachedComplementares(filters, rev)
-    .catch((e) => { console.error("[vendas] complementar", e); return { velocidadeFechamentoHoras: null, funilEstagio: [], produtividade: [], motivosPerda: [], conversaoCanalReal: [], coorte: [] }; });
+    .catch((e) => { console.error("[vendas] complementar", e); return { velocidadeFechamentoHoras: null, funilEstagio: [], produtividade: [], motivosPerda: [], conversaoCanalReal: [], coorte: [], frtConversao: [] }; });
 
   const perda = await cachedPerda(filters, conversao.leadsEntrados, rev)
     .catch((e) => { console.error("[vendas] perda", e); return PERDA_ZERO; });

@@ -633,7 +633,10 @@ export interface ComplementarData {
   motivosPerda: { motivo: string; n: number }[];
   conversaoCanalReal: { canal: string; leads: number; pagantes: number }[];
   coorte: { semana: string; leads: number; pagou7d: number; pagou14d: number; pagou30d: number }[];
+  frtConversao: { faixa: string; leads: number; pagantes: number }[];
 }
+
+const FRT_FAIXAS = ["até 1h", "1 a 4h", "4 a 24h", "mais de 1 dia", "sem resposta humana"];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -643,7 +646,7 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
   const pv = f.pricingVariant || null;
   const ini = f.start, fim = f.end;
 
-  const [vel, estagio, prod, motivos, coorteQ] = await Promise.all([
+  const [vel, estagio, prod, motivos, coorteQ, frtConvQ] = await Promise.all([
     // Velocidade de fechamento: lead criado → primeiro pagamento (mediana, horas)
     sql`
       WITH pagos AS (
@@ -724,6 +727,29 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
         COUNT(*) FILTER (WHERE first_paid IS NOT NULL AND first_paid - created_at <= interval '30 days')::int as pagou_30d
       FROM base GROUP BY 1 ORDER BY 1
     `,
+    // FRT × conversão: close rate por faixa de tempo de 1ª resposta humana (testa a tese de velocidade)
+    sql`
+      WITH base AS (
+        SELECT l.id, l.created_at,
+          EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'active') as pagou,
+          (SELECT MIN(r.created_at) FROM chatwoot_outgoing_message_requests r
+            JOIN chatwoot_conversations c ON c.chatwoot_conversation_id = r.chatwoot_conversation_id
+            WHERE c.lead_id = l.id AND r.source IN ('conversation_text','conversation_attachments') AND r.created_at > l.created_at) as first_human
+        FROM leads l
+        WHERE l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+          AND l.deleted_at IS NULL
+          AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+          AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      ),
+      bk AS (
+        SELECT CASE WHEN first_human IS NULL THEN 4
+                    ELSE width_bucket(EXTRACT(EPOCH FROM (first_human - created_at)) / 60, ARRAY[60,240,1440]) END as b,
+               pagou
+        FROM base
+      )
+      SELECT b, COUNT(*)::int as leads, COUNT(*) FILTER (WHERE pagou)::int as pagantes
+      FROM bk GROUP BY b ORDER BY b
+    `,
   ]);
 
   // Conversão por canal REAL: cruza canal (PostHog, por lead_id) com pagamento (Neon)
@@ -757,6 +783,7 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
     motivosPerda: motivos.map((r) => ({ motivo: String(r.motivo), n: n(r.n) })),
     conversaoCanalReal,
     coorte: coorteQ.map((r) => ({ semana: String(r.semana), leads: n(r.leads), pagou7d: n(r.pagou_7d), pagou14d: n(r.pagou_14d), pagou30d: n(r.pagou_30d) })),
+    frtConversao: frtConvQ.map((r) => ({ faixa: FRT_FAIXAS[n(r.b)] ?? "outro", leads: n(r.leads), pagantes: n(r.pagantes) })),
   };
 }
 
