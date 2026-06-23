@@ -25,9 +25,13 @@ const C = {
   page: "#ffffff", card: "#ffffff", border: "#e7e9ec", title: "#374151", big: "#111827",
   answer: "#6b7280", muted: "#9aa1ab", accent: "#475569", accentSoft: "#cbd2db", up: "#15803d", down: "#b91c1c",
   grid: "#eef0f3", axis: "#9aa1ab", track: "#eef0f3",
-  // Métricas de estado atual (não dependem do período) ganham um tom levemente distinto
-  stateBg: "#fbfaf7", stateAccent: "#b08243", stateTint: "#f3ede1",
+  // Sombra suave para destacar a faixa de estado atual (sem bordas coloridas)
+  shadow: "0 1px 2px rgba(16,24,40,0.05), 0 6px 16px rgba(16,24,40,0.06)",
 };
+
+// Métricas de estado atual (não dependem do período) — vivem numa faixa fixa no topo
+const STATE_IDS = ["mrr", "clientes_ativos", "faturas_atraso"];
+const STATE_TITLES: Record<string, string> = { mrr: "Receita recorrente", clientes_ativos: "Clientes ativos", faturas_atraso: "Clientes com faturas em atraso" };
 // Formatadores à prova de undefined/null (dado parcial ou cache antigo não quebra a tela)
 const brl = (v: number | null | undefined) => { const n = Number(v ?? 0); return n >= 1_000_000 ? `R$ ${(n / 1_000_000).toFixed(1).replace(".", ",")}M` : n >= 1_000 ? `R$ ${Math.round(n / 1_000)}k` : `R$ ${Math.round(n)}`; };
 const brlFull = (v: number | null | undefined) => Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -67,17 +71,12 @@ function compara(cur: number, prev: number | undefined): Delta | null {
 
 // ── Catálogo de widgets ─────────────────────────────────────────────────────────
 type Kind = "kpi" | "chart";
-type Escopo = "estado" | "periodo";
-interface WDef { id: string; titulo: string; kind: Kind; w: number; h: number; minW: number; minH: number; maxW: number; maxH: number; viz?: string[]; grupo?: "principal" | "complementar"; escopo?: Escopo; }
+interface WDef { id: string; titulo: string; kind: Kind; w: number; h: number; minW: number; minH: number; maxW: number; maxH: number; viz?: string[]; grupo?: "principal" | "complementar"; }
 const KPI_BOX = { kind: "kpi" as const, w: 3, h: 2, minW: 2, minH: 2, maxW: 6, maxH: 3 };
 const CHART_BOX = { kind: "chart" as const, w: 6, h: 4, minW: 3, minH: 3, maxW: 12, maxH: 8 };
 
 const CATALOG: WDef[] = [
-  // Estado atual da operação (independe do período selecionado)
-  { id: "mrr", titulo: "Receita recorrente", ...KPI_BOX, escopo: "estado" },
-  { id: "clientes_ativos", titulo: "Clientes ativos", ...KPI_BOX, escopo: "estado" },
-  { id: "faturas_atraso", titulo: "Clientes com faturas em atraso", ...KPI_BOX, escopo: "estado" },
-  // Movimentação no período
+  // Movimentação no período (estado atual fica na faixa fixa do topo)
   { id: "receita_nova", titulo: "Receita nova no período", ...KPI_BOX },
   { id: "ticket", titulo: "Ticket médio", ...KPI_BOX },
   { id: "total_cobrado", titulo: "Total cobrado", ...KPI_BOX },
@@ -102,7 +101,7 @@ const CATALOG: WDef[] = [
   { id: "sla_1h", titulo: "SLA: respondidos em 1h", ...KPI_BOX, grupo: "complementar" },
   { id: "sla_24h", titulo: "SLA: respondidos em 24h", ...KPI_BOX, grupo: "complementar" },
   { id: "velocidade_fechamento", titulo: "Velocidade de fechamento", ...KPI_BOX, grupo: "complementar" },
-  { id: "faturas_atraso_dist", titulo: "Faturas em atraso por idade", ...CHART_BOX, w: 5, h: 4, grupo: "complementar", escopo: "estado" },
+  { id: "faturas_atraso_dist", titulo: "Faturas em atraso por idade", ...CHART_BOX, w: 5, h: 4, grupo: "complementar" },
   { id: "funil_estagio", titulo: "Funil por estágio (CRM) + tempo parado", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
   { id: "produtividade", titulo: "Produtividade por vendedor", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
   { id: "motivos_perda", titulo: "Motivos de perda", ...CHART_BOX, w: 4, h: 4, grupo: "complementar" },
@@ -117,11 +116,11 @@ const CATALOG: WDef[] = [
 ];
 
 const DEFAULT_LAYOUT: LayoutItem[] = ([
-  ["mrr", 0, 0, 3, 2], ["clientes_ativos", 3, 0, 3, 2], ["faturas_atraso", 6, 0, 3, 2], ["receita_nova", 9, 0, 3, 2],
-  ["leads", 0, 2, 3, 2], ["pagaram", 3, 2, 3, 2], ["close_rate", 6, 2, 3, 2], ["taxa_pagamento", 9, 2, 3, 2],
+  ["receita_nova", 0, 0, 3, 2], ["total_cobrado", 3, 0, 3, 2], ["leads", 6, 0, 3, 2], ["pagaram", 9, 0, 3, 2],
+  ["close_rate", 0, 2, 3, 2], ["taxa_pagamento", 3, 2, 3, 2], ["frt", 6, 2, 3, 2], ["quicam", 9, 2, 3, 2],
   ["leads_dia", 0, 4, 6, 4], ["receita_dia", 6, 4, 6, 4],
   ["pv_leads", 0, 8, 8, 4], ["funil", 8, 8, 4, 4],
-  ["frt", 0, 12, 3, 2], ["cancelamentos", 3, 12, 3, 2], ["quicam", 6, 12, 3, 2], ["inad_primeiro", 9, 12, 3, 2],
+  ["cancelamentos", 0, 12, 3, 2], ["perda_silenciosa", 3, 12, 3, 2], ["inad_primeiro", 6, 12, 3, 2], ["novos_anuais", 9, 12, 3, 2],
 ] as const).map(([i, x, y, w, h]) => {
   const def = CATALOG.find((d) => d.id === i)!;
   return { i, x, y, w, h, minW: def.minW, minH: def.minH, maxW: def.maxW, maxH: def.maxH } as LayoutItem;
@@ -162,13 +161,13 @@ function resolveKpi(id: string, d: Data): { valor: string; resposta: string; com
   return map[id]?.() ?? null;
 }
 
-function KpiView({ k, estado, onDrill }: { k: { valor: string; resposta: string; comp?: Delta | null; pendente?: string }; estado?: boolean; onDrill?: () => void }) {
+function KpiView({ k, onDrill }: { k: { valor: string; resposta: string; comp?: Delta | null; pendente?: string }; onDrill?: () => void }) {
   const [open, setOpen] = useState(false);
   const click = k.pendente ? (e: React.MouseEvent) => { e.stopPropagation(); setOpen((o) => !o); } : onDrill ? (e: React.MouseEvent) => { e.stopPropagation(); onDrill(); } : undefined;
   return (
     <div onClick={click} style={{ height: "100%", display: "flex", flexDirection: "column", padding: "6cqh 7cqw", cursor: click ? "pointer" : "default" }}>
       {k.pendente && <span style={{ position: "absolute", top: 12, right: 14, fontSize: 9.5, fontWeight: 600, color: "#b45309", background: "#fef3c7", borderRadius: 5, padding: "2px 6px" }}>pendente</span>}
-      {onDrill && !k.pendente && <span style={{ position: "absolute", top: 13, right: 14, fontSize: 10, color: estado ? C.stateAccent : C.muted }}>ver clientes ↗</span>}
+      {onDrill && !k.pendente && <span style={{ position: "absolute", top: 13, right: 14, fontSize: 10, color: C.muted }}>ver clientes ↗</span>}
       {/* valor acompanha o tamanho do card (container queries) */}
       <div style={{ fontSize: "clamp(20px, min(11cqw, 30cqh), 40px)", fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1, marginTop: 4 }}>{k.valor}</div>
       {open && k.pendente
@@ -334,7 +333,7 @@ function renderChart(id: string, d: Data, viz: string, gran: string) {
   return null;
 }
 
-const LS_LAYOUT = "grid-layout-v2", LS_VIEWS = "grid-views-v2", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1";
+const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1";
 
 type SqlQuery = { id: string; title: string; sql: string };
 
@@ -465,16 +464,13 @@ function MetricMenu({ activeIds, titulo, onPick }: { activeIds: string[]; titulo
   return (
     <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.12)", padding: 8, width: 300, maxHeight: 360, overflow: "auto" }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: C.title, padding: "2px 9px 8px" }}>{titulo}</div>
-      {(["estado", "principal", "complementar"] as const).map((grupo) => {
-        const itens = CATALOG.filter((d) => {
-          if (grupo === "estado") return d.escopo === "estado";
-          return d.escopo !== "estado" && (d.grupo ?? "principal") === grupo;
-        });
+      {(["principal", "complementar"] as const).map((grupo) => {
+        const itens = CATALOG.filter((d) => (d.grupo ?? "principal") === grupo);
         if (itens.length === 0) return null;
-        const rotulo = grupo === "estado" ? "Estado atual" : grupo === "principal" ? "No período" : "Complementares";
+        const rotulo = grupo === "principal" ? "No período" : "Complementares";
         return (
           <div key={grupo} style={{ marginBottom: 6 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: grupo === "estado" ? C.stateAccent : C.muted, textTransform: "uppercase", letterSpacing: 0.6, padding: "6px 9px 3px" }}>{rotulo}</div>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6, padding: "6px 9px 3px" }}>{rotulo}</div>
             {itens.map((d) => {
               const ja = activeIds.includes(d.id);
               return (
@@ -487,6 +483,38 @@ function MetricMenu({ activeIds, titulo, onPick }: { activeIds: string[]; titulo
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Faixa reservada de estado atual: cartões elevados (sombra), sem bordas coloridas.
+function StateBand({ data, onDrill }: { data: Data; onDrill: (tipo: string, titulo: string) => void }) {
+  return (
+    <div style={{ marginTop: 18 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 11 }}>
+        Estado atual da operação <span style={{ fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>· não depende do período</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
+        {STATE_IDS.map((id) => {
+          const k = resolveKpi(id, data); if (!k) return null;
+          const titulo = STATE_TITLES[id] ?? id;
+          const drill = DRILL[id];
+          const click = drill ? () => onDrill(drill, titulo) : undefined;
+          return (
+            <div key={id} onClick={click}
+              onMouseEnter={(e) => { if (click) e.currentTarget.style.boxShadow = "0 2px 4px rgba(16,24,40,0.06), 0 10px 24px rgba(16,24,40,0.10)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = C.shadow; }}
+              style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", boxShadow: C.shadow, position: "relative", cursor: click ? "pointer" : "default", transition: "box-shadow 0.15s" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: C.title, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{titulo}</span>
+                {drill && <span style={{ fontSize: 10, color: C.muted, flexShrink: 0 }}>ver clientes ↗</span>}
+              </div>
+              <div style={{ fontSize: 34, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1.05, marginTop: 12 }}>{k.valor}</div>
+              <div style={{ fontSize: 12, color: C.answer, marginTop: 10, lineHeight: 1.35 }}>{k.resposta}</div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -597,6 +625,9 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
         </div>
       </div>
 
+      {/* Faixa reservada: estado atual da operação (fixa, sempre no topo) */}
+      <StateBand data={data2} onDrill={(tipo, titulo) => setDrill({ tipo, titulo })} />
+
       {/* Barra de edição: grupos com hierarquia (Adicionar · Visões · Banco) */}
       {edit && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 14 }}>
@@ -624,8 +655,13 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
         </div>
       )}
 
+      {/* Movimentação no período (grid personalizável) */}
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7, marginTop: 26, marginBottom: 2 }}>
+        Movimentação no período <span style={{ fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>· {filters.start} a {filters.end}</span>
+      </div>
+
       {/* Grid */}
-      <div ref={ref} style={{ marginTop: 16 }}>
+      <div ref={ref} style={{ marginTop: 10 }}>
         <ResponsiveGridLayout
           layouts={{ lg: layout }}
           breakpoints={{ lg: 1100, md: 900, sm: 640 }}
@@ -642,14 +678,12 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
             const def = isSql ? null : CATALOG.find((d) => d.id === bid);
             if (isSql ? !sq : !def) return null;
             const titulo = isSql ? sq!.title : def!.titulo;
-            const estado = def?.escopo === "estado";
             const curViz = viz[item.i] ?? (def?.viz?.[0] ?? "area");
             return (
-              <div key={item.i} style={{ background: estado ? C.stateBg : C.card, border: `1px solid ${estado ? C.stateTint : C.border}`, borderLeft: estado ? `3px solid ${C.stateAccent}` : `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", containerType: "size" }}>
+              <div key={item.i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", containerType: "size" }}>
                 <div className={edit ? "drag-handle" : ""} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 13px 4px", cursor: edit ? "grab" : "default", flexShrink: 0 }}>
                   <span style={{ fontSize: 11.5, fontWeight: 600, color: C.title, display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{titulo}</span>
-                    {estado && <span style={{ fontSize: 8.5, fontWeight: 700, color: C.stateAccent, background: C.stateTint, borderRadius: 4, padding: "2px 5px", textTransform: "uppercase", letterSpacing: 0.4, flexShrink: 0 }}>hoje</span>}
                     {isSql && <span style={{ fontSize: 9, color: C.muted, flexShrink: 0 }}>personalizada</span>}
                   </span>
                   {edit && (
@@ -671,7 +705,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} estado={estado} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia")}
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia")}
                 </div>
               </div>
             );
