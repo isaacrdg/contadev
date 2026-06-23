@@ -11,7 +11,7 @@ import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
 import { refreshVendas, runSelectQuery, drillLeads } from "./actions";
 import { FATURAS_ATRASO_FAIXAS } from "@/lib/vendas-db";
-import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData } from "@/lib/vendas-db";
+import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData, DrillCol, DrillResult } from "@/lib/vendas-db";
 import type { AquisicaoData } from "@/lib/posthog-db";
 
 interface Data {
@@ -435,25 +435,85 @@ const DRILL: Record<string, string> = {
   inad_primeiro: "entrou_nao_pagou", faturas_atraso: "faturas_atraso", perda_silenciosa: "perda_silenciosa",
 };
 
+const PAGE_SIZE = 50;
+const fmtDataBR = (s: unknown) => { if (!s) return "—"; const d = new Date(String(s) + "T12:00:00"); return isNaN(d.getTime()) ? String(s) : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" }); };
+function fmtCell(v: unknown, kind: DrillCol["kind"]): string {
+  if (v === null || v === undefined || v === "") return "—";
+  if (kind === "money") return brlFull(Number(v));
+  if (kind === "num") return num(Number(v));
+  if (kind === "date") return fmtDataBR(v);
+  return String(v);
+}
+// Chave de ordenação por tipo (número, data ISO ou texto)
+function sortKey(v: unknown, kind: DrillCol["kind"]): number | string {
+  if (v === null || v === undefined || v === "") return kind === "text" || kind === "date" ? "" : -Infinity;
+  if (kind === "num" || kind === "money") return Number(v);
+  if (kind === "date") return String(v); // YYYY-MM-DD ordena cronologicamente
+  return String(v).toLowerCase();
+}
+
 function DrillModal({ tipo, titulo, filters, onClose }: { tipo: string; titulo: string; filters: VendasFilters; onClose: () => void }) {
-  const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
+  const [res, setRes] = useState<DrillResult | null>(null);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { setLoading(true); drillLeads(tipo, filters).then((r) => { setRes(r); setLoading(false); }); }, [tipo, filters]);
+  const [sortCol, setSortCol] = useState<number | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(0);
+  useEffect(() => { setLoading(true); drillLeads(tipo, filters).then((r) => { setRes(r); setLoading(false); setPage(0); setSortCol(null); }); }, [tipo, filters]);
+
+  function toggleSort(ci: number) {
+    if (sortCol === ci) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortCol(ci); setSortDir("desc"); }
+    setPage(0);
+  }
+
+  const cols = res?.columns ?? [];
+  const sorted = (() => {
+    if (!res) return [];
+    if (sortCol === null) return res.rows;
+    const kind = cols[sortCol].kind;
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...res.rows].sort((a, b) => {
+      const ka = sortKey(a[sortCol], kind), kb = sortKey(b[sortCol], kind);
+      if (ka < kb) return -1 * dir; if (ka > kb) return 1 * dir; return 0;
+    });
+  })();
+  const total = sorted.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pageRows = sorted.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
   return (
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ width: "min(92vw, 760px)", maxHeight: "86vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ width: "min(94vw, 880px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
-          <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>{titulo}</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>quem está por trás do número{res ? ` · ${res.rows.length}${res.rows.length >= 300 ? "+" : ""}` : ""}</div></div>
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>{titulo}</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>quem está por trás do número{res ? ` · ${total}${total >= 2000 ? "+" : ""}` : ""} · clique no cabeçalho pra ordenar</div></div>
           <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
         </div>
         <div style={{ flex: 1, overflow: "auto", padding: 8 }}>
           {loading ? <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Carregando...</div>
-            : !res || res.rows.length === 0 ? <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Ninguém aqui.</div>
+            : !res || total === 0 ? <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Ninguém aqui.</div>
             : <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead><tr>{res.columns.map((c) => <th key={c} style={{ textAlign: "left", padding: "6px 10px", color: C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, background: "#fff" }}>{c}</th>)}</tr></thead>
-                <tbody>{res.rows.map((row, ri) => <tr key={ri} style={{ borderBottom: `1px solid ${C.track}` }}>{row.map((cell, ci) => <td key={ci} style={{ padding: "6px 10px", color: C.title }}>{cell === null ? "—" : String(cell)}</td>)}</tr>)}</tbody>
+                <thead><tr>{cols.map((c, ci) => {
+                  const numeric = c.kind === "num" || c.kind === "money";
+                  const active = sortCol === ci;
+                  return (
+                    <th key={c.label} onClick={() => toggleSort(ci)} style={{ textAlign: numeric ? "right" : "left", padding: "6px 10px", color: active ? C.title : C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, background: "#fff", cursor: "pointer", whiteSpace: "nowrap", userSelect: "none" }}>
+                      {c.label}<span style={{ marginLeft: 4, color: active ? C.accent : C.accentSoft }}>{active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>
+                    </th>
+                  );
+                })}</tr></thead>
+                <tbody>{pageRows.map((row, ri) => <tr key={ri} style={{ borderBottom: `1px solid ${C.track}` }}>{row.map((cell, ci) => <td key={ci} style={{ padding: "6px 10px", color: C.title, textAlign: cols[ci].kind === "num" || cols[ci].kind === "money" ? "right" : "left", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{fmtCell(cell, cols[ci].kind)}</td>)}</tr>)}</tbody>
               </table>}
         </div>
+        {!loading && total > 0 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", borderTop: `1px solid ${C.border}` }}>
+            <span style={{ fontSize: 11.5, color: C.muted }}>{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} de {total}</span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} style={{ fontSize: 12, padding: "5px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: page === 0 ? C.muted : C.title, cursor: page === 0 ? "default" : "pointer" }}>← Anterior</button>
+              <span style={{ fontSize: 11.5, color: C.muted, minWidth: 60, textAlign: "center" }}>{page + 1} / {pages}</span>
+              <button onClick={() => setPage((p) => Math.min(pages - 1, p + 1))} disabled={page >= pages - 1} style={{ fontSize: 12, padding: "5px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: page >= pages - 1 ? C.muted : C.title, cursor: page >= pages - 1 ? "default" : "pointer" }}>Próxima →</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

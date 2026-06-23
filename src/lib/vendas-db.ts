@@ -837,7 +837,13 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
 
 // ── DRILL-DOWN: leads por trás de uma métrica ────────────────────────────────
 
-export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ columns: string[]; rows: unknown[][] }> {
+// Colunas tipadas para o frontend ordenar e formatar certo (número, dinheiro,
+// data ou texto). O valor cru é o que vai em `rows`; a formatação é na tela.
+export type DrillKind = "text" | "num" | "money" | "date";
+export interface DrillCol { label: string; kind: DrillKind; }
+export interface DrillResult { columns: DrillCol[]; rows: unknown[][]; }
+
+export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<DrillResult> {
   const sql = getSql();
   const lv = f.landingVariant || null;
   const pv = f.pricingVariant || null;
@@ -848,6 +854,7 @@ export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ c
     const rows = await sql`
       SELECT l.name as nome, l.phone as telefone,
         EXTRACT(DAY FROM now() - MIN(ob.due_date))::int as dias_atraso,
+        TO_CHAR(MIN(ob.due_date) AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD') as venceu,
         COUNT(*)::int as faturas,
         SUM(ob.value)::float8 as valor
       FROM overdue_billings ob
@@ -857,17 +864,21 @@ export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ c
         AND EXISTS (SELECT 1 FROM subscription_payments sp WHERE sp.lead_id = ob.lead_id AND sp.status = 'paid')
       GROUP BY l.id, l.name, l.phone
       ORDER BY MIN(ob.due_date) ASC
-      LIMIT 300
+      LIMIT 2000
     `;
-    const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     return {
-      columns: ["nome", "telefone", "dias em atraso", "faturas", "valor devido"],
-      rows: rows.map((r) => [r.nome, r.telefone, `${n(r.dias_atraso)} dias`, n(r.faturas), brl(n(r.valor))]),
+      columns: [
+        { label: "nome", kind: "text" }, { label: "telefone", kind: "text" },
+        { label: "dias em atraso", kind: "num" }, { label: "venceu em", kind: "date" },
+        { label: "faturas", kind: "num" }, { label: "valor devido", kind: "money" },
+      ],
+      rows: rows.map((r) => [r.nome, r.telefone, n(r.dias_atraso), r.venceu, n(r.faturas), n(r.valor)]),
     };
   }
+
   const all = await sql`
     SELECT l.name as nome, l.phone as telefone,
-      TO_CHAR(l.created_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YY HH24:MI') as entrou,
+      TO_CHAR(l.created_at AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD') as entrou,
       cs.name as estagio, l.has_billing,
       EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'active')   as is_active,
       EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'pending')  as is_pending,
@@ -875,8 +886,20 @@ export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ c
       (l.has_billing = false
         AND NOT EXISTS (SELECT 1 FROM lead_losses ll WHERE ll.lead_id = l.id)
         AND EXISTS     (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id)
-        AND NOT EXISTS (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id AND cm.created_at > now() - interval '7 days')) as is_ghost
-    FROM leads l LEFT JOIN crm_stages cs ON cs.id = l.crm_stage_id
+        AND NOT EXISTS (SELECT 1 FROM chatwoot_messages cm WHERE cm.lead_id = l.id AND cm.created_at > now() - interval '7 days')) as is_ghost,
+      m.msgs, TO_CHAR(m.ultima AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD') as ultima_msg,
+      CASE WHEN m.ultima IS NOT NULL THEN EXTRACT(DAY FROM now() - m.ultima)::int END as dias_silencio,
+      EXTRACT(DAY FROM now() - l.created_at)::int as dias_desde_entrada,
+      s.value as valor, s.cycle as ciclo
+    FROM leads l
+    LEFT JOIN crm_stages cs ON cs.id = l.crm_stage_id
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int as msgs, MAX(created_at) as ultima
+      FROM chatwoot_messages cm WHERE cm.lead_id = l.id
+    ) m ON true
+    LEFT JOIN LATERAL (
+      SELECT value, cycle FROM lead_subscriptions ls WHERE ls.lead_id = l.id ORDER BY created_at DESC LIMIT 1
+    ) s ON true
     WHERE l.created_at >= ${f.start}::date AND l.created_at < (${f.end}::date + interval '1 day')
       AND l.deleted_at IS NULL
       AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
@@ -891,11 +914,44 @@ export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ c
     inadimplentes: (r) => !!r.is_past_due && !r.is_active,
     perda_silenciosa: (r) => !!r.is_ghost,
   };
-  const status = (r: Row) => r.is_active ? "pagou" : r.is_past_due ? "inadimplente" : r.is_pending ? "não pagou" : r.has_billing ? "acesso" : r.is_ghost ? "sumiu 7d+" : "lead";
-  const filtered = all.filter(pred[tipo] ?? (() => true)).slice(0, 300);
+  const status = (r: Row) => r.is_active ? "pagou" : r.is_past_due ? "em atraso" : r.is_pending ? "não pagou" : r.has_billing ? "acesso" : r.is_ghost ? "sumiu 7d+" : "lead";
+  const plano = (r: Row) => r.ciclo === "YEARLY" ? "anual" : r.ciclo === "MONTHLY" ? "mensal" : "—";
+  const filtered = all.filter(pred[tipo] ?? (() => true)).slice(0, 2000);
+
+  // Colunas inteligentes por tipo de métrica
+  const C_TEXT = (label: string): DrillCol => ({ label, kind: "text" });
+  const C_NUM = (label: string): DrillCol => ({ label, kind: "num" });
+  const C_DATE = (label: string): DrillCol => ({ label, kind: "date" });
+  const C_MONEY = (label: string): DrillCol => ({ label, kind: "money" });
+
+  if (tipo === "perda_silenciosa") {
+    return {
+      columns: [C_TEXT("nome"), C_TEXT("telefone"), C_NUM("mensagens"), C_DATE("parou de responder"), C_NUM("dias em silêncio"), C_TEXT("estágio")],
+      rows: filtered.map((r) => [r.nome, r.telefone, n(r.msgs), r.ultima_msg, n(r.dias_silencio), r.estagio ?? "—"]),
+    };
+  }
+  if (tipo === "pagaram") {
+    return {
+      columns: [C_TEXT("nome"), C_TEXT("telefone"), C_DATE("entrou"), C_TEXT("plano"), C_MONEY("valor"), C_TEXT("estágio")],
+      rows: filtered.map((r) => [r.nome, r.telefone, r.entrou, plano(r), n(r.valor), r.estagio ?? "—"]),
+    };
+  }
+  if (tipo === "entrou_nao_pagou") {
+    return {
+      columns: [C_TEXT("nome"), C_TEXT("telefone"), C_DATE("entrou"), C_NUM("dias sem pagar"), C_NUM("mensagens"), C_TEXT("estágio")],
+      rows: filtered.map((r) => [r.nome, r.telefone, r.entrou, n(r.dias_desde_entrada), n(r.msgs), r.estagio ?? "—"]),
+    };
+  }
+  if (tipo === "acessos") {
+    return {
+      columns: [C_TEXT("nome"), C_TEXT("telefone"), C_DATE("entrou"), C_NUM("mensagens"), C_TEXT("status"), C_TEXT("estágio")],
+      rows: filtered.map((r) => [r.nome, r.telefone, r.entrou, n(r.msgs), status(r), r.estagio ?? "—"]),
+    };
+  }
+  // leads (e fallback)
   return {
-    columns: ["nome", "telefone", "entrou", "estágio", "status"],
-    rows: filtered.map((r) => [r.nome, r.telefone, r.entrou, r.estagio ?? "—", status(r)]),
+    columns: [C_TEXT("nome"), C_TEXT("telefone"), C_DATE("entrou"), C_NUM("mensagens"), C_TEXT("status"), C_TEXT("estágio")],
+    rows: filtered.map((r) => [r.nome, r.telefone, r.entrou, n(r.msgs), status(r), r.estagio ?? "—"]),
   };
 }
 
