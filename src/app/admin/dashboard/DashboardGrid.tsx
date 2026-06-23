@@ -31,6 +31,23 @@ const pct = (r: number) => `${Math.round(r * 100)}%`;
 const fmtMin = (m: number | null) => m == null ? "sem dados" : m < 60 ? `${Math.round(m)} min` : m < 1440 ? `${(m / 60).toFixed(1).replace(".", ",")} h` : `${(m / 1440).toFixed(1).replace(".", ",")} dias`;
 const fmtDia = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
+// Agrega uma série diária por dia, semana ou mês
+function aggregar(raw: { date: string; v: number }[], gran: string): { label: string; v: number }[] {
+  if (gran !== "semana" && gran !== "mes") return raw.map((d) => ({ label: fmtDia(d.date), v: d.v }));
+  const map = new Map<string, number>();
+  for (const d of raw) {
+    const dt = new Date(d.date + "T12:00:00");
+    let key: string;
+    if (gran === "semana") { const wd = (dt.getDay() + 6) % 7; const ws = new Date(dt); ws.setDate(dt.getDate() - wd); key = ws.toISOString().slice(0, 10); }
+    else key = d.date.slice(0, 7) + "-01";
+    map.set(key, (map.get(key) ?? 0) + d.v);
+  }
+  return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => ({
+    label: gran === "mes" ? new Date(k + "T12:00:00").toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }) : fmtDia(k),
+    v,
+  }));
+}
+
 type Delta = { dir: "up" | "down"; txt: string };
 function compara(cur: number, prev: number | undefined): Delta | null {
   if (prev == null || prev <= 0) return null;
@@ -171,9 +188,9 @@ function SerieChart({ data, dataKey, name, viz, fmt }: { data: { label: string; 
     </AreaChart></ResponsiveContainer>);
 }
 
-function renderChart(id: string, d: Data, viz: string) {
-  if (id === "leads_dia") return <SerieChart data={d.leadsPorDia.map((x) => ({ label: fmtDia(x.date), v: x.count }))} dataKey="leads" name="Leads" viz={viz} />;
-  if (id === "receita_dia") return <SerieChart data={d.receitaPorDia.map((x) => ({ label: fmtDia(x.date), v: x.valor }))} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} />;
+function renderChart(id: string, d: Data, viz: string, gran: string) {
+  if (id === "leads_dia") return <SerieChart data={aggregar(d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })), gran)} dataKey="leads" name="Leads" viz={viz} />;
+  if (id === "receita_dia") return <SerieChart data={aggregar(d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })), gran)} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} />;
   if (id === "pv_leads") {
     const pvDia = d.aquisicao.pageviewsPorDia ?? [];
     const pv = Object.fromEntries(pvDia.map((x) => [x.date, x.count]));
@@ -340,6 +357,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const router = useRouter(); const pathname = usePathname(); const sp = useSearchParams();
   const [layout, setLayout] = useState<LayoutItem[]>(DEFAULT_LAYOUT);
   const [viz, setViz] = useState<Record<string, string>>({});
+  const [gran, setGran] = useState<Record<string, string>>({});
   const [views, setViews] = useState<{ name: string; layout: LayoutItem[]; viz: Record<string, string> }[]>([]);
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
   const [sqlModal, setSqlModal] = useState<SqlQuery | "new" | null>(null);
@@ -358,8 +376,10 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       const v = localStorage.getItem(LS_VIEWS); if (v) setViews(JSON.parse(v));
       const z = localStorage.getItem(LS_VIZ); if (z) setViz(JSON.parse(z));
       const s = localStorage.getItem(LS_SQL); if (s) setSqlQueries(JSON.parse(s));
+      const g = localStorage.getItem("grid-gran-v1"); if (g) setGran(JSON.parse(g));
     } catch {}
   }, []);
+  const persistGran = (g: Record<string, string>) => { try { localStorage.setItem("grid-gran-v1", JSON.stringify(g)); } catch {} setGran(g); };
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(([e]) => setGridW(e.contentRect.width)); ro.observe(el); setGridW(el.getBoundingClientRect().width); return () => ro.disconnect(); }, [mounted]);
 
   const persistLayout = useCallback((l: LayoutItem[]) => { try { localStorage.setItem(LS_LAYOUT, JSON.stringify(l)); } catch {} setLayout(l); }, []);
@@ -481,12 +501,15 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                       {def?.viz && def.viz.map((z) => (
                         <button key={z} onClick={(e) => { e.stopPropagation(); persistViz({ ...viz, [item.i]: z }); }} title={z} style={{ fontSize: 13, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: curViz === z ? C.accent : "#eef1f5", color: curViz === z ? "#fff" : C.muted }}>{z === "area" ? "∿" : z === "bar" ? "▮" : "╱"}</button>
                       ))}
+                      {(item.i === "leads_dia" || item.i === "receita_dia") && (["dia", "semana", "mes"] as const).map((g) => (
+                        <button key={g} onClick={(e) => { e.stopPropagation(); persistGran({ ...gran, [item.i]: g }); }} title={g} style={{ fontSize: 11, fontWeight: 600, width: 20, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: (gran[item.i] ?? "dia") === g ? C.accent : "#eef1f5", color: (gran[item.i] ?? "dia") === g ? "#fff" : C.muted }}>{g === "dia" ? "D" : g === "semana" ? "S" : "M"}</button>
+                      ))}
                       <button onClick={(e) => { e.stopPropagation(); removeWidget(item.i); }} title="Remover" style={{ fontSize: 14, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#fde8e8", color: C.down }}>×</button>
                     </span>
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(item.i, data2); return k ? <KpiView k={k} /> : null; })() : renderChart(item.i, data2, curViz)}
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(item.i, data2); return k ? <KpiView k={k} /> : null; })() : renderChart(item.i, data2, curViz, gran[item.i] ?? "dia")}
                 </div>
               </div>
             );
