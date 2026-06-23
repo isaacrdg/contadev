@@ -167,6 +167,15 @@ export default async function DashboardPage({
     cachedReceitaPorDia(filters, rev).catch(() => []),
   ]);
 
+  // PostHog pode não estar configurado em produção (env ausente na Vercel) ou a
+  // query pode falhar. Nesses casos o caminho ao vivo volta zerado — então caímos
+  // para o aquisicao do snapshot, que sempre tem os page views. Melhor um dado
+  // levemente defasado do que um gráfico vazio.
+  const aquisicaoView =
+    aquisicao.pageviews > 0 || (aquisicao.pageviewsPorDia?.length ?? 0) > 0
+      ? aquisicao
+      : snapshot.aquisicao;
+
   const complementar = await cachedComplementares(filters, rev)
     .catch((e) => { console.error("[vendas] complementar", e); return { velocidadeFechamentoHoras: null, funilEstagio: [], produtividade: [], motivosPerda: [], conversaoCanalReal: [], coorte: [], frtConversao: [] }; });
 
@@ -198,7 +207,7 @@ export default async function DashboardPage({
       leadsPorDia={leadsPorDia}
       receitaPorDia={receitaPorDia}
       filterOptions={filterOptions}
-      aquisicao={aquisicao}
+      aquisicao={aquisicaoView}
       complementar={complementar}
       prev={{
         receita: prevReceita,
