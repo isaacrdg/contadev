@@ -49,26 +49,26 @@ const snapshot = snapshotData as unknown as {
 // O parâmetro `rev` é só chave de cache; as funções não o utilizam.
 // ─────────────────────────────────────────────────────────────────────────────
 const cachedReceita = unstable_cache(
-  (f: VendasFilters, _rev: string) => getReceitaMetrics(f), ["vendas-receita"]);
+  (f: VendasFilters, _rev: string) => getReceitaMetrics(f), ["vendas-receita-v2"]);
 const cachedConversao = unstable_cache(
-  (f: VendasFilters, _rev: string) => getConversaoMetrics(f), ["vendas-conversao"]);
+  (f: VendasFilters, _rev: string) => getConversaoMetrics(f), ["vendas-conversao-v2"]);
 const cachedVelocidade = unstable_cache(
-  (f: VendasFilters, _rev: string) => getVelocidadeMetrics(f), ["vendas-velocidade"]);
+  (f: VendasFilters, _rev: string) => getVelocidadeMetrics(f), ["vendas-velocidade-v2"]);
 const cachedPerda = unstable_cache(
-  (f: VendasFilters, leadsEntrados: number, _rev: string) => getPerdaMetrics(f, leadsEntrados), ["vendas-perda"]);
+  (f: VendasFilters, leadsEntrados: number, _rev: string) => getPerdaMetrics(f, leadsEntrados), ["vendas-perda-v2"]);
 const cachedLeadsPorDia = unstable_cache(
-  (f: VendasFilters, _rev: string) => getLeadsPorDia(f), ["vendas-leadsdia"]);
+  (f: VendasFilters, _rev: string) => getLeadsPorDia(f), ["vendas-leadsdia-v2"]);
 const cachedReceitaPorDia = unstable_cache(
-  (f: VendasFilters, _rev: string) => getReceitaPorDia(f), ["vendas-receitadia"]);
+  (f: VendasFilters, _rev: string) => getReceitaPorDia(f), ["vendas-receitadia-v2"]);
 const cachedFilterOptions = unstable_cache(
-  (_rev: string) => getFilterOptions(), ["vendas-filteropts"]);
+  (_rev: string) => getFilterOptions(), ["vendas-filteropts-v2"]);
 const cachedAquisicao = unstable_cache(
-  (start: string, end: string, _rev: string) => getAquisicaoMetrics(start, end), ["vendas-aquisicao"]);
+  (start: string, end: string, _rev: string) => getAquisicaoMetrics(start, end), ["vendas-aquisicao-v2"]);
 const cachedComplementares = unstable_cache(
-  (f: VendasFilters, _rev: string) => getComplementares(f), ["vendas-complementar"]);
+  (f: VendasFilters, _rev: string) => getComplementares(f), ["vendas-complementar-v2"]);
 // Carimbo de quando o cache foi populado (= última leitura real do banco) por `rev`.
 const cachedStamp = unstable_cache(
-  async (_rev: string) => new Date().toISOString(), ["vendas-stamp"]);
+  async (_rev: string) => new Date().toISOString(), ["vendas-stamp-v2"]);
 
 function defaultDates() {
   const end = new Date();

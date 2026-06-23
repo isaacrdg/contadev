@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T17:00:05.311Z",
+  "generatedAt": "2026-06-23T17:20:08.956Z",
   "filters": {
     "start": "2026-05-24",
     "end": "2026-06-23",
@@ -266,22 +266,22 @@
     ]
   },
   "aquisicao": {
-    "pageviews": 3722,
-    "visitantes": 2751,
+    "pageviews": 3727,
+    "visitantes": 2754,
     "leadsCriados": 326,
-    "pvToLead": 0.11850236277717194,
+    "pvToLead": 0.11837327523602033,
     "porCanal": [
       {
         "nome": "www.youtube.com",
-        "valor": 970
+        "valor": 972
       },
       {
         "nome": "$direct",
-        "valor": 911
+        "valor": 912
       },
       {
         "nome": "www.google.com",
-        "valor": 813
+        "valor": 814
       },
       {
         "nome": "instagram.com",
@@ -301,17 +301,17 @@
       },
       {
         "nome": "localhost:3002",
-        "valor": 33
+        "valor": 34
       }
     ],
     "porDevice": [
       {
         "nome": "Desktop",
-        "valor": 2054
+        "valor": 2058
       },
       {
         "nome": "Mobile",
-        "valor": 1660
+        "valor": 1661
       },
       {
         "nome": "Tablet",
@@ -321,7 +321,7 @@
     "porPais": [
       {
         "nome": "Brazil",
-        "valor": 3545
+        "valor": 3550
       },
       {
         "nome": "United States",
@@ -507,10 +507,10 @@
       },
       {
         "date": "2026-06-23",
-        "count": 85
+        "count": 90
       }
     ],
-    "funilPageview": 3722,
+    "funilPageview": 3727,
     "funilFormStep1": 361,
     "funilFormCompleto": 344,
     "funilLead": 326,

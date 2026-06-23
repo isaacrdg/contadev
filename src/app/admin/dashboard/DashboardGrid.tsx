@@ -9,7 +9,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
-import { refreshVendas } from "./actions";
+import { refreshVendas, runSelectQuery } from "./actions";
 import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData } from "@/lib/vendas-db";
 import type { AquisicaoData } from "@/lib/posthog-db";
 
@@ -172,9 +172,10 @@ function renderChart(id: string, d: Data, viz: string) {
   if (id === "leads_dia") return <SerieChart data={d.leadsPorDia.map((x) => ({ label: fmtDia(x.date), v: x.count }))} dataKey="leads" name="Leads" viz={viz} />;
   if (id === "receita_dia") return <SerieChart data={d.receitaPorDia.map((x) => ({ label: fmtDia(x.date), v: x.valor }))} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} />;
   if (id === "pv_leads") {
-    const pv = Object.fromEntries(d.aquisicao.pageviewsPorDia.map((x) => [x.date, x.count]));
+    const pvDia = d.aquisicao.pageviewsPorDia ?? [];
+    const pv = Object.fromEntries(pvDia.map((x) => [x.date, x.count]));
     const ld = Object.fromEntries(d.leadsPorDia.map((x) => [x.date, x.count]));
-    const datas = Array.from(new Set([...d.aquisicao.pageviewsPorDia.map((x) => x.date), ...d.leadsPorDia.map((x) => x.date)])).sort();
+    const datas = Array.from(new Set([...pvDia.map((x) => x.date), ...d.leadsPorDia.map((x) => x.date)])).sort();
     const data = datas.map((date) => ({ label: fmtDia(date), pageviews: pv[date] ?? 0, leads: ld[date] ?? 0 }));
     return (
       <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
@@ -222,13 +223,81 @@ function renderChart(id: string, d: Data, viz: string) {
   return null;
 }
 
-const LS_LAYOUT = "grid-layout-v1", LS_VIEWS = "grid-views-v1", LS_VIZ = "grid-viz-v1";
+const LS_LAYOUT = "grid-layout-v1", LS_VIEWS = "grid-views-v1", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1";
+
+type SqlQuery = { id: string; title: string; sql: string };
+
+// Widget de consulta SQL personalizada (somente leitura, validado no servidor).
+function SqlWidget({ sql }: { sql: string }) {
+  const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    setLoading(true); setErr(null);
+    runSelectQuery(sql).then((r) => { if (r.error) setErr(r.error); else setRes({ columns: r.columns, rows: r.rows }); setLoading(false); });
+  }, [sql]);
+  if (loading) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Executando...</div>;
+  if (err) return <div style={{ fontSize: 11.5, color: C.down, fontFamily: "monospace", padding: 12, whiteSpace: "pre-wrap" }}>{err}</div>;
+  if (!res || res.rows.length === 0) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Sem resultados.</div>;
+  return (
+    <div style={{ height: "100%", overflow: "auto", padding: "0 8px 8px" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
+        <thead><tr>{res.columns.map((c) => <th key={c} style={{ textAlign: "left", padding: "5px 8px", color: C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, background: "#fff" }}>{c}</th>)}</tr></thead>
+        <tbody>{res.rows.slice(0, 200).map((row, ri) => (
+          <tr key={ri} style={{ borderBottom: `1px solid ${C.track}` }}>{row.map((cell, ci) => <td key={ci} style={{ padding: "5px 8px", color: C.title, fontFamily: "monospace" }}>{cell === null ? "—" : String(cell)}</td>)}</tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function SqlModal({ inicial, onSalvar, onFechar }: { inicial?: SqlQuery; onSalvar: (q: SqlQuery) => void; onFechar: () => void }) {
+  const [title, setTitle] = useState(inicial?.title ?? "Nova consulta");
+  const [sql, setSql] = useState(inicial?.sql ?? "SELECT\n  \nFROM leads\nLIMIT 50");
+  const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
+  async function exec() { setRunning(true); setErr(null); const r = await runSelectQuery(sql); if (r.error) { setErr(r.error); setRes(null); } else setRes({ columns: r.columns, rows: r.rows }); setRunning(false); }
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget) onFechar(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div style={{ width: "min(92vw, 820px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ fontSize: 14, fontWeight: 600, border: "none", outline: "none", color: C.big, flex: 1 }} placeholder="Título da consulta" />
+          <button onClick={onFechar} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
+        </div>
+        <textarea value={sql} onChange={(e) => setSql(e.target.value)} spellCheck={false}
+          onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") exec(); }}
+          style={{ fontFamily: "monospace", fontSize: 12.5, padding: "12px 18px", border: "none", borderBottom: `1px solid ${C.border}`, outline: "none", resize: "none", height: 150, color: "#334155", lineHeight: 1.6 }} />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 18px", borderBottom: `1px solid ${C.border}` }}>
+          <button onClick={exec} disabled={running} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 14px", borderRadius: 7, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>{running ? "Executando..." : "Executar (Ctrl+Enter)"}</button>
+          <span style={{ fontSize: 11.5, color: C.muted }}>Apenas SELECT. Somente leitura.</span>
+          {res && <span style={{ fontSize: 11.5, color: C.muted, marginLeft: "auto" }}>{res.rows.length} linhas</span>}
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: 8, minHeight: 120 }}>
+          {err && <div style={{ fontSize: 11.5, color: C.down, fontFamily: "monospace", padding: 10, whiteSpace: "pre-wrap" }}>{err}</div>}
+          {res && !err && res.rows.length > 0 && (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
+              <thead><tr>{res.columns.map((c) => <th key={c} style={{ textAlign: "left", padding: "5px 8px", color: C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}` }}>{c}</th>)}</tr></thead>
+              <tbody>{res.rows.slice(0, 50).map((row, ri) => <tr key={ri} style={{ borderBottom: `1px solid ${C.track}` }}>{row.map((cell, ci) => <td key={ci} style={{ padding: "5px 8px", fontFamily: "monospace", color: C.title }}>{cell === null ? "—" : String(cell)}</td>)}</tr>)}</tbody>
+            </table>
+          )}
+          {!res && !err && <div style={{ fontSize: 12, color: C.muted, padding: 10 }}>Execute para ver um preview.</div>}
+        </div>
+        <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}` }}>
+          <button onClick={() => onSalvar({ id: inicial?.id ?? `sql_${Date.now()}`, title, sql })} style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Adicionar ao dashboard</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardGrid({ filters, dataStamp, filterOptions, ...data }: Props) {
   const router = useRouter(); const pathname = usePathname(); const sp = useSearchParams();
   const [layout, setLayout] = useState<LayoutItem[]>(DEFAULT_LAYOUT);
   const [viz, setViz] = useState<Record<string, string>>({});
   const [views, setViews] = useState<{ name: string; layout: LayoutItem[]; viz: Record<string, string> }[]>([]);
+  const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
+  const [sqlModal, setSqlModal] = useState<SqlQuery | "new" | null>(null);
   const [edit, setEdit] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [nome, setNome] = useState("");
@@ -243,6 +312,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       const l = localStorage.getItem(LS_LAYOUT); if (l) setLayout(JSON.parse(l));
       const v = localStorage.getItem(LS_VIEWS); if (v) setViews(JSON.parse(v));
       const z = localStorage.getItem(LS_VIZ); if (z) setViz(JSON.parse(z));
+      const s = localStorage.getItem(LS_SQL); if (s) setSqlQueries(JSON.parse(s));
     } catch {}
   }, []);
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(([e]) => setGridW(e.contentRect.width)); ro.observe(el); setGridW(el.getBoundingClientRect().width); return () => ro.disconnect(); }, [mounted]);
@@ -260,7 +330,13 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
 
   const activeIds = layout.map((l) => l.i);
   function addWidget(id: string) { const def = CATALOG.find((d) => d.id === id); if (!def) return; const maxY = Math.max(0, ...layout.map((l) => l.y + l.h)); persistLayout([...layout, { i: id, x: 0, y: maxY, w: def.w, h: def.h, minW: def.minW, minH: def.minH, maxW: def.maxW, maxH: def.maxH } as LayoutItem]); setShowAdd(false); }
-  function removeWidget(id: string) { persistLayout(layout.filter((l) => l.i !== id)); }
+  function removeWidget(id: string) { persistLayout(layout.filter((l) => l.i !== id)); if (id.startsWith("sql_")) persistSql(sqlQueries.filter((q) => q.id !== id)); }
+  const persistSql = (qs: SqlQuery[]) => { try { localStorage.setItem(LS_SQL, JSON.stringify(qs)); } catch {} setSqlQueries(qs); };
+  function saveSql(q: SqlQuery) {
+    persistSql([...sqlQueries.filter((x) => x.id !== q.id), q]);
+    if (!layout.some((l) => l.i === q.id)) { const maxY = Math.max(0, ...layout.map((l) => l.y + l.h)); persistLayout([...layout, { i: q.id, x: 0, y: maxY, w: 6, h: 4, minW: 3, minH: 3, maxW: 12, maxH: 10 } as LayoutItem]); }
+    setSqlModal(null);
+  }
   function salvarView() { const n = nome.trim(); if (!n) return; persistViews([...views.filter((v) => v.name !== n), { name: n, layout, viz }]); setNome(""); }
   function carregarView(name: string) { const view = views.find((v) => v.name === name); if (view) { persistLayout(view.layout); persistViz(view.viz); } }
 
@@ -320,6 +396,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
               </div>
             )}
           </div>
+          <button onClick={() => setSqlModal("new")} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px dashed ${C.accent}`, background: "#fff", color: C.accent, cursor: "pointer" }}>+ Consulta SQL</button>
           <span style={{ width: 1, height: 18, background: C.border }} />
           <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da visão" onKeyDown={(e) => e.key === "Enter" && salvarView()} style={{ ...selStyle, width: 140 }} />
           <button onClick={salvarView} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Salvar visão</button>
@@ -343,30 +420,36 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
           onLayoutChange={(_: Layout, all: ResponsiveLayouts) => { if (all.lg) persistLayout([...all.lg] as LayoutItem[]); }}
         >
           {layout.map((item) => {
-            const def = CATALOG.find((d) => d.id === item.i);
-            if (!def) return null;
-            const curViz = viz[item.i] ?? (def.viz?.[0] ?? "area");
+            const isSql = item.i.startsWith("sql_");
+            const sq = isSql ? sqlQueries.find((q) => q.id === item.i) : null;
+            const def = isSql ? null : CATALOG.find((d) => d.id === item.i);
+            if (isSql ? !sq : !def) return null;
+            const titulo = isSql ? sq!.title : def!.titulo;
+            const curViz = viz[item.i] ?? (def?.viz?.[0] ?? "area");
             return (
               <div key={item.i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
                 <div className={edit ? "drag-handle" : ""} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 14px 4px", cursor: edit ? "grab" : "default" }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: C.title }}>{def.titulo}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: C.title }}>{titulo}{isSql && <span style={{ fontSize: 9, color: C.muted, marginLeft: 6 }}>SQL</span>}</span>
                   {edit && (
                     <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                      {def.viz && def.viz.map((z) => (
+                      {isSql && <button onClick={(e) => { e.stopPropagation(); setSqlModal(sq!); }} title="Editar SQL" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#eef1f5", color: C.muted }}>✎</button>}
+                      {def?.viz && def.viz.map((z) => (
                         <button key={z} onClick={(e) => { e.stopPropagation(); persistViz({ ...viz, [item.i]: z }); }} title={z} style={{ fontSize: 13, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: curViz === z ? C.accent : "#eef1f5", color: curViz === z ? "#fff" : C.muted }}>{z === "area" ? "∿" : z === "bar" ? "▮" : "╱"}</button>
                       ))}
                       <button onClick={(e) => { e.stopPropagation(); removeWidget(item.i); }} title="Remover" style={{ fontSize: 14, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#fde8e8", color: C.down }}>×</button>
                     </span>
                   )}
                 </div>
-                <div style={{ flex: 1, minHeight: 0, padding: def.kind === "chart" ? "4px 12px 12px" : "0 0 0 0" }}>
-                  {def.kind === "kpi" ? (() => { const k = resolveKpi(item.i, data2); return k ? <KpiView k={k} /> : null; })() : renderChart(item.i, data2, curViz)}
+                <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(item.i, data2); return k ? <KpiView k={k} /> : null; })() : renderChart(item.i, data2, curViz)}
                 </div>
               </div>
             );
           })}
         </ResponsiveGridLayout>
       </div>
+
+      {sqlModal && <SqlModal inicial={sqlModal === "new" ? undefined : sqlModal} onSalvar={saveSql} onFechar={() => setSqlModal(null)} />}
     </div>
   );
 }
