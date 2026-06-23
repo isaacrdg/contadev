@@ -74,9 +74,11 @@ const CATALOG: WDef[] = [
   { id: "sla_1h", titulo: "SLA: respondidos em 1h", ...KPI_BOX, grupo: "complementar" },
   { id: "sla_24h", titulo: "SLA: respondidos em 24h", ...KPI_BOX, grupo: "complementar" },
   { id: "velocidade_fechamento", titulo: "Velocidade de fechamento", ...KPI_BOX, grupo: "complementar" },
-  { id: "funil_estagio", titulo: "Funil por estágio (CRM)", ...CHART_BOX, w: 4, h: 5, grupo: "complementar" },
+  { id: "funil_estagio", titulo: "Funil por estágio (CRM) + tempo parado", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
   { id: "produtividade", titulo: "Produtividade por vendedor", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
   { id: "motivos_perda", titulo: "Motivos de perda", ...CHART_BOX, w: 4, h: 4, grupo: "complementar" },
+  { id: "conversao_canal_real", titulo: "Conversão por canal (canal × pagamento)", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
+  { id: "coorte", titulo: "Coorte: pagamento por semana de entrada", ...CHART_BOX, w: 6, h: 5, grupo: "complementar" },
   { id: "leads_dia", titulo: "Leads por dia", ...CHART_BOX, viz: ["area", "bar", "line"] },
   { id: "receita_dia", titulo: "Receita nova por dia", ...CHART_BOX, viz: ["area", "bar", "line"] },
   { id: "pv_leads", titulo: "Page views e leads por dia", ...CHART_BOX },
@@ -203,8 +205,41 @@ function renderChart(id: string, d: Data, viz: string) {
     const es = d.complementar.funilEstagio; const max = Math.max(...es.map((x) => x.n), 1);
     if (es.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem leads no período</div>;
     return <div style={{ display: "flex", flexDirection: "column", gap: 7, overflow: "auto", height: "100%" }}>{es.map((s) => (
-      <div key={s.estagio}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, marginBottom: 3 }}><span style={{ color: "#475569" }}>{s.estagio}</span><span style={{ color: C.big, fontWeight: 600 }}>{num(s.n)}</span></div><div style={{ height: 6, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${(s.n / max) * 100}%`, height: "100%", background: C.accent, opacity: 0.8 }} /></div></div>
+      <div key={s.estagio}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, marginBottom: 3 }}>
+          <span style={{ color: "#475569" }}>{s.estagio}</span>
+          <span style={{ color: C.answer }}>{s.parados7d > 0 && <span style={{ color: C.down, marginRight: 6 }}>{num(s.parados7d)} parados +7d</span>}<span style={{ color: C.muted, marginRight: 6 }}>~{s.diasParado}d</span><span style={{ color: C.big, fontWeight: 600 }}>{num(s.n)}</span></span>
+        </div>
+        <div style={{ height: 6, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${(s.n / max) * 100}%`, height: "100%", background: C.accent, opacity: 0.8 }} /></div>
+      </div>
     ))}</div>;
+  }
+  if (id === "conversao_canal_real") {
+    const cs = d.complementar.conversaoCanalReal; const max = Math.max(...cs.map((x) => x.leads), 1);
+    if (cs.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem dados de canal no período</div>;
+    return <div style={{ display: "flex", flexDirection: "column", gap: 9, overflow: "auto", height: "100%" }}>{cs.map((ch) => {
+      const taxa = ch.leads > 0 ? ch.pagantes / ch.leads : 0;
+      return <div key={ch.canal}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}><span style={{ color: "#475569" }}>{ch.canal}</span><span style={{ color: C.answer }}><span style={{ color: C.big, fontWeight: 600 }}>{num(ch.leads)}</span> leads · <span style={{ color: taxa >= 0.05 ? C.up : C.title, fontWeight: 600 }}>{num(ch.pagantes)} pagaram ({pct(taxa)})</span></span></div><div style={{ height: 7, borderRadius: 3, background: C.track, overflow: "hidden", position: "relative" }}><div style={{ width: `${(ch.leads / max) * 100}%`, height: "100%", background: C.accentSoft }} /><div style={{ position: "absolute", top: 0, left: 0, width: `${(ch.pagantes / max) * 100}%`, height: "100%", background: C.accent }} /></div></div>;
+    })}</div>;
+  }
+  if (id === "coorte") {
+    const co = d.complementar.coorte;
+    if (co.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem coorte no período</div>;
+    const cell: React.CSSProperties = { padding: "5px 8px", textAlign: "right", fontVariantNumeric: "tabular-nums" };
+    return <div style={{ height: "100%", overflow: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
+        <thead><tr style={{ color: C.muted }}><th style={{ ...cell, textAlign: "left" }}>Semana</th><th style={cell}>Leads</th><th style={cell}>Pagou 7d</th><th style={cell}>14d</th><th style={cell}>30d</th></tr></thead>
+        <tbody>{co.map((r) => (
+          <tr key={r.semana} style={{ borderTop: `1px solid ${C.track}` }}>
+            <td style={{ ...cell, textAlign: "left", color: "#475569" }}>{fmtDia(r.semana)}</td>
+            <td style={{ ...cell, color: C.big, fontWeight: 600 }}>{num(r.leads)}</td>
+            <td style={{ ...cell, color: C.answer }}>{r.leads > 0 ? pct(r.pagou7d / r.leads) : "—"}</td>
+            <td style={{ ...cell, color: C.answer }}>{r.leads > 0 ? pct(r.pagou14d / r.leads) : "—"}</td>
+            <td style={{ ...cell, color: C.up, fontWeight: 600 }}>{r.leads > 0 ? pct(r.pagou30d / r.leads) : "—"}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>;
   }
   if (id === "produtividade") {
     const ps = d.complementar.produtividade; const max = Math.max(...ps.map((x) => x.leads), 1);

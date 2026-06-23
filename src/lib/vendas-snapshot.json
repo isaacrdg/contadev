@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T17:20:08.956Z",
+  "generatedAt": "2026-06-23T17:29:49.590Z",
   "filters": {
     "start": "2026-05-24",
     "end": "2026-06-23",
@@ -266,10 +266,10 @@
     ]
   },
   "aquisicao": {
-    "pageviews": 3727,
-    "visitantes": 2754,
+    "pageviews": 3729,
+    "visitantes": 2755,
     "leadsCriados": 326,
-    "pvToLead": 0.11837327523602033,
+    "pvToLead": 0.11833030852994555,
     "porCanal": [
       {
         "nome": "www.youtube.com",
@@ -277,7 +277,7 @@
       },
       {
         "nome": "$direct",
-        "valor": 912
+        "valor": 913
       },
       {
         "nome": "www.google.com",
@@ -307,7 +307,7 @@
     "porDevice": [
       {
         "nome": "Desktop",
-        "valor": 2058
+        "valor": 2060
       },
       {
         "nome": "Mobile",
@@ -321,7 +321,7 @@
     "porPais": [
       {
         "nome": "Brazil",
-        "valor": 3550
+        "valor": 3552
       },
       {
         "nome": "United States",
@@ -507,10 +507,10 @@
       },
       {
         "date": "2026-06-23",
-        "count": 90
+        "count": 92
       }
     ],
-    "funilPageview": 3727,
+    "funilPageview": 3729,
     "funilFormStep1": 361,
     "funilFormCompleto": 344,
     "funilLead": 326,
@@ -521,39 +521,57 @@
     "funilEstagio": [
       {
         "estagio": "Negociação",
-        "n": 29
+        "n": 29,
+        "diasParado": 18.3,
+        "parados7d": 26
       },
       {
         "estagio": "Sem Contato",
-        "n": 10
+        "n": 10,
+        "diasParado": 19.5,
+        "parados7d": 10
       },
       {
         "estagio": "Primeira abordagem",
-        "n": 69
+        "n": 69,
+        "diasParado": 15,
+        "parados7d": 53
       },
       {
         "estagio": "Qualificação",
-        "n": 88
+        "n": 88,
+        "diasParado": 13.9,
+        "parados7d": 77
       },
       {
         "estagio": "Simulação",
-        "n": 23
+        "n": 23,
+        "diasParado": 15,
+        "parados7d": 16
       },
       {
         "estagio": "Fechamento",
-        "n": 13
+        "n": 13,
+        "diasParado": 19.7,
+        "parados7d": 12
       },
       {
         "estagio": "Finalizado",
-        "n": 19
+        "n": 19,
+        "diasParado": 15.7,
+        "parados7d": 18
       },
       {
         "estagio": "Sem resposta",
-        "n": 14
+        "n": 14,
+        "diasParado": 8.2,
+        "parados7d": 14
       },
       {
         "estagio": "Perdidos",
-        "n": 20
+        "n": 20,
+        "diasParado": 14.3,
+        "parados7d": 19
       }
     ],
     "produtividade": [
@@ -563,7 +581,86 @@
         "pagantes": 26
       }
     ],
-    "motivosPerda": []
+    "motivosPerda": [],
+    "conversaoCanalReal": [
+      {
+        "canal": "google",
+        "leads": 29,
+        "pagantes": 4
+      },
+      {
+        "canal": "(sem origem)",
+        "leads": 20,
+        "pagantes": 3
+      },
+      {
+        "canal": "instagram",
+        "leads": 16,
+        "pagantes": 0
+      },
+      {
+        "canal": "youtube",
+        "leads": 16,
+        "pagantes": 1
+      },
+      {
+        "canal": "$direct",
+        "leads": 11,
+        "pagantes": 0
+      },
+      {
+        "canal": "l.instagram",
+        "leads": 5,
+        "pagantes": 0
+      },
+      {
+        "canal": "reddit",
+        "leads": 2,
+        "pagantes": 0
+      },
+      {
+        "canal": "adsmanager.facebook",
+        "leads": 1,
+        "pagantes": 0
+      }
+    ],
+    "coorte": [
+      {
+        "semana": "2026-05-18",
+        "leads": 6,
+        "pagou7d": 0,
+        "pagou14d": 0,
+        "pagou30d": 0
+      },
+      {
+        "semana": "2026-05-25",
+        "leads": 72,
+        "pagou7d": 9,
+        "pagou14d": 11,
+        "pagou30d": 12
+      },
+      {
+        "semana": "2026-06-01",
+        "leads": 77,
+        "pagou7d": 7,
+        "pagou14d": 10,
+        "pagou30d": 10
+      },
+      {
+        "semana": "2026-06-08",
+        "leads": 75,
+        "pagou7d": 4,
+        "pagou14d": 4,
+        "pagou30d": 4
+      },
+      {
+        "semana": "2026-06-15",
+        "leads": 56,
+        "pagou7d": 1,
+        "pagou14d": 1,
+        "pagou30d": 1
+      }
+    ]
   },
   "prev": {
     "receita": {

@@ -51,6 +51,18 @@ const num = (v: unknown) => Number(v ?? 0);
 const buckets = (rows: unknown[][]): Bucket[] =>
   rows.map((r) => ({ nome: String(r[0] ?? "(desconhecido)"), valor: num(r[1]) }));
 
+// Canal de origem por lead_id (o evento lead_created carrega o lead_id do Neon).
+// Permite cruzar canal (PostHog) com pagamento (Neon) casando por lead_id.
+export async function getCanalPorLead(start: string, end: string): Promise<{ lead_id: string; canal: string }[]> {
+  if (!isDate(start) || !isDate(end)) return [];
+  const W = `toDate(timestamp) >= toDate('${start}') AND toDate(timestamp) <= toDate('${end}')`;
+  const rows = await hogql(`
+    SELECT properties.lead_id AS lead_id, person.properties.$initial_referring_domain AS canal
+    FROM events WHERE event = 'lead_created' AND ${W} AND properties.lead_id IS NOT NULL
+  `);
+  return rows.map((r) => ({ lead_id: String(r[0]), canal: String(r[1] ?? "(sem origem)") }));
+}
+
 export async function getAquisicaoMetrics(start: string, end: string): Promise<AquisicaoData> {
   if (!isDate(start) || !isDate(end)) throw new Error("datas inválidas");
   // Janela por dia (timezone do projeto), inclusiva nas duas pontas.

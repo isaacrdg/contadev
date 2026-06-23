@@ -628,10 +628,14 @@ export async function getLeadsPorDia(f: VendasFilters): Promise<LeadDia[]> {
 
 export interface ComplementarData {
   velocidadeFechamentoHoras: number | null;
-  funilEstagio: { estagio: string; n: number }[];
+  funilEstagio: { estagio: string; n: number; diasParado: number; parados7d: number }[];
   produtividade: { vendedor: string; leads: number; pagantes: number }[];
   motivosPerda: { motivo: string; n: number }[];
+  conversaoCanalReal: { canal: string; leads: number; pagantes: number }[];
+  coorte: { semana: string; leads: number; pagou7d: number; pagou14d: number; pagou30d: number }[];
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function getComplementares(f: VendasFilters): Promise<ComplementarData> {
   const sql = getSql();
@@ -639,7 +643,7 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
   const pv = f.pricingVariant || null;
   const ini = f.start, fim = f.end;
 
-  const [vel, estagio, prod, motivos] = await Promise.all([
+  const [vel, estagio, prod, motivos, coorteQ] = await Promise.all([
     // Velocidade de fechamento: lead criado → primeiro pagamento (mediana, horas)
     sql`
       WITH pagos AS (
@@ -655,16 +659,25 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
       SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (first_paid - created_at)) / 3600) as horas
       FROM pagos WHERE first_paid > created_at
     `,
-    // Funil por estágio do CRM: onde estão os leads do período
+    // Funil por estágio do CRM + tempo parado (aging) no estágio atual
     sql`
-      SELECT cs.name as estagio, cs.position, COUNT(l.id)::int as n
-      FROM crm_stages cs
-      LEFT JOIN leads l ON l.crm_stage_id = cs.id AND l.deleted_at IS NULL
-        AND l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
-        AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
-        AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      WITH pl AS (
+        SELECT l.id, l.crm_stage_id,
+          COALESCE(
+            (SELECT MAX(h.created_at) FROM lead_stage_history h WHERE h.lead_id = l.id AND h.to_stage_id = l.crm_stage_id),
+            l.created_at
+          ) as entrou
+        FROM leads l
+        WHERE l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+          AND l.deleted_at IS NULL AND l.crm_stage_id IS NOT NULL
+          AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+          AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      )
+      SELECT cs.name as estagio, cs.position, COUNT(*)::int as n,
+        ROUND(AVG(EXTRACT(EPOCH FROM (now() - pl.entrou)) / 86400)::numeric, 1) as dias_parado,
+        COUNT(*) FILTER (WHERE now() - pl.entrou > interval '7 days')::int as parados_7d
+      FROM pl JOIN crm_stages cs ON cs.id = pl.crm_stage_id
       GROUP BY cs.id, cs.name, cs.position
-      HAVING COUNT(l.id) > 0
       ORDER BY cs.position
     `,
     // Produtividade por vendedor (atribuição atual de leads.assigned_employee_id)
@@ -693,13 +706,57 @@ export async function getComplementares(f: VendasFilters): Promise<ComplementarD
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
       GROUP BY lr.name ORDER BY n DESC LIMIT 8
     `,
+    // Coorte: por semana de entrada, % que pagou em 7/14/30 dias
+    sql`
+      WITH base AS (
+        SELECT l.id, l.created_at,
+          (SELECT MIN(sp.paid_at) FROM subscription_payments sp WHERE sp.lead_id = l.id AND sp.status = 'paid') as first_paid
+        FROM leads l
+        WHERE l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+          AND l.deleted_at IS NULL
+          AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+          AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      )
+      SELECT TO_CHAR(DATE_TRUNC('week', created_at AT TIME ZONE 'America/Sao_Paulo'), 'YYYY-MM-DD') as semana,
+        COUNT(*)::int as leads,
+        COUNT(*) FILTER (WHERE first_paid IS NOT NULL AND first_paid - created_at <= interval '7 days')::int  as pagou_7d,
+        COUNT(*) FILTER (WHERE first_paid IS NOT NULL AND first_paid - created_at <= interval '14 days')::int as pagou_14d,
+        COUNT(*) FILTER (WHERE first_paid IS NOT NULL AND first_paid - created_at <= interval '30 days')::int as pagou_30d
+      FROM base GROUP BY 1 ORDER BY 1
+    `,
   ]);
+
+  // Conversão por canal REAL: cruza canal (PostHog, por lead_id) com pagamento (Neon)
+  let conversaoCanalReal: { canal: string; leads: number; pagantes: number }[] = [];
+  try {
+    const ph = await import("./posthog-db");
+    const canalPorLead = (await ph.getCanalPorLead(ini, fim)).filter((x) => UUID.test(x.lead_id));
+    if (canalPorLead.length) {
+      const ids = canalPorLead.map((x) => x.lead_id);
+      const pagos = await sql`
+        SELECT l.id::text as id FROM leads l
+        WHERE l.id = ANY(${ids}::uuid[])
+          AND EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'active')
+      `;
+      const paid = new Set(pagos.map((r) => String(r.id)));
+      const agg = new Map<string, { leads: number; pagantes: number }>();
+      for (const { lead_id, canal } of canalPorLead) {
+        const c = canal.replace("www.", "").replace(".com", "");
+        const a = agg.get(c) ?? { leads: 0, pagantes: 0 };
+        a.leads++; if (paid.has(lead_id)) a.pagantes++;
+        agg.set(c, a);
+      }
+      conversaoCanalReal = Array.from(agg.entries()).map(([canal, v]) => ({ canal, ...v })).sort((a, b) => b.leads - a.leads).slice(0, 8);
+    }
+  } catch (e) { console.error("[canal x pagamento]", e); }
 
   return {
     velocidadeFechamentoHoras: toFloat(vel[0]?.horas),
-    funilEstagio: estagio.map((r) => ({ estagio: String(r.estagio), n: n(r.n) })),
+    funilEstagio: estagio.map((r) => ({ estagio: String(r.estagio), n: n(r.n), diasParado: n(r.dias_parado), parados7d: n(r.parados_7d) })),
     produtividade: prod.map((r) => ({ vendedor: String(r.vendedor), leads: n(r.leads), pagantes: n(r.pagantes) })),
     motivosPerda: motivos.map((r) => ({ motivo: String(r.motivo), n: n(r.n) })),
+    conversaoCanalReal,
+    coorte: coorteQ.map((r) => ({ semana: String(r.semana), leads: n(r.leads), pagou7d: n(r.pagou_7d), pagou14d: n(r.pagou_14d), pagou30d: n(r.pagou_30d) })),
   };
 }
 
