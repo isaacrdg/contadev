@@ -30,6 +30,15 @@ function getSql(): NeonQueryFunction<false, false> {
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
+// A tabela kv_store não existe neste banco. Ao detectar isso uma vez, paramos de
+// consultar o Neon (cada tentativa custa compute e falha igual) e servimos o
+// fallback direto. Evita spam no overlay do Next e requisições inúteis.
+let kvStoreMissing = false;
+function isMissingTable(err: unknown): boolean {
+  const e = err as { code?: string; message?: string };
+  return e?.code === "42P01" || /relation .* does not exist/i.test(e?.message ?? "");
+}
+
 async function ensureDir(): Promise<void> {
   try {
     await fs.access(DATA_DIR);
@@ -47,6 +56,7 @@ function fileFor(key: string): string {
  */
 export async function readJson<T>(key: string, fallback: T): Promise<T> {
   if (USE_NEON) {
+    if (kvStoreMissing) return fallback;
     try {
       const sql = getSql();
       const rows = (await sql`SELECT value FROM kv_store WHERE key = ${key}`) as Array<{
@@ -55,6 +65,11 @@ export async function readJson<T>(key: string, fallback: T): Promise<T> {
       if (rows.length === 0) return fallback;
       return rows[0].value as T;
     } catch (err) {
+      if (isMissingTable(err)) {
+        if (!kvStoreMissing) console.warn("[kv] tabela kv_store não existe neste banco; usando fallback (storage kv desativado)");
+        kvStoreMissing = true;
+        return fallback;
+      }
       console.error(`[kv] Erro lendo ${key}:`, err);
       return fallback;
     }
@@ -76,6 +91,7 @@ export async function readJson<T>(key: string, fallback: T): Promise<T> {
  */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
   if (USE_NEON) {
+    if (kvStoreMissing) return; // tabela inexistente: não há onde gravar, evita erro e custo
     try {
       const sql = getSql();
       // UPSERT — INSERT ON CONFLICT, atualiza updated_at
@@ -87,6 +103,11 @@ export async function writeJson<T>(key: string, value: T): Promise<void> {
       `;
       return;
     } catch (err) {
+      if (isMissingTable(err)) {
+        if (!kvStoreMissing) console.warn("[kv] tabela kv_store não existe neste banco; gravação ignorada");
+        kvStoreMissing = true;
+        return;
+      }
       console.error(`[kv] Erro gravando ${key}:`, err);
       throw err;
     }
