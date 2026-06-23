@@ -5,9 +5,11 @@ import {
   getPerdaMetrics,
   getLeadsPorDia,
   getReceitaPorDia,
+  getComplementares,
   getFilterOptions,
   type VendasFilters,
   type ReceitaDia,
+  type ComplementarData,
   type ReceitaData,
   type ConversaoData,
   type VelocidadeData,
@@ -34,6 +36,7 @@ const snapshot = snapshotData as unknown as {
   receitaPorDia: ReceitaDia[];
   filterOptions: FilterOptions;
   aquisicao: AquisicaoData;
+  complementar: ComplementarData;
   prev: { receita: ReceitaData; conversao: ConversaoData; velocidade: VelocidadeData; perda: PerdaData };
 };
 
@@ -61,6 +64,8 @@ const cachedFilterOptions = unstable_cache(
   (_rev: string) => getFilterOptions(), ["vendas-filteropts"]);
 const cachedAquisicao = unstable_cache(
   (start: string, end: string, _rev: string) => getAquisicaoMetrics(start, end), ["vendas-aquisicao"]);
+const cachedComplementares = unstable_cache(
+  (f: VendasFilters, _rev: string) => getComplementares(f), ["vendas-complementar"]);
 // Carimbo de quando o cache foi populado (= última leitura real do banco) por `rev`.
 const cachedStamp = unstable_cache(
   async (_rev: string) => new Date().toISOString(), ["vendas-stamp"]);
@@ -145,6 +150,7 @@ export default async function DashboardPage({
         receitaPorDia={snapshot.receitaPorDia}
         filterOptions={snapshot.filterOptions}
         aquisicao={snapshot.aquisicao}
+        complementar={snapshot.complementar}
         prev={snapshot.prev}
       />
     );
@@ -159,6 +165,9 @@ export default async function DashboardPage({
     cachedAquisicao(filters.start, filters.end, rev).catch((e) => { console.error("[posthog]", e); return AQUISICAO_ZERO; }),
     cachedReceitaPorDia(filters, rev).catch(() => []),
   ]);
+
+  const complementar = await cachedComplementares(filters, rev)
+    .catch((e) => { console.error("[vendas] complementar", e); return { velocidadeFechamentoHoras: null, funilEstagio: [], produtividade: [], motivosPerda: [] }; });
 
   const perda = await cachedPerda(filters, conversao.leadsEntrados, rev)
     .catch((e) => { console.error("[vendas] perda", e); return PERDA_ZERO; });
@@ -189,6 +198,7 @@ export default async function DashboardPage({
       receitaPorDia={receitaPorDia}
       filterOptions={filterOptions}
       aquisicao={aquisicao}
+      complementar={complementar}
       prev={{
         receita: prevReceita,
         conversao: prevConversao,

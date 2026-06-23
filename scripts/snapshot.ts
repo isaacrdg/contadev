@@ -31,6 +31,7 @@ async function main() {
     db.getReceitaPorDia(filters),
   ]);
   const perda = await db.getPerdaMetrics(filters, conversao.leadsEntrados);
+  const complementar = await db.getComplementares(filters);
   const aquisicao = await ph.getAquisicaoMetrics(filters.start, filters.end)
     .catch((e) => { console.error("[posthog]", e.message); return ph.AQUISICAO_ZERO; });
 
@@ -49,7 +50,7 @@ async function main() {
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
-    filters, receita, conversao, velocidade, perda, leadsPorDia, receitaPorDia, filterOptions, aquisicao,
+    filters, receita, conversao, velocidade, perda, leadsPorDia, receitaPorDia, filterOptions, aquisicao, complementar,
     prev: { receita: pReceita, conversao: pConversao, velocidade: pVelocidade, perda: pPerda },
   };
 

@@ -4,17 +4,18 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
 import { refreshVendas } from "./actions";
-import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions } from "@/lib/vendas-db";
+import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData } from "@/lib/vendas-db";
 import type { AquisicaoData } from "@/lib/posthog-db";
 
 interface Data {
   receita: ReceitaData; conversao: ConversaoData; velocidade: VelocidadeData; perda: PerdaData;
-  leadsPorDia: LeadDia[]; receitaPorDia: ReceitaDia[]; aquisicao: AquisicaoData;
+  leadsPorDia: LeadDia[]; receitaPorDia: ReceitaDia[]; aquisicao: AquisicaoData; complementar: ComplementarData;
   prev?: { receita: ReceitaData; conversao: ConversaoData; velocidade: VelocidadeData; perda: PerdaData };
 }
 interface Props extends Data { filters: VendasFilters; dataStamp: string; filterOptions: FilterOptions; }
@@ -41,7 +42,7 @@ function compara(cur: number, prev: number | undefined): Delta | null {
 
 // ── Catálogo de widgets ─────────────────────────────────────────────────────────
 type Kind = "kpi" | "chart";
-interface WDef { id: string; titulo: string; kind: Kind; w: number; h: number; minW: number; minH: number; maxW: number; maxH: number; viz?: string[]; }
+interface WDef { id: string; titulo: string; kind: Kind; w: number; h: number; minW: number; minH: number; maxW: number; maxH: number; viz?: string[]; grupo?: "principal" | "complementar"; }
 const KPI_BOX = { kind: "kpi" as const, w: 3, h: 2, minW: 2, minH: 2, maxW: 4, maxH: 3 };
 const CHART_BOX = { kind: "chart" as const, w: 6, h: 4, minW: 3, minH: 3, maxW: 12, maxH: 8 };
 
@@ -69,6 +70,13 @@ const CATALOG: WDef[] = [
   { id: "perda_silenciosa", titulo: "Perda silenciosa", ...KPI_BOX },
   { id: "visitantes", titulo: "Visitantes do site", ...KPI_BOX },
   { id: "visita_lead", titulo: "Visitante vira lead", ...KPI_BOX },
+  // Complementares (não entram na visão principal, ficam disponíveis para adicionar)
+  { id: "sla_1h", titulo: "SLA: respondidos em 1h", ...KPI_BOX, grupo: "complementar" },
+  { id: "sla_24h", titulo: "SLA: respondidos em 24h", ...KPI_BOX, grupo: "complementar" },
+  { id: "velocidade_fechamento", titulo: "Velocidade de fechamento", ...KPI_BOX, grupo: "complementar" },
+  { id: "funil_estagio", titulo: "Funil por estágio (CRM)", ...CHART_BOX, w: 4, h: 5, grupo: "complementar" },
+  { id: "produtividade", titulo: "Produtividade por vendedor", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
+  { id: "motivos_perda", titulo: "Motivos de perda", ...CHART_BOX, w: 4, h: 4, grupo: "complementar" },
   { id: "leads_dia", titulo: "Leads por dia", ...CHART_BOX, viz: ["area", "bar", "line"] },
   { id: "receita_dia", titulo: "Receita nova por dia", ...CHART_BOX, viz: ["area", "bar", "line"] },
   { id: "pv_leads", titulo: "Page views e leads por dia", ...CHART_BOX },
@@ -115,6 +123,9 @@ function resolveKpi(id: string, d: Data): { valor: string; resposta: string; com
     perda_silenciosa: () => ({ valor: num(p.perdidosGhosting), resposta: "tinham conversa e sumiram há 7 dias ou mais" }),
     visitantes: () => ({ valor: num(a.visitantes), resposta: `${num(a.pageviews)} visualizações de página no total` }),
     visita_lead: () => ({ valor: pct(a.pvToLead), resposta: `${num(a.leadsCriados)} viraram lead dos ${num(a.visitantes)} visitantes` }),
+    sla_1h: () => { const t = v.frtDist.reduce((s, x) => s + x, 0); const ok = (v.frtDist[0] ?? 0) + (v.frtDist[1] ?? 0) + (v.frtDist[2] ?? 0) + (v.frtDist[3] ?? 0); return { valor: t > 0 ? pct(ok / t) : "sem dados", resposta: "leads cuja 1ª resposta humana veio em até 1 hora" }; },
+    sla_24h: () => { const t = v.frtDist.reduce((s, x) => s + x, 0); const ok = t - (v.frtDist[6] ?? 0); return { valor: t > 0 ? pct(ok / t) : "sem dados", resposta: "leads cuja 1ª resposta humana veio em até 24 horas" }; },
+    velocidade_fechamento: () => ({ valor: fmtMin(d.complementar.velocidadeFechamentoHoras == null ? null : d.complementar.velocidadeFechamentoHoras * 60), resposta: "tempo típico entre o lead entrar e o primeiro pagamento" }),
   };
   return map[id]?.() ?? null;
 }
@@ -185,6 +196,27 @@ function renderChart(id: string, d: Data, viz: string) {
     const cs = d.aquisicao.porCanal.slice(0, 6); const max = Math.max(...cs.map((x) => x.valor), 1);
     return <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "center", height: "100%" }}>{cs.map((ch) => (
       <div key={ch.nome}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}><span style={{ color: "#475569" }}>{ch.nome.replace("www.", "").replace(".com", "")}</span><span style={{ color: C.big, fontWeight: 600 }}>{num(ch.valor)}</span></div><div style={{ height: 6, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${(ch.valor / max) * 100}%`, height: "100%", background: C.accent, opacity: 0.85 }} /></div></div>
+    ))}</div>;
+  }
+  if (id === "funil_estagio") {
+    const es = d.complementar.funilEstagio; const max = Math.max(...es.map((x) => x.n), 1);
+    if (es.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem leads no período</div>;
+    return <div style={{ display: "flex", flexDirection: "column", gap: 7, overflow: "auto", height: "100%" }}>{es.map((s) => (
+      <div key={s.estagio}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, marginBottom: 3 }}><span style={{ color: "#475569" }}>{s.estagio}</span><span style={{ color: C.big, fontWeight: 600 }}>{num(s.n)}</span></div><div style={{ height: 6, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${(s.n / max) * 100}%`, height: "100%", background: C.accent, opacity: 0.8 }} /></div></div>
+    ))}</div>;
+  }
+  if (id === "produtividade") {
+    const ps = d.complementar.produtividade; const max = Math.max(...ps.map((x) => x.leads), 1);
+    if (ps.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem vendedor atribuído no período</div>;
+    return <div style={{ display: "flex", flexDirection: "column", gap: 8, overflow: "auto", height: "100%" }}>{ps.map((s) => (
+      <div key={s.vendedor}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}><span style={{ color: "#475569" }}>{s.vendedor}</span><span style={{ color: C.answer }}><span style={{ color: C.big, fontWeight: 600 }}>{num(s.leads)}</span> leads · <span style={{ color: C.up, fontWeight: 600 }}>{num(s.pagantes)} pagaram</span></span></div><div style={{ height: 7, borderRadius: 3, background: C.track, overflow: "hidden", position: "relative" }}><div style={{ width: `${(s.leads / max) * 100}%`, height: "100%", background: C.accentSoft }} /><div style={{ position: "absolute", top: 0, left: 0, width: `${(s.pagantes / max) * 100}%`, height: "100%", background: C.accent }} /></div></div>
+    ))}</div>;
+  }
+  if (id === "motivos_perda") {
+    const ms = d.complementar.motivosPerda; const max = Math.max(...ms.map((x) => x.n), 1);
+    if (ms.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>sem perdas declaradas no período</div>;
+    return <div style={{ display: "flex", flexDirection: "column", gap: 8, overflow: "auto", height: "100%" }}>{ms.map((s) => (
+      <div key={s.motivo}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}><span style={{ color: "#475569" }}>{s.motivo}</span><span style={{ color: C.big, fontWeight: 600 }}>{num(s.n)}</span></div><div style={{ height: 6, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${(s.n / max) * 100}%`, height: "100%", background: C.down, opacity: 0.7 }} /></div></div>
     ))}</div>;
   }
   return null;
@@ -260,6 +292,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
             <select value={filters.landingVariant ?? ""} onChange={(e) => navigate({ lv: e.target.value || null })} style={selStyle}><option value="">Landing: todas</option>{filterOptions.landingVariants.map((x) => <option key={x} value={x}>{x}</option>)}</select>
           )}
           <button onClick={handleRefresh} disabled={refreshing} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px solid ${C.accent}`, background: C.accent, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", animation: refreshing ? "spin 0.8s linear infinite" : "none" }}>↻</span>{refreshing ? "..." : "Atualizar"}</button>
+          <Link href="/admin/dashboard/banco" style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, textDecoration: "none" }}>⛁ Banco</Link>
           <button onClick={() => setEdit(!edit)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, cursor: "pointer", border: `1px solid ${edit ? C.accent : C.border}`, background: edit ? "#eef1f5" : "#fff", color: C.title }}>{edit ? "✓ Concluir" : "✎ Editar"}</button>
         </div>
       </div>
@@ -271,10 +304,19 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
             <button onClick={() => setShowAdd(!showAdd)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px dashed ${C.accent}`, background: "#fff", color: C.accent, cursor: "pointer" }}>+ Adicionar métrica</button>
             {showAdd && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 30, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.12)", padding: 8, width: 280, maxHeight: 320, overflow: "auto" }}>
-                {CATALOG.filter((d) => !activeIds.includes(d.id)).length === 0 ? <div style={{ fontSize: 12, color: C.muted, padding: 8 }}>Tudo já está no painel.</div> :
-                  CATALOG.filter((d) => !activeIds.includes(d.id)).map((d) => (
-                    <button key={d.id} onClick={() => addWidget(d.id)} style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12.5, padding: "7px 9px", borderRadius: 6, border: "none", background: "transparent", color: C.title, cursor: "pointer" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>{d.titulo} <span style={{ color: C.muted, fontSize: 10 }}>{d.kind === "chart" ? "gráfico" : ""}</span></button>
-                  ))}
+                {(["principal", "complementar"] as const).map((grupo) => {
+                  const itens = CATALOG.filter((d) => !activeIds.includes(d.id) && (d.grupo ?? "principal") === grupo);
+                  if (itens.length === 0) return null;
+                  return (
+                    <div key={grupo} style={{ marginBottom: 6 }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.6, padding: "6px 9px 3px" }}>{grupo === "principal" ? "Principais" : "Complementares"}</div>
+                      {itens.map((d) => (
+                        <button key={d.id} onClick={() => addWidget(d.id)} style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12.5, padding: "7px 9px", borderRadius: 6, border: "none", background: "transparent", color: C.title, cursor: "pointer" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>{d.titulo} <span style={{ color: C.muted, fontSize: 10 }}>{d.kind === "chart" ? "gráfico" : ""}</span></button>
+                      ))}
+                    </div>
+                  );
+                })}
+                {CATALOG.filter((d) => !activeIds.includes(d.id)).length === 0 && <div style={{ fontSize: 12, color: C.muted, padding: 8 }}>Tudo já está no painel.</div>}
               </div>
             )}
           </div>

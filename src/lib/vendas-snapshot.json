@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T16:12:21.749Z",
+  "generatedAt": "2026-06-23T17:00:05.311Z",
   "filters": {
     "start": "2026-05-24",
     "end": "2026-06-23",
@@ -266,10 +266,10 @@
     ]
   },
   "aquisicao": {
-    "pageviews": 3715,
-    "visitantes": 2747,
-    "leadsCriados": 325,
-    "pvToLead": 0.11831088460138332,
+    "pageviews": 3722,
+    "visitantes": 2751,
+    "leadsCriados": 326,
+    "pvToLead": 0.11850236277717194,
     "porCanal": [
       {
         "nome": "www.youtube.com",
@@ -277,15 +277,15 @@
       },
       {
         "nome": "$direct",
-        "valor": 906
+        "valor": 911
       },
       {
         "nome": "www.google.com",
-        "valor": 812
+        "valor": 813
       },
       {
         "nome": "instagram.com",
-        "valor": 552
+        "valor": 553
       },
       {
         "nome": "l.instagram.com",
@@ -307,11 +307,11 @@
     "porDevice": [
       {
         "nome": "Desktop",
-        "valor": 2051
+        "valor": 2054
       },
       {
         "nome": "Mobile",
-        "valor": 1656
+        "valor": 1660
       },
       {
         "nome": "Tablet",
@@ -321,7 +321,7 @@
     "porPais": [
       {
         "nome": "Brazil",
-        "valor": 3538
+        "valor": 3545
       },
       {
         "nome": "United States",
@@ -355,7 +355,7 @@
     "conversaoCanal": [
       {
         "canal": "www.google.com",
-        "leads": 77,
+        "leads": 78,
         "clientes": 7
       },
       {
@@ -507,14 +507,63 @@
       },
       {
         "date": "2026-06-23",
-        "count": 78
+        "count": 85
       }
     ],
-    "funilPageview": 3715,
-    "funilFormStep1": 360,
-    "funilFormCompleto": 343,
-    "funilLead": 325,
+    "funilPageview": 3722,
+    "funilFormStep1": 361,
+    "funilFormCompleto": 344,
+    "funilLead": 326,
     "funilCliente": 15
+  },
+  "complementar": {
+    "velocidadeFechamentoHoras": 73.16286736111111,
+    "funilEstagio": [
+      {
+        "estagio": "Negociação",
+        "n": 29
+      },
+      {
+        "estagio": "Sem Contato",
+        "n": 10
+      },
+      {
+        "estagio": "Primeira abordagem",
+        "n": 69
+      },
+      {
+        "estagio": "Qualificação",
+        "n": 88
+      },
+      {
+        "estagio": "Simulação",
+        "n": 23
+      },
+      {
+        "estagio": "Fechamento",
+        "n": 13
+      },
+      {
+        "estagio": "Finalizado",
+        "n": 19
+      },
+      {
+        "estagio": "Sem resposta",
+        "n": 14
+      },
+      {
+        "estagio": "Perdidos",
+        "n": 20
+      }
+    ],
+    "produtividade": [
+      {
+        "vendedor": "Jadhe Westerman",
+        "leads": 268,
+        "pagantes": 26
+      }
+    ],
+    "motivosPerda": []
   },
   "prev": {
     "receita": {

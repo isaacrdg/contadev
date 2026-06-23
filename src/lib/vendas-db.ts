@@ -624,6 +624,110 @@ export async function getLeadsPorDia(f: VendasFilters): Promise<LeadDia[]> {
   return rows.map((r) => ({ date: String(r.date), count: n(r.count) }));
 }
 
+// ── MÉTRICAS COMPLEMENTARES ───────────────────────────────────────────────────
+
+export interface ComplementarData {
+  velocidadeFechamentoHoras: number | null;
+  funilEstagio: { estagio: string; n: number }[];
+  produtividade: { vendedor: string; leads: number; pagantes: number }[];
+  motivosPerda: { motivo: string; n: number }[];
+}
+
+export async function getComplementares(f: VendasFilters): Promise<ComplementarData> {
+  const sql = getSql();
+  const lv = f.landingVariant || null;
+  const pv = f.pricingVariant || null;
+  const ini = f.start, fim = f.end;
+
+  const [vel, estagio, prod, motivos] = await Promise.all([
+    // Velocidade de fechamento: lead criado → primeiro pagamento (mediana, horas)
+    sql`
+      WITH pagos AS (
+        SELECT l.id, l.created_at, MIN(sp.paid_at) as first_paid
+        FROM leads l JOIN subscription_payments sp ON sp.lead_id = l.id
+        WHERE sp.status = 'paid'
+          AND l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+          AND l.deleted_at IS NULL
+          AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+          AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+        GROUP BY l.id, l.created_at
+      )
+      SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (first_paid - created_at)) / 3600) as horas
+      FROM pagos WHERE first_paid > created_at
+    `,
+    // Funil por estágio do CRM: onde estão os leads do período
+    sql`
+      SELECT cs.name as estagio, cs.position, COUNT(l.id)::int as n
+      FROM crm_stages cs
+      LEFT JOIN leads l ON l.crm_stage_id = cs.id AND l.deleted_at IS NULL
+        AND l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+        AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+        AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      GROUP BY cs.id, cs.name, cs.position
+      HAVING COUNT(l.id) > 0
+      ORDER BY cs.position
+    `,
+    // Produtividade por vendedor (atribuição atual de leads.assigned_employee_id)
+    sql`
+      SELECT e.name as vendedor,
+        COUNT(l.id)::int as leads,
+        COUNT(l.id) FILTER (WHERE EXISTS (SELECT 1 FROM lead_subscriptions s WHERE s.lead_id = l.id AND s.subscription_status = 'active'))::int as pagantes
+      FROM leads l JOIN employees e ON e.id = l.assigned_employee_id
+      WHERE l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+        AND l.deleted_at IS NULL
+        AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+        AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      GROUP BY e.id, e.name
+      ORDER BY pagantes DESC, leads DESC
+      LIMIT 10
+    `,
+    // Motivos de perda (lead_losses + lead_loss_reasons)
+    sql`
+      SELECT COALESCE(lr.name, '(sem motivo)') as motivo, COUNT(*)::int as n
+      FROM lead_losses ll
+      LEFT JOIN lead_loss_reasons lr ON lr.id = ll.loss_reason_id
+      JOIN leads l ON l.id = ll.lead_id
+      WHERE l.created_at >= ${ini}::date AND l.created_at < (${fim}::date + interval '1 day')
+        AND l.deleted_at IS NULL
+        AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
+        AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
+      GROUP BY lr.name ORDER BY n DESC LIMIT 8
+    `,
+  ]);
+
+  return {
+    velocidadeFechamentoHoras: toFloat(vel[0]?.horas),
+    funilEstagio: estagio.map((r) => ({ estagio: String(r.estagio), n: n(r.n) })),
+    produtividade: prod.map((r) => ({ vendedor: String(r.vendedor), leads: n(r.leads), pagantes: n(r.pagantes) })),
+    motivosPerda: motivos.map((r) => ({ motivo: String(r.motivo), n: n(r.n) })),
+  };
+}
+
+// ── EXPLORADOR DE BANCO (schema, read-only) ──────────────────────────────────
+
+export interface TabelaInfo {
+  tabela: string;
+  colunas: { nome: string; tipo: string }[];
+}
+
+export async function getSchema(): Promise<TabelaInfo[]> {
+  const sql = getSql();
+  // information_schema é metadado (barato, não varre dados).
+  const rows = await sql`
+    SELECT table_name, column_name, data_type
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+    ORDER BY table_name, ordinal_position
+  `;
+  const map = new Map<string, { nome: string; tipo: string }[]>();
+  for (const r of rows) {
+    const t = String(r.table_name);
+    if (!map.has(t)) map.set(t, []);
+    map.get(t)!.push({ nome: String(r.column_name), tipo: String(r.data_type) });
+  }
+  return Array.from(map.entries()).map(([tabela, colunas]) => ({ tabela, colunas }));
+}
+
 // ── RECEITA NOVA POR DIA ──────────────────────────────────────────────────────
 
 export async function getReceitaPorDia(f: VendasFilters): Promise<ReceitaDia[]> {
