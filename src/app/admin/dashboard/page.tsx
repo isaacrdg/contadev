@@ -13,6 +13,7 @@ import {
   type LeadDia,
   type FilterOptions,
 } from "@/lib/vendas-db";
+import { getAquisicaoMetrics, AQUISICAO_ZERO, type AquisicaoData } from "@/lib/posthog-db";
 import DashboardClient from "./DashboardClient";
 import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
@@ -29,6 +30,7 @@ const snapshot = snapshotData as unknown as {
   perda: PerdaData;
   leadsPorDia: LeadDia[];
   filterOptions: FilterOptions;
+  aquisicao: AquisicaoData;
   prev: { receita: ReceitaData; conversao: ConversaoData; velocidade: VelocidadeData; perda: PerdaData };
 };
 
@@ -52,6 +54,8 @@ const cachedLeadsPorDia = unstable_cache(
   (f: VendasFilters, _rev: string) => getLeadsPorDia(f), ["vendas-leadsdia"]);
 const cachedFilterOptions = unstable_cache(
   (_rev: string) => getFilterOptions(), ["vendas-filteropts"]);
+const cachedAquisicao = unstable_cache(
+  (start: string, end: string, _rev: string) => getAquisicaoMetrics(start, end), ["vendas-aquisicao"]);
 // Carimbo de quando o cache foi populado (= última leitura real do banco) por `rev`.
 const cachedStamp = unstable_cache(
   async (_rev: string) => new Date().toISOString(), ["vendas-stamp"]);
@@ -134,17 +138,19 @@ export default async function DashboardPage({
         perda={snapshot.perda}
         leadsPorDia={snapshot.leadsPorDia}
         filterOptions={snapshot.filterOptions}
+        aquisicao={snapshot.aquisicao}
         prev={snapshot.prev}
       />
     );
   }
 
-  const [receita, conversao, velocidade, leadsPorDia, filterOptions] = await Promise.all([
+  const [receita, conversao, velocidade, leadsPorDia, filterOptions, aquisicao] = await Promise.all([
     cachedReceita(filters, rev).catch((e) => { console.error("[vendas] receita", e); return RECEITA_ZERO; }),
     cachedConversao(filters, rev).catch((e) => { console.error("[vendas] conversao", e); return CONVERSAO_ZERO; }),
     cachedVelocidade(filters, rev).catch((e) => { console.error("[vendas] velocidade", e); return VELOCIDADE_ZERO; }),
     cachedLeadsPorDia(filters, rev).catch(() => []),
     cachedFilterOptions(rev).catch(() => ({ sources: [], landingVariants: [], pricingVariants: [] })),
+    cachedAquisicao(filters.start, filters.end, rev).catch((e) => { console.error("[posthog]", e); return AQUISICAO_ZERO; }),
   ]);
 
   const perda = await cachedPerda(filters, conversao.leadsEntrados, rev)
@@ -174,6 +180,7 @@ export default async function DashboardPage({
       perda={perda}
       leadsPorDia={leadsPorDia}
       filterOptions={filterOptions}
+      aquisicao={aquisicao}
       prev={{
         receita: prevReceita,
         conversao: prevConversao,

@@ -17,6 +17,7 @@ import type {
   VendasFilters, ReceitaData, ConversaoData,
   VelocidadeData, PerdaData, LeadDia, FilterOptions,
 } from "@/lib/vendas-db";
+import type { AquisicaoData } from "@/lib/posthog-db";
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ interface DashboardData {
   perda: PerdaData;
   leadsPorDia: LeadDia[];
   filterOptions: FilterOptions;
+  aquisicao: AquisicaoData;
 }
 
 interface PrevData {
@@ -57,12 +59,13 @@ const CATEGORY_DOT: Record<string, string> = {
   conversao:  "#22c55e",
   velocidade: "#3b82f6",
   perda:      "#ef4444",
+  aquisicao:  "#06b6d4",
 };
 
 interface WidgetDef {
   id: string;
   title: string;
-  category: "receita" | "conversao" | "velocidade" | "perda";
+  category: "receita" | "conversao" | "velocidade" | "perda" | "aquisicao";
   w: number;
   h: number;
 }
@@ -102,6 +105,13 @@ const WIDGET_CATALOG: WidgetDef[] = [
   { id: "taxa_perda",        title: "Taxa de Perda",            category: "perda",      w: 3, h: 2 },
   { id: "reentradas_p",      title: "Reentradas pós-Perda",     category: "perda",      w: 3, h: 2 },
   { id: "cancelamentos",     title: "Cancelamentos (churn)",    category: "perda",      w: 3, h: 2 },
+  { id: "pageviews",         title: "Page Views",               category: "aquisicao",  w: 3, h: 2 },
+  { id: "visitantes",        title: "Visitantes Únicos",        category: "aquisicao",  w: 3, h: 2 },
+  { id: "pv_to_lead",        title: "Visitante → Lead",         category: "aquisicao",  w: 3, h: 2 },
+  { id: "canais",            title: "Canais (tráfego)",         category: "aquisicao",  w: 4, h: 4 },
+  { id: "device",            title: "Device",                   category: "aquisicao",  w: 4, h: 3 },
+  { id: "geo",               title: "País",                     category: "aquisicao",  w: 4, h: 4 },
+  { id: "funil_web",         title: "Funil Web",                category: "aquisicao",  w: 4, h: 4 },
 ];
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
@@ -139,6 +149,14 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: "taxa_perda",       x: 6,  y: 17, w: 3, h: 2 } as LayoutItem,
   { i: "cancelamentos",    x: 9,  y: 17, w: 3, h: 2 } as LayoutItem,
   { i: "reentradas_p",     x: 0,  y: 19, w: 3, h: 2 } as LayoutItem,
+  // Aquisição (PostHog)
+  { i: "pageviews",        x: 0,  y: 21, w: 3, h: 2 } as LayoutItem,
+  { i: "visitantes",       x: 3,  y: 21, w: 3, h: 2 } as LayoutItem,
+  { i: "pv_to_lead",       x: 6,  y: 21, w: 3, h: 2 } as LayoutItem,
+  { i: "canais",           x: 0,  y: 23, w: 4, h: 4 } as LayoutItem,
+  { i: "funil_web",        x: 4,  y: 23, w: 4, h: 4 } as LayoutItem,
+  { i: "geo",              x: 8,  y: 23, w: 4, h: 4 } as LayoutItem,
+  { i: "device",           x: 0,  y: 27, w: 4, h: 3 } as LayoutItem,
 ];
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
@@ -174,13 +192,13 @@ interface KpiData {
   value: string;
   label: string;
   sub?: string;
-  accent: "purple" | "green" | "red" | "blue" | "neutral" | "disabled";
+  accent: "purple" | "green" | "red" | "blue" | "cyan" | "neutral" | "disabled";
   p50?: string;
   p90?: string;
 }
 
 function resolveKpi(id: string, d: DashboardData): KpiData | null {
-  const { receita: r, conversao: c, velocidade: v, perda: p } = d;
+  const { receita: r, conversao: c, velocidade: v, perda: p, aquisicao: a } = d;
   const map: Record<string, () => KpiData> = {
     clientes_ativos: () => ({ value: fmtNum(r.clientesAtivos),          label: "Clientes Ativos",          sub: "assinaturas ativas hoje",        accent: "purple" }),
     mrr:             () => ({ value: fmtBRL(r.mrr),                     label: "MRR Atual",                sub: "recorrência mensal equiv.",       accent: "purple" }),
@@ -213,6 +231,9 @@ function resolveKpi(id: string, d: DashboardData): KpiData | null {
     taxa_perda:      () => ({ value: fmtPct(p.taxaPerda),               label: "Taxa de Perda",            sub: "(declarados + ghosting) / leads", accent: p.taxaPerda > 0.4 ? "red" : p.taxaPerda > 0.2 ? "neutral" : "green" }),
     reentradas_p:    () => ({ value: fmtNum(p.reentradas),              label: "Reentradas pós-Perda",     sub: "perdido → voltou ao funil",      accent: p.reentradas > 0 ? "green" : "neutral" }),
     cancelamentos:   () => ({ value: fmtNum(p.cancelamentos),          label: "Cancelamentos (churn)",    sub: "assinaturas canceladas no período", accent: p.cancelamentos > 0 ? "red" : "neutral" }),
+    pageviews:       () => ({ value: fmtNum(a.pageviews),               label: "Page Views",               sub: "visualizações de página (PostHog)", accent: "cyan" }),
+    visitantes:      () => ({ value: fmtNum(a.visitantes),              label: "Visitantes Únicos",        sub: "pessoas distintas no período",   accent: "cyan" }),
+    pv_to_lead:      () => ({ value: a.visitantes > 0 ? fmtPct(a.pvToLead) : "—", label: "Visitante → Lead", sub: `${a.leadsCriados} leads / ${a.visitantes} visitantes`, accent: a.pvToLead > 0.1 ? "green" : "cyan" }),
   };
   return map[id]?.() ?? null;
 }
@@ -224,6 +245,7 @@ const ACCENT_HEX: Record<string, string> = {
   green:    "#22c55e",
   red:      "#ef4444",
   blue:     "#60a5fa",
+  cyan:     "#22d3ee",
   neutral:  "rgba(255,255,255,0.75)",
   disabled: "rgba(255,255,255,0.2)",
 };
@@ -517,6 +539,70 @@ function FunilWidget({ c }: { c: ConversaoData }) {
                 </div>
               </div>
               <div className="h-4 rounded overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+                <div className="h-full rounded transition-all" style={{ width: `${pct * 100}%`, background: s.color, opacity: 0.7 }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Aquisição: ranking de buckets (canal / device / país) ──────────────────────
+
+function BucketBarWidget({ title, data, color }: { title: string; data: { nome: string; valor: number }[]; color: string }) {
+  const max = Math.max(...data.map((d) => d.valor), 1);
+  return (
+    <div className="flex flex-col h-full px-4 py-3.5">
+      <div className="text-[10px] font-medium tracking-wide mb-3" style={{ color: "rgba(255,255,255,0.42)" }}>{title}</div>
+      <div className="flex-1 overflow-auto min-h-0 space-y-1.5" style={{ scrollbarWidth: "thin" }}>
+        {data.length === 0 ? (
+          <div className="text-[12px]" style={{ color: "rgba(255,255,255,0.2)" }}>Sem dados</div>
+        ) : data.map((d) => (
+          <div key={d.nome}>
+            <div className="flex justify-between text-[11px] mb-0.5">
+              <span className="truncate mr-2" style={{ color: "rgba(255,255,255,0.6)" }}>{d.nome}</span>
+              <span className="font-semibold tabular-nums" style={{ color: "rgba(255,255,255,0.8)" }}>{fmtNum(d.valor)}</span>
+            </div>
+            <div className="h-1.5 rounded overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <div className="h-full rounded" style={{ width: `${(d.valor / max) * 100}%`, background: color, opacity: 0.75 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Aquisição: funil web (pageview → form → lead → cliente) ─────────────────────
+
+function FunilWebWidget({ a }: { a: AquisicaoData }) {
+  const stages = [
+    { label: "Page views",    value: a.funilPageview,     color: "#06b6d4" },
+    { label: "Form etapa 1",  value: a.funilFormStep1,    color: "#3b82f6" },
+    { label: "Form completo", value: a.funilFormCompleto, color: "#7553ff" },
+    { label: "Lead criado",   value: a.funilLead,         color: "#22c55e" },
+    { label: "Cliente",       value: a.funilCliente,      color: "#eab308" },
+  ];
+  const max = stages[0].value || 1;
+  return (
+    <div className="flex flex-col h-full px-4 py-3.5">
+      <div className="text-[10px] font-medium tracking-wide mb-3" style={{ color: "rgba(255,255,255,0.42)" }}>Funil Web (PostHog)</div>
+      <div className="space-y-2 flex-1 flex flex-col justify-center">
+        {stages.map((s, i) => {
+          const pct = s.value / max;
+          const dropPct = i > 0 && stages[i - 1].value > 0 ? 1 - s.value / stages[i - 1].value : 0;
+          return (
+            <div key={s.label}>
+              <div className="flex justify-between text-[11px] mb-1">
+                <span style={{ color: "rgba(255,255,255,0.6)" }}>{s.label}</span>
+                <div className="flex items-center gap-2">
+                  {i > 0 && dropPct > 0 && <span className="text-[10px]" style={{ color: "#ef444488" }}>−{fmtPct(dropPct)}</span>}
+                  <span className="font-semibold tabular-nums" style={{ color: "rgba(255,255,255,0.8)" }}>{fmtNum(s.value)}</span>
+                </div>
+              </div>
+              <div className="h-3.5 rounded overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
                 <div className="h-full rounded transition-all" style={{ width: `${pct * 100}%`, background: s.color, opacity: 0.7 }} />
               </div>
             </div>
@@ -837,8 +923,8 @@ function QueryModal({ initial, onSave, onClose }: { initial?: CustomQuery; onSav
 // ── Add widget panel ───────────────────────────────────────────────────────────
 
 function AddWidgetPanel({ activeIds, onAdd, onNewQuery, onClose }: { activeIds: string[]; onAdd: (id: string) => void; onNewQuery: () => void; onClose: () => void; }) {
-  const cats = ["receita", "conversao", "velocidade", "perda"] as const;
-  const catLabel = { receita: "Receita", conversao: "Conversão", velocidade: "Velocidade", perda: "Perda" } as const;
+  const cats = ["receita", "conversao", "velocidade", "perda", "aquisicao"] as const;
+  const catLabel = { receita: "Receita", conversao: "Conversão", velocidade: "Velocidade", perda: "Perda", aquisicao: "Aquisição" } as const;
   const inactive = WIDGET_CATALOG.filter((w) => !activeIds.includes(w.id));
 
   return (
@@ -891,7 +977,7 @@ function AddWidgetPanel({ activeIds, onAdd, onNewQuery, onClose }: { activeIds: 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function DashboardClient({
-  filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions, prev, dataStamp,
+  filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions, aquisicao, prev, dataStamp,
 }: Props) {
   const router   = useRouter();
   const pathname = usePathname();
@@ -916,9 +1002,9 @@ export default function DashboardClient({
     } catch { return "—"; }
   };
 
-  const data: DashboardData = { receita, conversao, velocidade, perda, leadsPorDia, filterOptions };
+  const data: DashboardData = { receita, conversao, velocidade, perda, leadsPorDia, filterOptions, aquisicao };
   const prevData: DashboardData | null = prev
-    ? { ...prev, leadsPorDia: [], filterOptions }
+    ? { ...prev, leadsPorDia: [], filterOptions, aquisicao }
     : null;
 
   const [layout, setLayout]               = useState<LayoutItem[]>(DEFAULT_LAYOUT);
@@ -946,7 +1032,7 @@ export default function DashboardClient({
   useEffect(() => {
     setMounted(true);
     try {
-      const sl = localStorage.getItem("vendas-layout-v6");
+      const sl = localStorage.getItem("vendas-layout-v7");
       if (sl) setLayout(JSON.parse(sl));
       const sq = localStorage.getItem("vendas-queries-v1");
       if (sq) setCustomQueries(JSON.parse(sq));
@@ -956,7 +1042,7 @@ export default function DashboardClient({
   }, []);
 
   const persistLayout = useCallback((l: LayoutItem[]) => {
-    try { localStorage.setItem("vendas-layout-v6", JSON.stringify(l)); } catch {}
+    try { localStorage.setItem("vendas-layout-v7", JSON.stringify(l)); } catch {}
     setLayout(l);
   }, []);
 
@@ -1021,6 +1107,10 @@ export default function DashboardClient({
     if (id === "leads_dia")  return <LeadsDiaWidget data={leadsPorDia} viz={(viz as LeadsViz) ?? "area"} />;
     if (id === "funil")      return <FunilWidget c={conversao} />;
     if (id === "planos_mix") return <PlanosMixWidget r={receita} />;
+    if (id === "canais")     return <BucketBarWidget title="Canais (origem do tráfego)" data={aquisicao.porCanal} color="#06b6d4" />;
+    if (id === "device")     return <BucketBarWidget title="Device" data={aquisicao.porDevice} color="#06b6d4" />;
+    if (id === "geo")        return <BucketBarWidget title="País" data={aquisicao.porPais} color="#06b6d4" />;
+    if (id === "funil_web")  return <FunilWebWidget a={aquisicao} />;
 
     if (id.startsWith("query_")) {
       const q = customQueries.find((c) => c.id === id);

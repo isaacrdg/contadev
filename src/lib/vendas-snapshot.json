@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-06-22T20:05:10.340Z",
+  "generatedAt": "2026-06-23T13:37:47.960Z",
   "filters": {
-    "start": "2026-05-23",
-    "end": "2026-06-22",
+    "start": "2026-05-24",
+    "end": "2026-06-23",
     "source": null,
     "landingVariant": null,
     "pricingVariant": null
   },
   "receita": {
-    "totalCobrado": 201401.84,
+    "totalCobrado": 198452.94,
     "valorNovosContratos": 44495.54,
     "mrr": 176019.89,
     "clientesAtivos": 597,
@@ -22,9 +22,9 @@
     "upgrades": 0
   },
   "conversao": {
-    "leadsEntrados": 290,
+    "leadsEntrados": 286,
     "fechamentos": 28,
-    "closeRate": 0.09655172413793103,
+    "closeRate": 0.0979020979020979,
     "acessos": 31,
     "taxaPagamento": 0.9032258064516129,
     "perdaPagamento": 2,
@@ -32,18 +32,18 @@
     "multiplosEntradas": 22,
     "reentradas": 0,
     "quicam": 0,
-    "funnelEntrados": 290,
-    "funnelTemConversa": 266,
+    "funnelEntrados": 286,
+    "funnelTemConversa": 263,
     "funnelAcesso": 31,
     "funnelPagou": 28
   },
   "velocidade": {
-    "frtP50": 1248.4192907833333,
-    "frtP90": 6581.073471566667,
-    "secondRespP50": 1665.0481764333333,
-    "secondRespP90": 7301.448655726667,
-    "timeBetweenP50": 3.988204083333333,
-    "timeBetweenP90": 1048.2077156266666,
+    "frtP50": 1221.6207109749998,
+    "frtP90": 6626.749567135004,
+    "secondRespP50": 1621.3978262083333,
+    "secondRespP90": 7306.032149056667,
+    "timeBetweenP50": 3.9155066,
+    "timeBetweenP90": 1047.083914096667,
     "msgsAteFecharP50": 96,
     "msgsAtePerdidoP50": null,
     "frtDist": [
@@ -53,7 +53,7 @@
       3,
       19,
       34,
-      56
+      55
     ],
     "secondDist": [
       2,
@@ -62,30 +62,26 @@
       2,
       9,
       28,
-      55
+      54
     ],
     "betweenDist": [
-      379,
-      70,
-      40,
-      35,
+      378,
+      68,
+      39,
+      34,
       71,
       87,
-      37
+      36
     ]
   },
   "perda": {
     "perdidosDeclarados": 0,
-    "perdidosGhosting": 147,
-    "taxaPerda": 0.506896551724138,
+    "perdidosGhosting": 152,
+    "taxaPerda": 0.5314685314685315,
     "reentradas": 0,
     "cancelamentos": 3
   },
   "leadsPorDia": [
-    {
-      "date": "2026-05-23",
-      "count": 4
-    },
     {
       "date": "2026-05-24",
       "count": 6
@@ -199,45 +195,138 @@
       "treatment"
     ]
   },
+  "aquisicao": {
+    "pageviews": 3697,
+    "visitantes": 2741,
+    "leadsCriados": 323,
+    "pvToLead": 0.11784020430499817,
+    "porCanal": [
+      {
+        "nome": "www.youtube.com",
+        "valor": 968
+      },
+      {
+        "nome": "$direct",
+        "valor": 899
+      },
+      {
+        "nome": "www.google.com",
+        "valor": 810
+      },
+      {
+        "nome": "instagram.com",
+        "valor": 551
+      },
+      {
+        "nome": "l.instagram.com",
+        "valor": 201
+      },
+      {
+        "nome": "m.facebook.com",
+        "valor": 71
+      },
+      {
+        "nome": "l.facebook.com",
+        "valor": 39
+      },
+      {
+        "nome": "www.bing.com",
+        "valor": 31
+      }
+    ],
+    "porDevice": [
+      {
+        "nome": "Desktop",
+        "valor": 2036
+      },
+      {
+        "nome": "Mobile",
+        "valor": 1653
+      },
+      {
+        "nome": "Tablet",
+        "valor": 8
+      }
+    ],
+    "porPais": [
+      {
+        "nome": "Brazil",
+        "valor": 3521
+      },
+      {
+        "nome": "United States",
+        "valor": 40
+      },
+      {
+        "nome": "Portugal",
+        "valor": 37
+      },
+      {
+        "nome": "Canada",
+        "valor": 10
+      },
+      {
+        "nome": "Germany",
+        "valor": 9
+      },
+      {
+        "nome": "The Netherlands",
+        "valor": 9
+      },
+      {
+        "nome": "United Kingdom",
+        "valor": 9
+      },
+      {
+        "nome": "Paraguay",
+        "valor": 8
+      }
+    ],
+    "funilPageview": 3697,
+    "funilFormStep1": 358,
+    "funilFormCompleto": 341,
+    "funilLead": 323,
+    "funilCliente": 14
+  },
   "prev": {
     "receita": {
-      "totalCobrado": 182518.47,
-      "valorNovosContratos": 28009.46,
+      "totalCobrado": 178387.75,
+      "valorNovosContratos": 26809.86,
       "mrr": 176019.89,
       "clientesAtivos": 597,
       "emRisco": 66,
       "qtdNovosAnuais": 6,
       "valorNovosAnuais": 15114.96,
-      "qtdNovosMensais": 46,
-      "valorNovosMensais": 12894.5,
-      "assinou": 47,
-      "pagou": 39,
+      "qtdNovosMensais": 42,
+      "valorNovosMensais": 11694.9,
+      "assinou": 44,
+      "pagou": 36,
       "upgrades": 3
     },
     "conversao": {
-      "leadsEntrados": 350,
-      "fechamentos": 39,
-      "closeRate": 0.11142857142857143,
-      "acessos": 47,
-      "taxaPagamento": 0.8297872340425532,
+      "leadsEntrados": 343,
+      "fechamentos": 36,
+      "closeRate": 0.10495626822157435,
+      "acessos": 44,
+      "taxaPagamento": 0.8181818181818182,
       "perdaPagamento": 3,
       "inadimplentes": 3,
-      "multiplosEntradas": 7,
+      "multiplosEntradas": 6,
       "reentradas": 0,
       "quicam": 0,
-      "funnelEntrados": 350,
-      "funnelTemConversa": 231,
-      "funnelAcesso": 47,
-      "funnelPagou": 39
+      "funnelEntrados": 343,
+      "funnelTemConversa": 228,
+      "funnelAcesso": 44,
+      "funnelPagou": 36
     },
     "velocidade": {
-      "frtP50": 1367.3071890166666,
-      "frtP90": 20287.302066683333,
-      "secondRespP50": 1571.3584592833333,
-      "secondRespP90": 20886.54892654,
-      "timeBetweenP50": 62.68052715,
-      "timeBetweenP90": 1361.207157806667,
-      "msgsAteFecharP50": 75,
+      "frtP50": 1468.305427,
+      "frtP90": 20276.641258975,
+      "secondRespP50": 2890.7262325250003,
+      "secondRespP90": 20773.024038396674,
+      "timeBetweenP50": 60.679770833333336,
+      "timeBetweenP90": 1377.5306236066674,
+      "msgsAteFecharP50": 74,
       "msgsAtePerdidoP50": 7,
       "frtDist": [
         0,
@@ -246,7 +335,7 @@
         3,
         7,
         19,
-        30
+        31
       ],
       "secondDist": [
         0,
@@ -255,22 +344,22 @@
         0,
         6,
         15,
-        24
+        25
       ],
       "betweenDist": [
-        61,
-        13,
-        10,
+        62,
         15,
+        11,
+        16,
         47,
         39,
-        18
+        19
       ]
     },
     "perda": {
       "perdidosDeclarados": 3,
-      "perdidosGhosting": 226,
-      "taxaPerda": 0.6542857142857142,
+      "perdidosGhosting": 225,
+      "taxaPerda": 0.6647230320699709,
       "reentradas": 0,
       "cancelamentos": 0
     }

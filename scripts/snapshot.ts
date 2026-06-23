@@ -4,10 +4,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 async function main() {
   const envTxt = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
-  process.env.DATABASE_URL = envTxt
-    .match(/DATABASE_URL\s*=\s*(.+)/)![1].trim().replace(/^["']|["']$/g, "");
+  for (const line of envTxt.split("\n")) {
+    if (line.trim().startsWith("#")) continue;
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
+    if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  }
 
   const db = await import("../src/lib/vendas-db.ts");
+  const ph = await import("../src/lib/posthog-db.ts");
 
   const end = new Date();
   const start = new Date(end);
@@ -26,6 +30,8 @@ async function main() {
     db.getFilterOptions(),
   ]);
   const perda = await db.getPerdaMetrics(filters, conversao.leadsEntrados);
+  const aquisicao = await ph.getAquisicaoMetrics(filters.start, filters.end)
+    .catch((e) => { console.error("[posthog]", e.message); return ph.AQUISICAO_ZERO; });
 
   // Período anterior (mesma duração, imediatamente antes) — pra comparação.
   const days = Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
@@ -42,7 +48,7 @@ async function main() {
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
-    filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions,
+    filters, receita, conversao, velocidade, perda, leadsPorDia, filterOptions, aquisicao,
     prev: { receita: pReceita, conversao: pConversao, velocidade: pVelocidade, perda: pPerda },
   };
 
@@ -55,6 +61,7 @@ async function main() {
   console.log("CONVERSAO:",  JSON.stringify(conversao));
   console.log("VELOCIDADE:", JSON.stringify({ ...velocidade, frtDist: velocidade.frtDist, secondDist: velocidade.secondDist, betweenDist: velocidade.betweenDist }));
   console.log("PERDA:",      JSON.stringify(perda));
+  console.log("AQUISICAO:",  JSON.stringify({ pv: aquisicao.pageviews, vis: aquisicao.visitantes, leads: aquisicao.leadsCriados, pvToLead: aquisicao.pvToLead, canais: aquisicao.porCanal.length }));
   console.log("LEADS/DIA:",  leadsPorDia.length, "dias com dados");
   console.log("FILTROS:",    JSON.stringify(filterOptions));
   console.log("\nSnapshot salvo em src/lib/vendas-snapshot.json");
