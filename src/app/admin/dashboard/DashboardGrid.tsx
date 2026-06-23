@@ -28,10 +28,11 @@ const C = {
   // Métricas de estado atual (não dependem do período) ganham um tom levemente distinto
   stateBg: "#fbfaf7", stateAccent: "#b08243", stateTint: "#f3ede1",
 };
-const brl = (v: number) => v >= 1_000_000 ? `R$ ${(v / 1_000_000).toFixed(1).replace(".", ",")}M` : v >= 1_000 ? `R$ ${Math.round(v / 1_000)}k` : `R$ ${Math.round(v)}`;
-const brlFull = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-const num = (v: number) => v.toLocaleString("pt-BR");
-const pct = (r: number) => `${Math.round(r * 100)}%`;
+// Formatadores à prova de undefined/null (dado parcial ou cache antigo não quebra a tela)
+const brl = (v: number | null | undefined) => { const n = Number(v ?? 0); return n >= 1_000_000 ? `R$ ${(n / 1_000_000).toFixed(1).replace(".", ",")}M` : n >= 1_000 ? `R$ ${Math.round(n / 1_000)}k` : `R$ ${Math.round(n)}`; };
+const brlFull = (v: number | null | undefined) => Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const num = (v: number | null | undefined) => Number(v ?? 0).toLocaleString("pt-BR");
+const pct = (r: number | null | undefined) => `${Math.round(Number(r ?? 0) * 100)}%`;
 const fmtMin = (m: number | null) => m == null ? "sem dados" : m < 60 ? `${Math.round(m)} min` : m < 1440 ? `${(m / 60).toFixed(1).replace(".", ",")} h` : `${(m / 1440).toFixed(1).replace(".", ",")} dias`;
 const fmtDia = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
