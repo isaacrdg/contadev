@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
-import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
+import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ReferenceLine } from "recharts";
 import { refreshVendas, runSelectQuery, drillLeads } from "./actions";
 import { FATURAS_ATRASO_FAIXAS } from "@/lib/vendas-db";
 import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData, DrillCol, DrillResult } from "@/lib/vendas-db";
@@ -161,7 +161,93 @@ function resolveKpi(id: string, d: Data): { valor: string; resposta: string; com
   return map[id]?.() ?? null;
 }
 
-function KpiView({ k, onDrill }: { k: { valor: string; resposta: string; comp?: Delta | null; pendente?: string }; onDrill?: () => void }) {
+// ── METAS ──────────────────────────────────────────────────────────────────────
+// Cada métrica tem uma natureza fixa: maior é melhor (receita, leads) ou menor é
+// melhor (tempo de resposta, faturas em atraso). A meta é só o valor alvo, salvo
+// no navegador (localStorage). Zero banco.
+type MetaTipo = "money" | "pct" | "num" | "min";
+type Direcao = "maior" | "menor";
+const META_SPEC: Record<string, { tipo: MetaTipo; direcao: Direcao }> = {
+  mrr: { tipo: "money", direcao: "maior" },
+  clientes_ativos: { tipo: "num", direcao: "maior" },
+  faturas_atraso: { tipo: "num", direcao: "menor" },
+  receita_nova: { tipo: "money", direcao: "maior" },
+  total_cobrado: { tipo: "money", direcao: "maior" },
+  ticket: { tipo: "money", direcao: "maior" },
+  leads: { tipo: "num", direcao: "maior" },
+  pagaram: { tipo: "num", direcao: "maior" },
+  close_rate: { tipo: "pct", direcao: "maior" },
+  taxa_pagamento: { tipo: "pct", direcao: "maior" },
+  frt: { tipo: "min", direcao: "menor" },
+  cancelamentos: { tipo: "num", direcao: "menor" },
+  quicam: { tipo: "num", direcao: "menor" },
+  perda_silenciosa: { tipo: "num", direcao: "menor" },
+  inad_primeiro: { tipo: "num", direcao: "menor" },
+  novos_anuais: { tipo: "num", direcao: "maior" },
+  novos_mensais: { tipo: "num", direcao: "maior" },
+  visitantes: { tipo: "num", direcao: "maior" },
+  visita_lead: { tipo: "pct", direcao: "maior" },
+};
+
+// Valor atual da métrica em unidades de exibição (pct em 0-100, tempo em minutos)
+function kpiCurrent(id: string, d: Data): number | null {
+  const r = d.receita, c = d.conversao, v = d.velocidade, p = d.perda, a = d.aquisicao;
+  const novosTotal = r.qtdNovosAnuais + r.qtdNovosMensais;
+  switch (id) {
+    case "mrr": return r.mrr;
+    case "clientes_ativos": return r.clientesAtivos;
+    case "faturas_atraso": return r.faturasAtrasoClientes;
+    case "receita_nova": return r.valorNovosContratos;
+    case "total_cobrado": return r.totalCobrado;
+    case "ticket": return novosTotal > 0 ? r.valorNovosContratos / novosTotal : null;
+    case "leads": return c.leadsEntrados;
+    case "pagaram": return c.fechamentos;
+    case "close_rate": return c.closeRate * 100;
+    case "taxa_pagamento": return c.taxaPagamento * 100;
+    case "frt": return v.frtP50;
+    case "cancelamentos": return p.cancelamentos;
+    case "quicam": return c.quicam;
+    case "perda_silenciosa": return p.perdidosGhosting;
+    case "inad_primeiro": return c.perdaPagamento;
+    case "novos_anuais": return r.qtdNovosAnuais;
+    case "novos_mensais": return r.qtdNovosMensais;
+    case "visitantes": return a.visitantes;
+    case "visita_lead": return a.pvToLead * 100;
+    default: return null;
+  }
+}
+const metaUnidade = (tipo: MetaTipo) => tipo === "money" ? "R$" : tipo === "pct" ? "%" : tipo === "min" ? "min" : "";
+const fmtMeta = (tipo: MetaTipo, val: number) => tipo === "money" ? brl(val) : tipo === "pct" ? `${val}%` : tipo === "min" ? fmtMin(val) : num(val);
+
+interface MetaInfo { fmt: string; status: string; frac: number; ating: boolean; arrow: string; color: string; }
+function computeMeta(id: string, d: Data, metas: Record<string, number>): MetaInfo | null {
+  const spec = META_SPEC[id]; const meta = metas[id];
+  if (!spec || meta == null || !(meta > 0)) return null;
+  const cur = kpiCurrent(id, d); if (cur == null) return null;
+  const maior = spec.direcao === "maior";
+  const ating = maior ? cur >= meta : cur <= meta;
+  const frac = maior ? Math.min(cur / meta, 1) : (cur > 0 ? Math.min(meta / cur, 1) : 1);
+  const ratio = Math.round((cur / meta) * 100);
+  const status = ating ? (maior ? "meta batida" : "dentro da meta") : (maior ? `${ratio}% da meta` : `${ratio}% do limite`);
+  const color = ating ? C.up : frac >= 0.66 ? "#b45309" : C.down;
+  return { fmt: fmtMeta(spec.tipo, meta), status, frac, ating, arrow: ating ? "▲" : "▼", color };
+}
+
+const METRIC_TITLE = (id: string) => STATE_TITLES[id] ?? CATALOG.find((d) => d.id === id)?.titulo ?? id;
+
+function MetaBar({ info }: { info: MetaInfo }) {
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10.5, marginBottom: 3 }}>
+        <span style={{ color: C.muted }}>meta {info.fmt}</span>
+        <span style={{ color: info.color, fontWeight: 600 }}>{info.arrow} {info.status}</span>
+      </div>
+      <div style={{ height: 5, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${info.frac * 100}%`, height: "100%", background: info.color }} /></div>
+    </div>
+  );
+}
+
+function KpiView({ k, metaInfo, onDrill }: { k: { valor: string; resposta: string; comp?: Delta | null; pendente?: string }; metaInfo?: MetaInfo | null; onDrill?: () => void }) {
   const [open, setOpen] = useState(false);
   const click = k.pendente ? (e: React.MouseEvent) => { e.stopPropagation(); setOpen((o) => !o); } : onDrill ? (e: React.MouseEvent) => { e.stopPropagation(); onDrill(); } : undefined;
   return (
@@ -175,6 +261,7 @@ function KpiView({ k, onDrill }: { k: { valor: string; resposta: string; comp?: 
         : <>
             <div style={{ fontSize: "clamp(10px, 3.4cqw, 12px)", color: C.answer, marginTop: "auto", paddingTop: 8, lineHeight: 1.3 }}>{k.resposta}</div>
             {k.comp && <div style={{ fontSize: 11, marginTop: 4, color: k.comp.dir === "up" ? C.up : C.down, fontWeight: 600 }}>{k.comp.dir === "up" ? "▲ " : "▼ "}{k.comp.txt}</div>}
+            {metaInfo && <MetaBar info={metaInfo} />}
           </>}
     </div>
   );
@@ -198,31 +285,45 @@ function MiniTable({ data, name, fmt }: { data: { label: string; v: number }[]; 
   );
 }
 
-function SerieChart({ data, dataKey, name, viz, fmt }: { data: { label: string; v: number }[]; dataKey: string; name: string; viz: string; fmt?: (x: number) => string }) {
+function goalLine(goal: number | undefined, fmt?: (x: number) => string) {
+  if (goal == null || !(goal > 0)) return null;
+  return <ReferenceLine y={goal} stroke={C.down} strokeDasharray="5 4" strokeWidth={1.2}
+    label={{ value: `meta ${fmt ? fmt(goal) : num(goal)}`, position: "insideTopRight", fill: C.down, fontSize: 10 }} />;
+}
+
+function SerieChart({ data, dataKey, name, viz, fmt, goal }: { data: { label: string; v: number }[]; dataKey: string; name: string; viz: string; fmt?: (x: number) => string; goal?: number }) {
   const tick = { fill: C.axis, fontSize: 10 };
   const tip = { contentStyle: { background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }, labelStyle: { color: C.answer } };
   if (viz === "table") return <MiniTable data={data} name={name} fmt={fmt} />;
   if (viz === "bar") return (
     <ResponsiveContainer width="100%" height="100%"><BarChart data={data} margin={{ top: 4, right: 6, left: -10, bottom: 0 }}>
       <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} /><YAxis tick={tick} axisLine={false} tickLine={false} />
-      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Bar dataKey="v" name={name} fill={C.accent} radius={[2, 2, 0, 0]} />
+      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Bar dataKey="v" name={name} fill={C.accent} radius={[2, 2, 0, 0]} />{goalLine(goal, fmt)}
     </BarChart></ResponsiveContainer>);
   if (viz === "line") return (
     <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 4, right: 6, left: -10, bottom: 0 }}>
       <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} /><YAxis tick={tick} axisLine={false} tickLine={false} />
-      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Line type="monotone" dataKey="v" name={name} stroke={C.accent} strokeWidth={2} dot={false} />
+      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Line type="monotone" dataKey="v" name={name} stroke={C.accent} strokeWidth={2} dot={false} />{goalLine(goal, fmt)}
     </LineChart></ResponsiveContainer>);
   return (
     <ResponsiveContainer width="100%" height="100%"><AreaChart data={data} margin={{ top: 4, right: 6, left: -10, bottom: 0 }}>
       <defs><linearGradient id={`g-${dataKey}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.accent} stopOpacity={0.22} /><stop offset="100%" stopColor={C.accent} stopOpacity={0} /></linearGradient></defs>
       <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} /><YAxis tick={tick} axisLine={false} tickLine={false} />
-      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Area type="monotone" dataKey="v" name={name} stroke={C.accent} strokeWidth={2} fill={`url(#g-${dataKey})`} />
+      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Area type="monotone" dataKey="v" name={name} stroke={C.accent} strokeWidth={2} fill={`url(#g-${dataKey})`} />{goalLine(goal, fmt)}
     </AreaChart></ResponsiveContainer>);
 }
 
-function renderChart(id: string, d: Data, viz: string, gran: string) {
-  if (id === "leads_dia") return <SerieChart data={aggregar(d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })), gran)} dataKey="leads" name="Leads" viz={viz} />;
-  if (id === "receita_dia") return <SerieChart data={aggregar(d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })), gran)} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} />;
+// Meta por dia/semana/mês a partir da meta mensal definida (escala pela granularidade)
+function goalPorBucket(metaMensal: number | undefined, gran: string): number | undefined {
+  if (metaMensal == null || !(metaMensal > 0)) return undefined;
+  if (gran === "mes") return metaMensal;
+  if (gran === "semana") return (metaMensal / 30) * 7;
+  return metaMensal / 30;
+}
+
+function renderChart(id: string, d: Data, viz: string, gran: string, metas: Record<string, number>) {
+  if (id === "leads_dia") return <SerieChart data={aggregar(d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })), gran)} dataKey="leads" name="Leads" viz={viz} goal={goalPorBucket(metas["leads"], gran)} />;
+  if (id === "receita_dia") return <SerieChart data={aggregar(d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })), gran)} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} goal={goalPorBucket(metas["receita_nova"], gran)} />;
   if (id === "pv_leads") {
     const pvDia = d.aquisicao.pageviewsPorDia ?? [];
     const pv = Object.fromEntries(pvDia.map((x) => [x.date, x.count]));
@@ -333,7 +434,7 @@ function renderChart(id: string, d: Data, viz: string, gran: string) {
   return null;
 }
 
-const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1";
+const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1", LS_METAS = "grid-metas-v1";
 
 type SqlQuery = { id: string; title: string; sql: string };
 
@@ -424,6 +525,83 @@ function ConfirmRefresh({ onConfirm, onCancel, loading }: { onConfirm: () => voi
           <button onClick={onCancel} disabled={loading} style={{ fontSize: 12.5, fontWeight: 600, padding: "8px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer" }}>Cancelar</button>
           <button onClick={onConfirm} disabled={loading} style={{ fontSize: 12.5, fontWeight: 600, padding: "8px 16px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>{loading ? "Atualizando..." : "Atualizar"}</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Painel de metas: define o alvo de cada métrica (salvo no navegador)
+function MetasModal({ data, metas, onSave, onClose }: { data: Data; metas: Record<string, number>; onSave: (m: Record<string, number>) => void; onClose: () => void }) {
+  const [draft, setDraft] = useState<Record<string, string>>(() => {
+    const o: Record<string, string> = {};
+    for (const id of Object.keys(META_SPEC)) o[id] = metas[id] != null ? String(metas[id]) : "";
+    return o;
+  });
+  function save() {
+    const out: Record<string, number> = {};
+    for (const [id, val] of Object.entries(draft)) { const v = parseFloat(val.replace(",", ".")); if (!isNaN(v) && v > 0) out[id] = v; }
+    onSave(out);
+  }
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 105 }}>
+      <div style={{ width: "min(94vw, 640px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>🎯 Metas</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>defina o alvo de cada métrica · salvo no navegador, sem custo · deixe em branco pra remover</div></div>
+          <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: "6px 18px" }}>
+          {Object.entries(META_SPEC).map(([id, spec]) => {
+            const cur = kpiCurrent(id, data);
+            const dirTxt = spec.direcao === "maior" ? "quanto maior, melhor" : "quanto menor, melhor";
+            return (
+              <div key={id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: `1px solid ${C.track}` }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: C.title }}>{METRIC_TITLE(id)}</div>
+                  <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>{dirTxt} · agora {cur == null ? "sem dados" : fmtMeta(spec.tipo, cur)}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, position: "relative" }}>
+                  <input value={draft[id]} onChange={(e) => setDraft({ ...draft, [id]: e.target.value })} placeholder="alvo" inputMode="decimal"
+                    style={{ width: 96, fontSize: 12.5, padding: "6px 9px", borderRadius: 7, border: `1px solid ${C.border}`, outline: "none", color: C.title, textAlign: "right", fontVariantNumeric: "tabular-nums" }} />
+                  <span style={{ fontSize: 11, color: C.muted, width: 28 }}>{metaUnidade(spec.tipo)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}` }}>
+          <button onClick={save} style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Salvar metas</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Ticker estilo bolsa: desliza devagar mostrando o estado das métricas e metas
+function Ticker({ data, metas }: { data: Data; metas: Record<string, number> }) {
+  const ids = Array.from(new Set([...STATE_IDS, ...Object.keys(metas)]));
+  const itens = ids.map((id) => {
+    const cur = kpiCurrent(id, data);
+    const k = resolveKpi(id, data);
+    const valor = k?.valor ?? (cur == null ? "—" : String(cur));
+    const mi = computeMeta(id, data, metas);
+    return { id, titulo: METRIC_TITLE(id), valor, mi };
+  }).filter((x) => x.valor !== "—");
+  if (itens.length === 0) return null;
+  const linha = (dupe: boolean) => (
+    <div aria-hidden={dupe} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+      {itens.map((it, idx) => (
+        <span key={(dupe ? "d" : "") + it.id + idx} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0 22px", borderRight: `1px solid ${C.border}` }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{it.titulo}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums" }}>{it.valor}</span>
+          {it.mi && <span style={{ fontSize: 11, fontWeight: 600, color: it.mi.color }}>{it.mi.arrow} {it.mi.status}</span>}
+        </span>
+      ))}
+    </div>
+  );
+  return (
+    <div style={{ overflow: "hidden", borderBottom: `1px solid ${C.border}`, background: "#fbfbfc", marginLeft: -40, marginRight: -40, padding: "9px 0" }}>
+      <div className="ticker-track" style={{ display: "flex", width: "max-content", animation: "ticker 60s linear infinite" }}>
+        {linha(false)}{linha(true)}
       </div>
     </div>
   );
@@ -548,7 +726,7 @@ function MetricMenu({ activeIds, titulo, onPick }: { activeIds: string[]; titulo
 }
 
 // Faixa reservada de estado atual: cartões elevados (sombra), sem bordas coloridas.
-function StateBand({ data, onDrill }: { data: Data; onDrill: (tipo: string, titulo: string) => void }) {
+function StateBand({ data, metas, onDrill }: { data: Data; metas: Record<string, number>; onDrill: (tipo: string, titulo: string) => void }) {
   return (
     <div style={{ marginTop: 18 }}>
       <div style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 11 }}>
@@ -559,6 +737,7 @@ function StateBand({ data, onDrill }: { data: Data; onDrill: (tipo: string, titu
           const k = resolveKpi(id, data); if (!k) return null;
           const titulo = STATE_TITLES[id] ?? id;
           const drill = DRILL[id];
+          const mi = computeMeta(id, data, metas);
           const click = drill ? () => onDrill(drill, titulo) : undefined;
           return (
             <div key={id} onClick={click}
@@ -571,6 +750,33 @@ function StateBand({ data, onDrill }: { data: Data; onDrill: (tipo: string, titu
               </div>
               <div style={{ fontSize: 34, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1.05, marginTop: 12 }}>{k.valor}</div>
               <div style={{ fontSize: 12, color: C.answer, marginTop: 10, lineHeight: 1.35 }}>{k.resposta}</div>
+              {mi && <MetaBar info={mi} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Painel resumo das metas definidas: progresso de todas num lugar só
+function MetasBand({ data, metas, onEdit }: { data: Data; metas: Record<string, number>; onEdit: () => void }) {
+  const ids = Object.keys(metas).filter((id) => META_SPEC[id] && kpiCurrent(id, data) != null);
+  if (ids.length === 0) return null;
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
+        <div style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7 }}>Metas <span style={{ fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>· {ids.length} acompanhada{ids.length > 1 ? "s" : ""}</span></div>
+        <button onClick={onEdit} style={{ fontSize: 11.5, fontWeight: 600, color: C.accent, background: "transparent", border: "none", cursor: "pointer" }}>editar metas</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
+        {ids.map((id) => {
+          const k = resolveKpi(id, data); const mi = computeMeta(id, data, metas); if (!k || !mi) return null;
+          return (
+            <div key={id} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: C.title, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{METRIC_TITLE(id)}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{k.valor}</div>
+              <MetaBar info={mi} />
             </div>
           );
         })}
@@ -587,6 +793,8 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const [views, setViews] = useState<{ name: string; layout: LayoutItem[]; viz: Record<string, string> }[]>([]);
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
   const [sqlModal, setSqlModal] = useState<SqlQuery | "new" | null>(null);
+  const [metas, setMetas] = useState<Record<string, number>>({});
+  const [metasModal, setMetasModal] = useState(false);
   const [edit, setEdit] = useState(false);
   const [drill, setDrill] = useState<{ tipo: string; titulo: string } | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -606,8 +814,10 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       const z = localStorage.getItem(LS_VIZ); if (z) setViz(JSON.parse(z));
       const s = localStorage.getItem(LS_SQL); if (s) setSqlQueries(JSON.parse(s));
       const g = localStorage.getItem("grid-gran-v1"); if (g) setGran(JSON.parse(g));
+      const mt = localStorage.getItem(LS_METAS); if (mt) setMetas(JSON.parse(mt));
     } catch {}
   }, []);
+  const persistMetas = (m: Record<string, number>) => { try { localStorage.setItem(LS_METAS, JSON.stringify(m)); } catch {} setMetas(m); };
   const persistGran = (g: Record<string, string>) => { try { localStorage.setItem("grid-gran-v1", JSON.stringify(g)); } catch {} setGran(g); };
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(([e]) => setGridW(e.contentRect.width)); ro.observe(el); setGridW(el.getBoundingClientRect().width); return () => ro.disconnect(); }, [mounted]);
 
@@ -659,6 +869,8 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   return (
     <div style={{ background: C.page, minHeight: "calc(100vh - 73px)", color: C.big, marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", marginTop: -32, marginBottom: -32, padding: "0 40px 40px" }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+        .ticker-track:hover{animation-play-state:paused}
         .react-grid-item.react-grid-placeholder{background:${C.accentSoft};opacity:.5;border-radius:10px}
         .react-grid-item>.react-resizable-handle{opacity:${edit ? 0.6 : 0}}
         .react-grid-item>.react-resizable-handle::after{border-color:${C.accent}}`}</style>
@@ -680,13 +892,20 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
             <select value={filters.landingVariant ?? ""} onChange={(e) => navigate({ lv: e.target.value || null })} style={selStyle}><option value="">Landing: todas</option>{filterOptions.landingVariants.map((x) => <option key={x} value={x}>{x}</option>)}</select>
           )}
           <span style={{ width: 1, height: 20, background: C.border, margin: "0 2px" }} />
+          <button onClick={() => setMetasModal(true)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, cursor: "pointer", border: `1px solid ${C.border}`, background: "#fff", color: C.title }}>🎯 Metas</button>
           <button onClick={() => setConfirmRefresh(true)} disabled={refreshing} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px solid ${C.accent}`, background: C.accent, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", animation: refreshing ? "spin 0.8s linear infinite" : "none" }}>↻</span>{refreshing ? "..." : "Atualizar"}</button>
           <button onClick={() => setEdit(!edit)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, cursor: "pointer", border: `1px solid ${edit ? C.accent : C.border}`, background: edit ? "#eef1f5" : "#fff", color: C.title }}>{edit ? "✓ Concluir edição" : "✎ Personalizar"}</button>
         </div>
       </div>
 
+      {/* Ticker estilo bolsa (desliza devagar) */}
+      <Ticker data={data2} metas={metas} />
+
       {/* Faixa reservada: estado atual da operação (fixa, sempre no topo) */}
-      <StateBand data={data2} onDrill={(tipo, titulo) => setDrill({ tipo, titulo })} />
+      <StateBand data={data2} metas={metas} onDrill={(tipo, titulo) => setDrill({ tipo, titulo })} />
+
+      {/* Painel resumo das metas definidas */}
+      <MetasBand data={data2} metas={metas} onEdit={() => setMetasModal(true)} />
 
       {/* Barra de edição: grupos com hierarquia (Adicionar · Visões · Banco) */}
       {edit && (
@@ -765,7 +984,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia")}
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas)}
                 </div>
               </div>
             );
@@ -773,6 +992,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
         </ResponsiveGridLayout>
       </div>
 
+      {metasModal && <MetasModal data={data2} metas={metas} onSave={(m) => { persistMetas(m); setMetasModal(false); }} onClose={() => setMetasModal(false)} />}
       {sqlModal && <SqlModal inicial={sqlModal === "new" ? undefined : sqlModal} tabelas={[]} onSalvar={saveSql} onFechar={() => setSqlModal(null)} />}
       {drill && <DrillModal tipo={drill.tipo} titulo={drill.titulo} filters={filters} onClose={() => setDrill(null)} />}
       {confirmRefresh && <ConfirmRefresh loading={refreshing} onConfirm={doRefresh} onCancel={() => setConfirmRefresh(false)} />}
