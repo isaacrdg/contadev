@@ -291,25 +291,37 @@ function goalLine(goal: number | undefined, fmt?: (x: number) => string) {
     label={{ value: `meta ${fmt ? fmt(goal) : num(goal)}`, position: "insideTopRight", fill: C.down, fontSize: 10 }} />;
 }
 
-function SerieChart({ data, dataKey, name, viz, fmt, goal }: { data: { label: string; v: number }[]; dataKey: string; name: string; viz: string; fmt?: (x: number) => string; goal?: number }) {
+interface ChartOpts { formato?: "suave" | "linear" | "degrau"; estilo?: "solida" | "tracejada" | "pontilhada"; espessura?: "S" | "M" | "L"; pontos?: "auto" | "on" | "off"; cor?: string }
+const CHART_CORES = ["#475569", "#2563eb", "#16a34a", "#b45309", "#9333ea", "#dc2626", "#0891b2", "#db2777"];
+function chartStyle(o?: ChartOpts) {
+  const cor = o?.cor || C.accent;
+  const sw = o?.espessura === "S" ? 1.5 : o?.espessura === "L" ? 3 : 2;
+  const dash = o?.estilo === "tracejada" ? "6 4" : o?.estilo === "pontilhada" ? "2 3" : undefined;
+  const tipo = (o?.formato === "linear" ? "linear" : o?.formato === "degrau" ? "stepAfter" : "monotone") as "linear" | "stepAfter" | "monotone";
+  const dot = o?.pontos === "on" ? { r: 2.5, fill: cor, strokeWidth: 0 } : false;
+  return { cor, sw, dash, tipo, dot };
+}
+
+function SerieChart({ data, dataKey, name, viz, fmt, goal, opts }: { data: { label: string; v: number }[]; dataKey: string; name: string; viz: string; fmt?: (x: number) => string; goal?: number; opts?: ChartOpts }) {
   const tick = { fill: C.axis, fontSize: 10 };
   const tip = { contentStyle: { background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }, labelStyle: { color: C.answer } };
+  const { cor, sw, dash, tipo, dot } = chartStyle(opts);
   if (viz === "table") return <MiniTable data={data} name={name} fmt={fmt} />;
   if (viz === "bar") return (
     <ResponsiveContainer width="100%" height="100%"><BarChart data={data} margin={{ top: 4, right: 6, left: -10, bottom: 0 }}>
       <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} /><YAxis tick={tick} axisLine={false} tickLine={false} />
-      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Bar dataKey="v" name={name} fill={C.accent} radius={[2, 2, 0, 0]} />{goalLine(goal, fmt)}
+      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Bar dataKey="v" name={name} fill={cor} radius={[2, 2, 0, 0]} />{goalLine(goal, fmt)}
     </BarChart></ResponsiveContainer>);
   if (viz === "line") return (
     <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 4, right: 6, left: -10, bottom: 0 }}>
       <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} /><YAxis tick={tick} axisLine={false} tickLine={false} />
-      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Line type="monotone" dataKey="v" name={name} stroke={C.accent} strokeWidth={2} dot={false} />{goalLine(goal, fmt)}
+      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Line type={tipo} dataKey="v" name={name} stroke={cor} strokeWidth={sw} strokeDasharray={dash} dot={dot} />{goalLine(goal, fmt)}
     </LineChart></ResponsiveContainer>);
   return (
     <ResponsiveContainer width="100%" height="100%"><AreaChart data={data} margin={{ top: 4, right: 6, left: -10, bottom: 0 }}>
-      <defs><linearGradient id={`g-${dataKey}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.accent} stopOpacity={0.22} /><stop offset="100%" stopColor={C.accent} stopOpacity={0} /></linearGradient></defs>
+      <defs><linearGradient id={`g-${dataKey}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={cor} stopOpacity={0.22} /><stop offset="100%" stopColor={cor} stopOpacity={0} /></linearGradient></defs>
       <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} /><YAxis tick={tick} axisLine={false} tickLine={false} />
-      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Area type="monotone" dataKey="v" name={name} stroke={C.accent} strokeWidth={2} fill={`url(#g-${dataKey})`} />{goalLine(goal, fmt)}
+      <Tooltip {...tip} formatter={(x) => [fmt ? fmt(Number(x)) : num(Number(x)), name]} /><Area type={tipo} dataKey="v" name={name} stroke={cor} strokeWidth={sw} strokeDasharray={dash} dot={dot} fill={`url(#g-${dataKey})`} />{goalLine(goal, fmt)}
     </AreaChart></ResponsiveContainer>);
 }
 
@@ -321,9 +333,9 @@ function goalPorBucket(metaMensal: number | undefined, gran: string): number | u
   return metaMensal / 30;
 }
 
-function renderChart(id: string, d: Data, viz: string, gran: string, metas: Record<string, number>) {
-  if (id === "leads_dia") return <SerieChart data={aggregar(d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })), gran)} dataKey="leads" name="Leads" viz={viz} goal={goalPorBucket(metas["leads"], gran)} />;
-  if (id === "receita_dia") return <SerieChart data={aggregar(d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })), gran)} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} goal={goalPorBucket(metas["receita_nova"], gran)} />;
+function renderChart(id: string, d: Data, viz: string, gran: string, metas: Record<string, number>, opts?: ChartOpts) {
+  if (id === "leads_dia") return <SerieChart data={aggregar(d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })), gran)} dataKey="leads" name="Leads" viz={viz} goal={goalPorBucket(metas["leads"], gran)} opts={opts} />;
+  if (id === "receita_dia") return <SerieChart data={aggregar(d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })), gran)} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} goal={goalPorBucket(metas["receita_nova"], gran)} opts={opts} />;
   if (id === "pv_leads") {
     const pvDia = d.aquisicao.pageviewsPorDia ?? [];
     const pv = Object.fromEntries(pvDia.map((x) => [x.date, x.count]));
@@ -434,7 +446,8 @@ function renderChart(id: string, d: Data, viz: string, gran: string, metas: Reco
   return null;
 }
 
-const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1", LS_METAS = "grid-metas-v1";
+const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1", LS_METAS = "grid-metas-v1", LS_CHARTOPTS = "grid-chartopts-v1";
+const RICH_CHARTS = new Set(["leads_dia", "receita_dia"]); // gráficos com opções avançadas de estilo
 
 type SqlQuery = { id: string; title: string; sql: string };
 
@@ -725,6 +738,33 @@ function MetricMenu({ activeIds, titulo, onPick }: { activeIds: string[]; titulo
   );
 }
 
+// Painel de opções do gráfico (tipo, formato, estilo, espessura, pontos, cor)
+function ChartOptsPanel({ tipos, viz, opts, onViz, onOpts, onClose }: { tipos: string[]; viz: string; opts: ChartOpts; onViz: (v: string) => void; onOpts: (o: ChartOpts) => void; onClose: () => void }) {
+  const seg = (active: boolean, onClick: () => void, content: React.ReactNode, key: string) => (
+    <button key={key} onClick={(e) => { e.stopPropagation(); onClick(); }} style={{ fontSize: 11, fontWeight: 600, padding: "5px 9px", borderRadius: 6, cursor: "pointer", border: `1px solid ${active ? C.accent : C.border}`, background: active ? "#eef1f5" : "#fff", color: active ? C.accent : C.title, minWidth: 30 }}>{content}</button>
+  );
+  const row = (label: string, children: React.ReactNode) => (
+    <div style={{ marginBottom: 9 }}><div style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 5 }}>{label}</div><div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{children}</div></div>
+  );
+  const linha = viz === "line" || viz === "area";
+  const nomeTipo: Record<string, string> = { area: "Área", line: "Linha", bar: "Barra", table: "Tabela" };
+  return (
+    <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.14)", padding: 12, width: 230 }}>
+      {row("Tipo", tipos.map((t) => seg(viz === t, () => onViz(t), nomeTipo[t] ?? t, t)))}
+      {linha && <>
+        {row("Formato da linha", ([["suave", "curva"], ["linear", "reta"], ["degrau", "degrau"]] as const).map(([v, l]) => seg((opts.formato ?? "suave") === v, () => onOpts({ ...opts, formato: v }), l, v)))}
+        {row("Estilo", ([["solida", "sólida"], ["tracejada", "tracejada"], ["pontilhada", "pontilhada"]] as const).map(([v, l]) => seg((opts.estilo ?? "solida") === v, () => onOpts({ ...opts, estilo: v }), l, v)))}
+        {row("Espessura", (["S", "M", "L"] as const).map((v) => seg((opts.espessura ?? "M") === v, () => onOpts({ ...opts, espessura: v }), v, v)))}
+        {row("Pontos", ([["auto", "auto"], ["on", "sim"], ["off", "não"]] as const).map(([v, l]) => seg((opts.pontos ?? "auto") === v, () => onOpts({ ...opts, pontos: v }), l, v)))}
+      </>}
+      {row("Cor", CHART_CORES.map((cor) => (
+        <button key={cor} onClick={(e) => { e.stopPropagation(); onOpts({ ...opts, cor }); }} title={cor} style={{ width: 22, height: 22, borderRadius: 6, cursor: "pointer", border: (opts.cor ?? C.accent) === cor ? `2px solid ${C.big}` : `1px solid ${C.border}`, background: cor }} />
+      )))}
+      <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ width: "100%", marginTop: 4, fontSize: 11.5, fontWeight: 600, padding: "6px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer" }}>Fechar</button>
+    </div>
+  );
+}
+
 // Faixa reservada de estado atual: cartões elevados (sombra), sem bordas coloridas.
 function StateBand({ data, metas, onDrill }: { data: Data; metas: Record<string, number>; onDrill: (tipo: string, titulo: string) => void }) {
   return (
@@ -795,6 +835,8 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const [sqlModal, setSqlModal] = useState<SqlQuery | "new" | null>(null);
   const [metas, setMetas] = useState<Record<string, number>>({});
   const [metasModal, setMetasModal] = useState(false);
+  const [chartOpts, setChartOpts] = useState<Record<string, ChartOpts>>({});
+  const [optsFor, setOptsFor] = useState<string | null>(null); // card com painel de opções aberto
   const [edit, setEdit] = useState(false);
   const [drill, setDrill] = useState<{ tipo: string; titulo: string } | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -815,9 +857,11 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       const s = localStorage.getItem(LS_SQL); if (s) setSqlQueries(JSON.parse(s));
       const g = localStorage.getItem("grid-gran-v1"); if (g) setGran(JSON.parse(g));
       const mt = localStorage.getItem(LS_METAS); if (mt) setMetas(JSON.parse(mt));
+      const co = localStorage.getItem(LS_CHARTOPTS); if (co) setChartOpts(JSON.parse(co));
     } catch {}
   }, []);
   const persistMetas = (m: Record<string, number>) => { try { localStorage.setItem(LS_METAS, JSON.stringify(m)); } catch {} setMetas(m); };
+  const persistChartOpts = (o: Record<string, ChartOpts>) => { try { localStorage.setItem(LS_CHARTOPTS, JSON.stringify(o)); } catch {} setChartOpts(o); };
   const persistGran = (g: Record<string, string>) => { try { localStorage.setItem("grid-gran-v1", JSON.stringify(g)); } catch {} setGran(g); };
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(([e]) => setGridW(e.contentRect.width)); ro.observe(el); setGridW(el.getBoundingClientRect().width); return () => ro.disconnect(); }, [mounted]);
 
@@ -968,9 +1012,15 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   {edit && (
                     <span style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
                       {isSql && <button onClick={(e) => { e.stopPropagation(); setSqlModal(sq!); }} title="Editar consulta" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#eef1f5", color: C.muted }}>✎</button>}
-                      {def?.viz && def.viz.map((z) => (
+                      {def?.viz && !RICH_CHARTS.has(bid) && def.viz.map((z) => (
                         <button key={z} onClick={(e) => { e.stopPropagation(); persistViz({ ...viz, [item.i]: z }); }} title={z} style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: curViz === z ? C.accent : "#eef1f5", color: curViz === z ? "#fff" : C.muted }}>{z === "area" ? "∿" : z === "bar" ? "▮" : z === "line" ? "╱" : "▦"}</button>
                       ))}
+                      {def?.viz && RICH_CHARTS.has(bid) && (
+                        <div style={{ position: "relative" }}>
+                          <button onClick={(e) => { e.stopPropagation(); setOptsFor(optsFor === item.i ? null : item.i); }} title="Opções do gráfico" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: optsFor === item.i ? C.accent : "#eef1f5", color: optsFor === item.i ? "#fff" : C.muted }}>⚙</button>
+                          {optsFor === item.i && <ChartOptsPanel tipos={def.viz} viz={curViz} opts={chartOpts[item.i] ?? {}} onViz={(v) => persistViz({ ...viz, [item.i]: v })} onOpts={(o) => persistChartOpts({ ...chartOpts, [item.i]: o })} onClose={() => setOptsFor(null)} />}
+                        </div>
+                      )}
                       {(bid === "leads_dia" || bid === "receita_dia") && (["dia", "semana", "mes"] as const).map((g) => (
                         <button key={g} onClick={(e) => { e.stopPropagation(); persistGran({ ...gran, [item.i]: g }); }} title={g} style={{ fontSize: 11, fontWeight: 600, width: 20, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: (gran[item.i] ?? "dia") === g ? C.accent : "#eef1f5", color: (gran[item.i] ?? "dia") === g ? "#fff" : C.muted }}>{g === "dia" ? "D" : g === "semana" ? "S" : "M"}</button>
                       ))}
@@ -984,7 +1034,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas)}
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas, chartOpts[item.i])}
                 </div>
               </div>
             );
