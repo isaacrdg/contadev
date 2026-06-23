@@ -96,6 +96,7 @@ function previousPeriod(start: string, end: string) {
 
 const RECEITA_ZERO = {
   totalCobrado: 0, valorNovosContratos: 0, mrr: 0, clientesAtivos: 0, emRisco: 0,
+  faturasAtrasoClientes: 0, faturasAtrasoFaturas: 0, faturasAtrasoValor: 0, faturasAtrasoDist: [0, 0, 0, 0],
   qtdNovosAnuais: 0, valorNovosAnuais: 0, qtdNovosMensais: 0, valorNovosMensais: 0,
   assinou: 0, pagou: 0, upgrades: 0,
 };

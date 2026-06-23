@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T17:32:30.376Z",
+  "generatedAt": "2026-06-23T18:27:40.959Z",
   "filters": {
     "start": "2026-05-24",
     "end": "2026-06-23",
@@ -13,6 +13,15 @@
     "mrr": 173470.79,
     "clientesAtivos": 597,
     "emRisco": 63,
+    "faturasAtrasoClientes": 70,
+    "faturasAtrasoFaturas": 167,
+    "faturasAtrasoValor": 46998.35000000004,
+    "faturasAtrasoDist": [
+      1,
+      19,
+      20,
+      30
+    ],
     "qtdNovosAnuais": 14,
     "valorNovosAnuais": 36948.24,
     "qtdNovosMensais": 27,
@@ -266,10 +275,10 @@
     ]
   },
   "aquisicao": {
-    "pageviews": 3729,
-    "visitantes": 2755,
+    "pageviews": 3740,
+    "visitantes": 2759,
     "leadsCriados": 326,
-    "pvToLead": 0.11833030852994555,
+    "pvToLead": 0.11815875317143892,
     "porCanal": [
       {
         "nome": "www.youtube.com",
@@ -277,15 +286,15 @@
       },
       {
         "nome": "$direct",
-        "valor": 913
+        "valor": 919
       },
       {
         "nome": "www.google.com",
-        "valor": 814
+        "valor": 818
       },
       {
         "nome": "instagram.com",
-        "valor": 553
+        "valor": 554
       },
       {
         "nome": "l.instagram.com",
@@ -307,11 +316,11 @@
     "porDevice": [
       {
         "nome": "Desktop",
-        "valor": 2060
+        "valor": 2070
       },
       {
         "nome": "Mobile",
-        "valor": 1661
+        "valor": 1662
       },
       {
         "nome": "Tablet",
@@ -321,7 +330,7 @@
     "porPais": [
       {
         "nome": "Brazil",
-        "valor": 3552
+        "valor": 3563
       },
       {
         "nome": "United States",
@@ -507,14 +516,14 @@
       },
       {
         "date": "2026-06-23",
-        "count": 92
+        "count": 103
       }
     ],
-    "funilPageview": 3729,
+    "funilPageview": 3740,
     "funilFormStep1": 361,
     "funilFormCompleto": 344,
     "funilLead": 326,
-    "funilCliente": 15
+    "funilCliente": 16
   },
   "complementar": {
     "velocidadeFechamentoHoras": 73.16286736111111,
@@ -522,8 +531,8 @@
       {
         "estagio": "Negociação",
         "n": 29,
-        "diasParado": 18.3,
-        "parados7d": 26
+        "diasParado": 18.4,
+        "parados7d": 27
       },
       {
         "estagio": "Sem Contato",
@@ -534,32 +543,32 @@
       {
         "estagio": "Primeira abordagem",
         "n": 69,
-        "diasParado": 15,
+        "diasParado": 15.1,
         "parados7d": 53
       },
       {
         "estagio": "Qualificação",
         "n": 88,
-        "diasParado": 13.9,
+        "diasParado": 14,
         "parados7d": 77
       },
       {
         "estagio": "Simulação",
         "n": 23,
-        "diasParado": 15,
+        "diasParado": 15.1,
         "parados7d": 16
       },
       {
         "estagio": "Fechamento",
         "n": 13,
-        "diasParado": 19.7,
+        "diasParado": 19.8,
         "parados7d": 12
       },
       {
         "estagio": "Finalizado",
         "n": 19,
         "diasParado": 15.7,
-        "parados7d": 18
+        "parados7d": 19
       },
       {
         "estagio": "Sem resposta",
@@ -584,43 +593,43 @@
     "motivosPerda": [],
     "conversaoCanalReal": [
       {
-        "canal": "google",
-        "leads": 29,
-        "pagantes": 4
-      },
-      {
-        "canal": "(sem origem)",
-        "leads": 20,
-        "pagantes": 3
-      },
-      {
         "canal": "instagram",
-        "leads": 16,
-        "pagantes": 0
+        "leads": 26,
+        "pagantes": 2
+      },
+      {
+        "canal": "google",
+        "leads": 24,
+        "pagantes": 2
       },
       {
         "canal": "youtube",
-        "leads": 16,
-        "pagantes": 1
-      },
-      {
-        "canal": "$direct",
-        "leads": 11,
+        "leads": 15,
         "pagantes": 0
       },
       {
+        "canal": "$direct",
+        "leads": 13,
+        "pagantes": 2
+      },
+      {
+        "canal": "(sem origem)",
+        "leads": 10,
+        "pagantes": 1
+      },
+      {
         "canal": "l.instagram",
-        "leads": 5,
+        "leads": 6,
+        "pagantes": 0
+      },
+      {
+        "canal": "m.facebook",
+        "leads": 3,
         "pagantes": 0
       },
       {
         "canal": "reddit",
         "leads": 2,
-        "pagantes": 0
-      },
-      {
-        "canal": "adsmanager.facebook",
-        "leads": 1,
         "pagantes": 0
       }
     ],
@@ -696,6 +705,15 @@
       "mrr": 173470.79,
       "clientesAtivos": 597,
       "emRisco": 63,
+      "faturasAtrasoClientes": 70,
+      "faturasAtrasoFaturas": 167,
+      "faturasAtrasoValor": 46998.35000000004,
+      "faturasAtrasoDist": [
+        1,
+        19,
+        20,
+        30
+      ],
       "qtdNovosAnuais": 6,
       "valorNovosAnuais": 15114.96,
       "qtdNovosMensais": 42,

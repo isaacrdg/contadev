@@ -36,6 +36,14 @@ export interface ReceitaData {
   clientesAtivos: number;
   // Assinaturas past_due + canceled (em risco ou canceladas)
   emRisco: number;
+  // ── Faturas em atraso (estado de HOJE, fonte: overdue_billings) ──
+  // Clientes que JÁ pagaram ao menos uma fatura e têm fatura vencida em aberto agora.
+  // É uma métrica dinâmica: a pessoa entra ao vencer e sai ao regularizar.
+  faturasAtrasoClientes: number;
+  faturasAtrasoFaturas: number;
+  faturasAtrasoValor: number;
+  // Clientes por faixa de dias de atraso (fatura em aberto mais antiga): [<=7d, 8-30d, 31-90d, >90d]
+  faturasAtrasoDist: number[];
   // Novos anuais no período
   qtdNovosAnuais: number;
   valorNovosAnuais: number;
@@ -84,6 +92,9 @@ export interface VelocidadeData {
 // Limiares (em minutos) das faixas de distribuição de tempo
 export const DIST_THRESHOLDS = [5, 15, 30, 60, 240, 1440];
 
+// Faixas de dias de atraso para clientes com fatura vencida
+export const FATURAS_ATRASO_FAIXAS = ["até 7 dias", "8 a 30 dias", "31 a 90 dias", "mais de 90 dias"];
+
 export interface PerdaData {
   perdidosDeclarados: number;
   perdidosGhosting: number;
@@ -128,7 +139,7 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
   const lv = f.landingVariant || null;
   const pv = f.pricingVariant || null;
 
-  const [pagamentos, ciclos, contratos, upgradesQ] = await Promise.all([
+  const [pagamentos, ciclos, contratos, upgradesQ, atraso] = await Promise.all([
     // Total cobrado no período (todos os pagamentos confirmados, incluindo recorrência)
     sql`
       SELECT COALESCE(SUM(value)::float8, 0) as total_cobrado
@@ -220,6 +231,39 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
         AND (${lv}::text IS NULL OR l.landing_variant = ${lv})
         AND (${pv}::text IS NULL OR l.pricing_variant = ${pv})
     `,
+    // Faturas em atraso HOJE (estado da carteira, global, sem filtro de período).
+    // Fonte: overdue_billings (a tabela que a Conta Dev mantém para cobranças
+    // vencidas, junto de overdue_notifications = o ciclo de cobrança).
+    // Em aberto = não paga, não excluída, não isenta e já vencida.
+    // Só conta quem JÁ pagou ao menos uma fatura (= virou cliente), separando do
+    // calote de primeiro pagamento.
+    sql`
+      WITH em_aberto AS (
+        SELECT ob.lead_id,
+               MIN(ob.due_date) AS mais_antiga,
+               SUM(ob.value)::float8 AS valor,
+               COUNT(*) AS faturas
+        FROM overdue_billings ob
+        WHERE ob.paid_at IS NULL AND ob.deleted_at IS NULL AND ob.exempted_at IS NULL
+          AND ob.due_date < now()
+          AND EXISTS (
+            SELECT 1 FROM subscription_payments sp
+            WHERE sp.lead_id = ob.lead_id AND sp.status = 'paid'
+          )
+        GROUP BY ob.lead_id
+      )
+      SELECT
+        COUNT(*)::int                                                                  AS clientes,
+        COALESCE(SUM(faturas), 0)::int                                                 AS faturas,
+        COALESCE(SUM(valor)::float8, 0)                                                AS valor,
+        COUNT(*) FILTER (WHERE now() - mais_antiga <= interval '7 days')::int          AS d_ate7,
+        COUNT(*) FILTER (WHERE now() - mais_antiga > interval '7 days'
+                           AND now() - mais_antiga <= interval '30 days')::int         AS d_8a30,
+        COUNT(*) FILTER (WHERE now() - mais_antiga > interval '30 days'
+                           AND now() - mais_antiga <= interval '90 days')::int         AS d_31a90,
+        COUNT(*) FILTER (WHERE now() - mais_antiga > interval '90 days')::int          AS d_mais90
+      FROM em_aberto
+    `,
   ]);
 
   return {
@@ -228,6 +272,10 @@ export async function getReceitaMetrics(f: VendasFilters): Promise<ReceitaData> 
     mrr:                 n(ciclos[0]?.mrr),
     clientesAtivos:      n(ciclos[0]?.clientes_ativos),
     emRisco:             n(ciclos[0]?.em_risco),
+    faturasAtrasoClientes: n(atraso[0]?.clientes),
+    faturasAtrasoFaturas:  n(atraso[0]?.faturas),
+    faturasAtrasoValor:    n(atraso[0]?.valor),
+    faturasAtrasoDist:   [n(atraso[0]?.d_ate7), n(atraso[0]?.d_8a30), n(atraso[0]?.d_31a90), n(atraso[0]?.d_mais90)],
     qtdNovosAnuais:      n(ciclos[0]?.qtd_anuais),
     valorNovosAnuais:    n(ciclos[0]?.valor_anuais),
     qtdNovosMensais:     n(ciclos[0]?.qtd_mensais),
@@ -793,6 +841,30 @@ export async function getLeadsDrill(tipo: string, f: VendasFilters): Promise<{ c
   const sql = getSql();
   const lv = f.landingVariant || null;
   const pv = f.pricingVariant || null;
+
+  // Faturas em atraso: estado de HOJE (não depende do período). Lista os clientes
+  // com fatura vencida em aberto, dias de atraso e valor devido.
+  if (tipo === "faturas_atraso") {
+    const rows = await sql`
+      SELECT l.name as nome, l.phone as telefone,
+        EXTRACT(DAY FROM now() - MIN(ob.due_date))::int as dias_atraso,
+        COUNT(*)::int as faturas,
+        SUM(ob.value)::float8 as valor
+      FROM overdue_billings ob
+      JOIN leads l ON l.id = ob.lead_id
+      WHERE ob.paid_at IS NULL AND ob.deleted_at IS NULL AND ob.exempted_at IS NULL
+        AND ob.due_date < now() AND l.deleted_at IS NULL
+        AND EXISTS (SELECT 1 FROM subscription_payments sp WHERE sp.lead_id = ob.lead_id AND sp.status = 'paid')
+      GROUP BY l.id, l.name, l.phone
+      ORDER BY MIN(ob.due_date) ASC
+      LIMIT 300
+    `;
+    const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    return {
+      columns: ["nome", "telefone", "dias em atraso", "faturas", "valor devido"],
+      rows: rows.map((r) => [r.nome, r.telefone, `${n(r.dias_atraso)} dias`, n(r.faturas), brl(n(r.valor))]),
+    };
+  }
   const all = await sql`
     SELECT l.name as nome, l.phone as telefone,
       TO_CHAR(l.created_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YY HH24:MI') as entrou,
