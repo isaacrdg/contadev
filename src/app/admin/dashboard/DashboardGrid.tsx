@@ -108,6 +108,7 @@ const CATALOG: WDef[] = [
   { id: "conversao_canal_real", titulo: "Conversão por canal (canal × pagamento)", ...CHART_BOX, w: 5, h: 5, grupo: "complementar" },
   { id: "coorte", titulo: "Coorte: pagamento por semana de entrada", ...CHART_BOX, w: 6, h: 5, grupo: "complementar" },
   { id: "frt_conversao", titulo: "Velocidade × conversão (tese)", ...CHART_BOX, w: 5, h: 4, grupo: "complementar" },
+  { id: "comparativo", titulo: "Comparativo (sobrepor séries)", ...CHART_BOX, w: 6, h: 4, grupo: "complementar" },
   { id: "leads_dia", titulo: "Leads por dia", ...CHART_BOX, viz: ["area", "bar", "line", "table"] },
   { id: "receita_dia", titulo: "Receita nova por dia", ...CHART_BOX, viz: ["area", "bar", "line", "table"] },
   { id: "pv_leads", titulo: "Page views e leads por dia", ...CHART_BOX, viz: ["line", "table"] },
@@ -333,7 +334,32 @@ function goalPorBucket(metaMensal: number | undefined, gran: string): number | u
   return metaMensal / 30;
 }
 
-function renderChart(id: string, d: Data, viz: string, gran: string, metas: Record<string, number>, opts?: ChartOpts) {
+// Séries diárias disponíveis para o gráfico Comparativo
+const COMP_SERIES: { key: string; label: string; unit: "count" | "money"; cor: string; get: (d: Data) => { date: string; v: number }[] }[] = [
+  { key: "leads", label: "Leads", unit: "count", cor: "#475569", get: (d) => d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })) },
+  { key: "page_views", label: "Page views", unit: "count", cor: "#2563eb", get: (d) => (d.aquisicao.pageviewsPorDia ?? []).map((x) => ({ date: x.date, v: x.count })) },
+  { key: "receita", label: "Receita nova", unit: "money", cor: "#16a34a", get: (d) => d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })) },
+];
+
+function renderChart(id: string, d: Data, viz: string, gran: string, metas: Record<string, number>, opts?: ChartOpts, compSel?: string[]) {
+  if (id === "comparativo") {
+    const sel = compSel && compSel.length ? compSel : ["leads", "page_views"];
+    const series = COMP_SERIES.filter((s) => sel.includes(s.key));
+    if (series.length === 0) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Escolha ao menos uma série em ⚙ séries (modo editar).</div>;
+    const byDate = new Map<string, Record<string, number | string>>();
+    for (const s of series) for (const p of s.get(d)) { const o = byDate.get(p.date) ?? { date: p.date }; o[s.key] = p.v; byDate.set(p.date, o); }
+    const data = Array.from(byDate.values()).sort((a, b) => String(a.date).localeCompare(String(b.date))).map((o) => ({ ...o, label: fmtDia(String(o.date)) }));
+    const hasCount = series.some((s) => s.unit === "count");
+    const hasMoney = series.some((s) => s.unit === "money");
+    return (
+      <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+        <CartesianGrid stroke={C.grid} vertical={false} /><XAxis dataKey="label" tick={{ fill: C.axis, fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} />
+        {hasCount && <YAxis yAxisId="count" tick={{ fill: C.axis, fontSize: 10 }} axisLine={false} tickLine={false} width={34} />}
+        {hasMoney && <YAxis yAxisId="money" orientation="right" tick={{ fill: C.axis, fontSize: 10 }} axisLine={false} tickLine={false} width={42} tickFormatter={(x) => brl(Number(x))} />}
+        <Tooltip contentStyle={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }} formatter={(val, nome) => [COMP_SERIES.find((s) => s.label === nome)?.unit === "money" ? brl(Number(val)) : num(Number(val)), nome]} /><Legend wrapperStyle={{ fontSize: 11 }} />
+        {series.map((s) => <Line key={s.key} yAxisId={s.unit} type="monotone" dataKey={s.key} name={s.label} stroke={s.cor} strokeWidth={2} dot={false} />)}
+      </LineChart></ResponsiveContainer>);
+  }
   if (id === "leads_dia") return <SerieChart data={aggregar(d.leadsPorDia.map((x) => ({ date: x.date, v: x.count })), gran)} dataKey="leads" name="Leads" viz={viz} goal={goalPorBucket(metas["leads"], gran)} opts={opts} />;
   if (id === "receita_dia") return <SerieChart data={aggregar(d.receitaPorDia.map((x) => ({ date: x.date, v: x.valor })), gran)} dataKey="rec" name="Receita nova" viz={viz} fmt={brl} goal={goalPorBucket(metas["receita_nova"], gran)} opts={opts} />;
   if (id === "pv_leads") {
@@ -446,7 +472,7 @@ function renderChart(id: string, d: Data, viz: string, gran: string, metas: Reco
   return null;
 }
 
-const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1", LS_METAS = "grid-metas-v1", LS_CHARTOPTS = "grid-chartopts-v1";
+const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1", LS_METAS = "grid-metas-v1", LS_CHARTOPTS = "grid-chartopts-v1", LS_COMP = "grid-comp-v1";
 const RICH_CHARTS = new Set(["leads_dia", "receita_dia"]); // gráficos com opções avançadas de estilo
 
 type SqlQuery = { id: string; title: string; sql: string };
@@ -765,6 +791,26 @@ function ChartOptsPanel({ tipos, viz, opts, onViz, onOpts, onClose }: { tipos: s
   );
 }
 
+// Painel de séries do gráfico Comparativo
+function CompPanel({ sel, onToggle, onClose }: { sel: string[]; onToggle: (key: string) => void; onClose: () => void }) {
+  return (
+    <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.14)", padding: 10, width: 200 }}>
+      <div style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, padding: "2px 4px 7px" }}>Séries pra comparar</div>
+      {COMP_SERIES.map((s) => {
+        const on = sel.includes(s.key);
+        return (
+          <button key={s.key} onClick={(e) => { e.stopPropagation(); onToggle(s.key); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", fontSize: 12.5, padding: "7px 6px", borderRadius: 6, border: "none", background: "transparent", color: C.title, cursor: "pointer" }}>
+            <span style={{ width: 14, height: 14, borderRadius: 4, border: `1px solid ${on ? s.cor : C.border}`, background: on ? s.cor : "#fff", color: "#fff", fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{on ? "✓" : ""}</span>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: s.cor, flexShrink: 0 }} />
+            {s.label} <span style={{ color: C.muted, fontSize: 10 }}>{s.unit === "money" ? "R$" : "qtd"}</span>
+          </button>
+        );
+      })}
+      <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ width: "100%", marginTop: 4, fontSize: 11.5, fontWeight: 600, padding: "6px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer" }}>Fechar</button>
+    </div>
+  );
+}
+
 // Faixa reservada de estado atual: cartões elevados (sombra), sem bordas coloridas.
 function StateBand({ data, metas, onDrill }: { data: Data; metas: Record<string, number>; onDrill: (tipo: string, titulo: string) => void }) {
   return (
@@ -836,6 +882,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const [metas, setMetas] = useState<Record<string, number>>({});
   const [metasModal, setMetasModal] = useState(false);
   const [chartOpts, setChartOpts] = useState<Record<string, ChartOpts>>({});
+  const [compSeries, setCompSeries] = useState<Record<string, string[]>>({});
   const [optsFor, setOptsFor] = useState<string | null>(null); // card com painel de opções aberto
   const [edit, setEdit] = useState(false);
   const [drill, setDrill] = useState<{ tipo: string; titulo: string } | null>(null);
@@ -858,10 +905,12 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       const g = localStorage.getItem("grid-gran-v1"); if (g) setGran(JSON.parse(g));
       const mt = localStorage.getItem(LS_METAS); if (mt) setMetas(JSON.parse(mt));
       const co = localStorage.getItem(LS_CHARTOPTS); if (co) setChartOpts(JSON.parse(co));
+      const cs = localStorage.getItem(LS_COMP); if (cs) setCompSeries(JSON.parse(cs));
     } catch {}
   }, []);
   const persistMetas = (m: Record<string, number>) => { try { localStorage.setItem(LS_METAS, JSON.stringify(m)); } catch {} setMetas(m); };
   const persistChartOpts = (o: Record<string, ChartOpts>) => { try { localStorage.setItem(LS_CHARTOPTS, JSON.stringify(o)); } catch {} setChartOpts(o); };
+  const persistComp = (c: Record<string, string[]>) => { try { localStorage.setItem(LS_COMP, JSON.stringify(c)); } catch {} setCompSeries(c); };
   const persistGran = (g: Record<string, string>) => { try { localStorage.setItem("grid-gran-v1", JSON.stringify(g)); } catch {} setGran(g); };
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(([e]) => setGridW(e.contentRect.width)); ro.observe(el); setGridW(el.getBoundingClientRect().width); return () => ro.disconnect(); }, [mounted]);
 
@@ -1021,6 +1070,12 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                           {optsFor === item.i && <ChartOptsPanel tipos={def.viz} viz={curViz} opts={chartOpts[item.i] ?? {}} onViz={(v) => persistViz({ ...viz, [item.i]: v })} onOpts={(o) => persistChartOpts({ ...chartOpts, [item.i]: o })} onClose={() => setOptsFor(null)} />}
                         </div>
                       )}
+                      {bid === "comparativo" && (
+                        <div style={{ position: "relative" }}>
+                          <button onClick={(e) => { e.stopPropagation(); setOptsFor(optsFor === item.i ? null : item.i); }} title="Séries" style={{ fontSize: 11, fontWeight: 600, padding: "0 8px", height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: optsFor === item.i ? C.accent : "#eef1f5", color: optsFor === item.i ? "#fff" : C.muted }}>séries</button>
+                          {optsFor === item.i && <CompPanel sel={compSeries[item.i] ?? ["leads", "page_views"]} onToggle={(key) => { const cur = compSeries[item.i] ?? ["leads", "page_views"]; const next = cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]; persistComp({ ...compSeries, [item.i]: next }); }} onClose={() => setOptsFor(null)} />}
+                        </div>
+                      )}
                       {(bid === "leads_dia" || bid === "receita_dia") && (["dia", "semana", "mes"] as const).map((g) => (
                         <button key={g} onClick={(e) => { e.stopPropagation(); persistGran({ ...gran, [item.i]: g }); }} title={g} style={{ fontSize: 11, fontWeight: 600, width: 20, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: (gran[item.i] ?? "dia") === g ? C.accent : "#eef1f5", color: (gran[item.i] ?? "dia") === g ? "#fff" : C.muted }}>{g === "dia" ? "D" : g === "semana" ? "S" : "M"}</button>
                       ))}
@@ -1034,7 +1089,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas, chartOpts[item.i])}
+                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas, chartOpts[item.i], compSeries[item.i])}
                 </div>
               </div>
             );
