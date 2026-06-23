@@ -597,7 +597,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   if (!mounted) return <div style={{ padding: 24, color: C.muted }}>Carregando...</div>;
 
   return (
-    <div style={{ background: C.page, minHeight: "calc(100vh - 80px)", color: C.big, margin: "-32px -24px", padding: "0 28px 30px" }}>
+    <div style={{ background: C.page, minHeight: "calc(100vh - 73px)", color: C.big, marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", marginTop: -32, marginBottom: -32, padding: "0 40px 40px" }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}
         .react-grid-item.react-grid-placeholder{background:${C.accentSoft};opacity:.5;border-radius:10px}
         .react-grid-item>.react-resizable-handle{opacity:${edit ? 0.6 : 0}}
