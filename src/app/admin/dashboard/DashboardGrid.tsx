@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
-import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ReferenceLine } from "recharts";
+import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ReferenceLine, PieChart, Pie, Cell } from "recharts";
+import { METRIC_DEF, type MetricDef } from "./metric-defs";
 import { refreshVendas, runSelectQuery, drillLeads } from "./actions";
 import { FATURAS_ATRASO_FAIXAS } from "@/lib/vendas-db";
 import type { VendasFilters, ReceitaData, ConversaoData, VelocidadeData, PerdaData, LeadDia, ReceitaDia, FilterOptions, ComplementarData, DrillCol, DrillResult } from "@/lib/vendas-db";
@@ -484,28 +485,37 @@ function renderChart(id: string, d: Data, viz: string, gran: string, metas: Reco
 const LS_LAYOUT = "grid-layout-v3", LS_VIEWS = "grid-views-v3", LS_VIZ = "grid-viz-v1", LS_SQL = "grid-sql-v1", LS_METAS = "grid-metas-v1", LS_CHARTOPTS = "grid-chartopts-v1", LS_COMP = "grid-comp-v1";
 const RICH_CHARTS = new Set(["leads_dia", "receita_dia"]); // gráficos com opções avançadas de estilo
 
-type SqlQuery = { id: string; title: string; sql: string };
+type SqlQuery = { id: string; title: string; sql: string; viz?: string };
 
-// Widget de métrica personalizada (consulta SELECT, somente leitura, validada no servidor).
-function SqlWidget({ sql }: { sql: string }) {
-  const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    setLoading(true); setErr(null);
-    runSelectQuery(sql).then((r) => { if (r.error) setErr(r.error); else setRes({ columns: r.columns, rows: r.rows }); setLoading(false); });
-  }, [sql]);
-  if (loading) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Executando...</div>;
-  if (err) return <div style={{ fontSize: 11.5, color: C.down, fontFamily: "monospace", padding: 12, whiteSpace: "pre-wrap" }}>{err}</div>;
-  if (!res || res.rows.length === 0) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Sem resultados.</div>;
-  // Resultado de 1 linha × 1 coluna → exibe como número grande (KPI personalizado)
-  if (res.rows.length === 1 && res.columns.length === 1) {
-    const val = res.rows[0][0];
+// Visualizações possíveis para uma métrica personalizada
+const CUSTOM_VIZ = [
+  { key: "kpi", label: "Número" }, { key: "line", label: "Linha" }, { key: "bar", label: "Barra" },
+  { key: "area", label: "Área" }, { key: "pizza", label: "Pizza" }, { key: "table", label: "Tabela" },
+];
+
+// Render do resultado SQL conforme a visualização escolhida.
+// kpi: 1º valor · line/bar/area/pizza: 1ª coluna = rótulo, 2ª = valor · table: tudo.
+function renderSqlViz(res: { columns: string[]; rows: unknown[][] }, viz: string) {
+  if (viz === "kpi") {
+    const val = res.rows[0]?.[0];
     return <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", padding: "6cqh 7cqw" }}>
-      <div style={{ fontSize: "clamp(20px, min(11cqw, 30cqh), 40px)", fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{val === null ? "sem dados" : String(val)}</div>
+      <div style={{ fontSize: "clamp(20px, min(11cqw, 30cqh), 40px)", fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{val == null ? "sem dados" : String(val)}</div>
       <div style={{ fontSize: 11.5, color: C.answer, marginTop: 8 }}>{res.columns[0]}</div>
     </div>;
   }
+  if (viz === "line" || viz === "bar" || viz === "area" || viz === "pizza") {
+    const data = res.rows.map((r) => ({ label: String(r[0] ?? "—"), v: Number(r[1] ?? 0) }));
+    if (viz === "pizza") {
+      return <ResponsiveContainer width="100%" height="100%"><PieChart>
+        <Pie data={data} dataKey="v" nameKey="label" cx="50%" cy="50%" outerRadius="78%" innerRadius="45%">
+          {data.map((_, i) => <Cell key={i} fill={CHART_CORES[i % CHART_CORES.length]} />)}
+        </Pie>
+        <Tooltip contentStyle={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }} formatter={(val, nome) => [num(Number(val)), nome]} /><Legend wrapperStyle={{ fontSize: 11 }} />
+      </PieChart></ResponsiveContainer>;
+    }
+    return <SerieChart data={data} dataKey="custom" name={res.columns[1] ?? "valor"} viz={viz} />;
+  }
+  // table
   return (
     <div style={{ height: "100%", overflow: "auto", padding: "0 8px 8px" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
@@ -518,44 +528,105 @@ function SqlWidget({ sql }: { sql: string }) {
   );
 }
 
-function SqlModal({ inicial, tabelas, onSalvar, onFechar }: { inicial?: SqlQuery; tabelas: string[]; onSalvar: (q: SqlQuery) => void; onFechar: () => void }) {
-  const [title, setTitle] = useState(inicial?.title ?? "Nova métrica personalizada");
+// Widget de métrica personalizada (consulta SELECT, somente leitura, validada no servidor).
+function SqlWidget({ sql, viz }: { sql: string; viz?: string }) {
+  const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    setLoading(true); setErr(null);
+    runSelectQuery(sql).then((r) => { if (r.error) setErr(r.error); else setRes({ columns: r.columns, rows: r.rows }); setLoading(false); });
+  }, [sql]);
+  if (loading) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Executando...</div>;
+  if (err) return <div style={{ fontSize: 11.5, color: C.down, fontFamily: "monospace", padding: 12, whiteSpace: "pre-wrap" }}>{err}</div>;
+  if (!res || res.rows.length === 0) return <div style={{ fontSize: 12, color: C.muted, padding: 12 }}>Sem resultados.</div>;
+  // viz escolhida; se não houver, decide pelo formato (1 número = kpi, resto = tabela)
+  const v = viz ?? (res.rows.length === 1 && res.columns.length === 1 ? "kpi" : "table");
+  return renderSqlViz(res, v);
+}
+
+function SqlModal({ inicial, onSalvar, onFechar }: { inicial?: SqlQuery; onSalvar: (q: SqlQuery) => void; onFechar: () => void }) {
+  const [title, setTitle] = useState(inicial?.title ?? "");
   const [sql, setSql] = useState(inicial?.sql ?? "SELECT count(*) AS leads\nFROM leads\nWHERE deleted_at IS NULL");
+  const [viz, setViz] = useState(inicial?.viz ?? "kpi");
   const [res, setRes] = useState<{ columns: string[]; rows: unknown[][] } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   async function exec() { setRunning(true); setErr(null); const r = await runSelectQuery(sql); if (r.error) { setErr(r.error); setRes(null); } else setRes({ columns: r.columns, rows: r.rows }); setRunning(false); }
+  const dica = viz === "kpi" ? "Retorne 1 número (ex: COUNT, SUM)." : viz === "table" ? "Retorne as colunas que quiser ver." : "Retorne 2 colunas: rótulo (eixo) e valor.";
   return (
     <div onClick={(e) => { if (e.target === e.currentTarget) onFechar(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ width: "min(92vw, 860px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ flex: 1 }}>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ fontSize: 14, fontWeight: 600, border: "none", outline: "none", color: C.big, width: "100%" }} placeholder="Nome da métrica" />
-            <div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>Construa uma análise consultando o banco. Resultado de 1 número vira um cartão; várias linhas viram tabela.</div>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ fontSize: 14, fontWeight: 600, border: "none", outline: "none", color: C.big, width: "100%" }} placeholder="Nome da métrica (ex: Leads por origem)" />
+            <div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>Dê um nome, escreva a consulta e escolha como exibir.</div>
           </div>
           <button onClick={onFechar} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
         </div>
+        {/* Escolha da visualização */}
+        <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "10px 18px", borderBottom: `1px solid ${C.border}`, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, marginRight: 2 }}>Visualização</span>
+          {CUSTOM_VIZ.map((o) => (
+            <button key={o.key} onClick={() => setViz(o.key)} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 7, cursor: "pointer", border: `1px solid ${viz === o.key ? C.accent : C.border}`, background: viz === o.key ? "#eef1f5" : "#fff", color: viz === o.key ? C.accent : C.title }}>{o.label}</button>
+          ))}
+          <span style={{ fontSize: 11, color: C.muted, marginLeft: 4 }}>{dica}</span>
+        </div>
         <textarea value={sql} onChange={(e) => setSql(e.target.value)} spellCheck={false}
           onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") exec(); }}
-          style={{ fontFamily: "monospace", fontSize: 12.5, padding: "12px 18px", border: "none", borderBottom: `1px solid ${C.border}`, outline: "none", resize: "none", height: 150, color: "#334155", lineHeight: 1.6 }} />
+          style={{ fontFamily: "monospace", fontSize: 12.5, padding: "12px 18px", border: "none", borderBottom: `1px solid ${C.border}`, outline: "none", resize: "none", height: 140, color: "#334155", lineHeight: 1.6 }} />
         <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 18px", borderBottom: `1px solid ${C.border}`, flexWrap: "wrap" }}>
           <button onClick={exec} disabled={running} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 14px", borderRadius: 7, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>{running ? "Executando..." : "Testar (Ctrl+Enter)"}</button>
           <span style={{ fontSize: 11.5, color: C.muted }}>Apenas leitura (SELECT).</span>
           <Link href="/admin/dashboard/banco" target="_blank" style={{ fontSize: 11.5, color: C.accent, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>{Icon.database(13)} Explorar tabelas e campos</Link>
           {res && <span style={{ fontSize: 11.5, color: C.muted, marginLeft: "auto" }}>{res.rows.length} linhas</span>}
         </div>
-        <div style={{ flex: 1, overflow: "auto", padding: 8, minHeight: 120 }}>
+        <div style={{ flex: 1, overflow: "hidden", padding: 8, minHeight: 180, display: "flex", flexDirection: "column" }}>
           {err && <div style={{ fontSize: 11.5, color: C.down, fontFamily: "monospace", padding: 10, whiteSpace: "pre-wrap" }}>{err}</div>}
           {res && !err && res.rows.length > 0 && (
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
-              <thead><tr>{res.columns.map((c) => <th key={c} style={{ textAlign: "left", padding: "5px 8px", color: C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}` }}>{c}</th>)}</tr></thead>
-              <tbody>{res.rows.slice(0, 50).map((row, ri) => <tr key={ri} style={{ borderBottom: `1px solid ${C.track}` }}>{row.map((cell, ci) => <td key={ci} style={{ padding: "5px 8px", fontFamily: "monospace", color: C.title }}>{cell === null ? "—" : String(cell)}</td>)}</tr>)}</tbody>
-            </table>
+            <div style={{ flex: 1, minHeight: 180, border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden" }}>{renderSqlViz(res, viz)}</div>
           )}
-          {!res && !err && <div style={{ fontSize: 12, color: C.muted, padding: 10 }}>{tabelas.length > 0 ? `Algumas tabelas: ${tabelas.slice(0, 8).join(", ")}...` : "Teste a consulta para ver um preview."}</div>}
+          {res && !err && res.rows.length === 0 && <div style={{ fontSize: 12, color: C.muted, padding: 10 }}>A consulta não retornou linhas.</div>}
+          {!res && !err && <div style={{ fontSize: 12, color: C.muted, padding: 10 }}>Clique em Testar pra ver a prévia na visualização escolhida.</div>}
         </div>
         <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}` }}>
-          <button onClick={() => onSalvar({ id: inicial?.id ?? `sql_${Date.now()}`, title, sql })} style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Adicionar ao dashboard</button>
+          <button onClick={() => onSalvar({ id: inicial?.id ?? `sql_${Date.now()}`, title: title.trim() || (res?.columns[0] ?? "Métrica personalizada"), sql, viz })} style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>{inicial ? "Salvar alterações" : "Adicionar ao dashboard"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Transparência: de onde a métrica vem, regra e SQL (pra auditar com o time)
+function MetricInfoModal({ titulo, def, customSql, onClose }: { titulo: string; def?: MetricDef; customSql?: string; onClose: () => void }) {
+  const linha = (rotulo: string, valor: string) => (
+    <div style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${C.track}` }}>
+      <div style={{ width: 96, flexShrink: 0, fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{rotulo}</div>
+      <div style={{ fontSize: 12.5, color: C.title, lineHeight: 1.45 }}>{valor}</div>
+    </div>
+  );
+  const sql = customSql ?? def?.sql ?? "";
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 108 }}>
+      <div style={{ width: "min(94vw, 720px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
+          <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>{titulo}</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 1 }}>como esta métrica é calculada</div></div>
+          <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: "8px 18px 16px" }}>
+          {customSql ? linha("Fonte", "Métrica personalizada (SELECT no banco)")
+            : def ? <>
+                {linha("Fonte", def.fonte)}
+                {linha("Tabela(s)", def.tabelas)}
+                {linha("Campos", def.campos)}
+                {linha("Regra", def.regra)}
+              </>
+            : <div style={{ fontSize: 12.5, color: C.muted, padding: "10px 0" }}>Definição não cadastrada para esta métrica.</div>}
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6 }}>SQL / cálculo</div>
+            <pre style={{ margin: 0, background: "#0f172a", color: "#e2e8f0", padding: "14px 16px", borderRadius: 9, fontSize: 12, lineHeight: 1.55, overflow: "auto", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{sql || "—"}</pre>
+            <div style={{ fontSize: 10.5, color: C.muted, marginTop: 6 }}>{"{{início}} / {{fim}} = datas do período selecionado. Definições em src/app/admin/dashboard/metric-defs.ts."}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -938,6 +1009,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const [sqlModal, setSqlModal] = useState<SqlQuery | "new" | null>(null);
   const [metas, setMetas] = useState<Record<string, number>>({});
   const [metasModal, setMetasModal] = useState(false);
+  const [infoModal, setInfoModal] = useState<{ titulo: string; def?: MetricDef; customSql?: string } | null>(null);
   const [chartOpts, setChartOpts] = useState<Record<string, ChartOpts>>({});
   const [compSeries, setCompSeries] = useState<Record<string, string[]>>({});
   const [optsFor, setOptsFor] = useState<string | null>(null); // card com painel de opções aberto
@@ -1135,7 +1207,8 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   </span>
                   {edit && (
                     <span style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-                      {isSql && <button onClick={(e) => { e.stopPropagation(); setSqlModal(sq!); }} title="Editar consulta" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#eef1f5", color: C.muted }}>✎</button>}
+                      {!isSql && <button onClick={(e) => { e.stopPropagation(); setInfoModal({ titulo: def!.titulo, def: METRIC_DEF[bid] }); }} title="Ver de onde vem (tabela, regra, SQL)" style={{ width: 24, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#eef1f5", color: C.title, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{Icon.edit(12)}</button>}
+                      {isSql && <button onClick={(e) => { e.stopPropagation(); setSqlModal(sq!); }} title="Editar a métrica (nome, SQL, visualização)" style={{ width: 24, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#eef1f5", color: C.title, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{Icon.edit(12)}</button>}
                       {def?.viz && !RICH_CHARTS.has(bid) && def.viz.map((z) => (
                         <button key={z} onClick={(e) => { e.stopPropagation(); persistViz({ ...viz, [item.i]: z }); }} title={z} style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: curViz === z ? C.accent : "#eef1f5", color: curViz === z ? "#fff" : C.muted }}>{z === "area" ? "∿" : z === "bar" ? "▮" : z === "line" ? "╱" : "▦"}</button>
                       ))}
@@ -1164,7 +1237,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                   )}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, padding: isSql ? 0 : (def!.kind === "chart" ? "4px 12px 12px" : 0) }}>
-                  {isSql ? <SqlWidget sql={sq!.sql} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas, chartOpts[item.i], compSeries[item.i])}
+                  {isSql ? <SqlWidget sql={sq!.sql} viz={sq!.viz} /> : def!.kind === "kpi" ? (() => { const k = resolveKpi(bid, data2); return k ? <KpiView k={k} metaInfo={computeMeta(bid, data2, metas)} onDrill={!edit && DRILL[bid] ? () => setDrill({ tipo: DRILL[bid], titulo: def!.titulo }) : undefined} /> : null; })() : renderChart(bid, data2, curViz, gran[item.i] ?? "dia", metas, chartOpts[item.i], compSeries[item.i])}
                 </div>
               </div>
             );
@@ -1173,7 +1246,8 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
       </div>
 
       {metasModal && <MetasModal data={data2} metas={metas} onChange={persistMetas} onClose={() => setMetasModal(false)} />}
-      {sqlModal && <SqlModal inicial={sqlModal === "new" ? undefined : sqlModal} tabelas={[]} onSalvar={saveSql} onFechar={() => setSqlModal(null)} />}
+      {infoModal && <MetricInfoModal titulo={infoModal.titulo} def={infoModal.def} customSql={infoModal.customSql} onClose={() => setInfoModal(null)} />}
+      {sqlModal && <SqlModal inicial={sqlModal === "new" ? undefined : sqlModal} onSalvar={saveSql} onFechar={() => setSqlModal(null)} />}
       {drill && <DrillModal tipo={drill.tipo} titulo={drill.titulo} filters={filters} onClose={() => setDrill(null)} />}
       {confirmRefresh && <ConfirmRefresh loading={refreshing} onConfirm={doRefresh} onCancel={() => setConfirmRefresh(false)} />}
     </div>
