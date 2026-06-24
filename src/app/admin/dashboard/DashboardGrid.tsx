@@ -31,7 +31,16 @@ const C = {
 
 // Métricas de estado atual (não dependem do período) — vivem numa faixa fixa no topo
 const STATE_IDS = ["mrr", "clientes_ativos", "faturas_atraso"];
-const STATE_TITLES: Record<string, string> = { mrr: "Receita recorrente", clientes_ativos: "Clientes ativos", faturas_atraso: "Clientes com faturas em atraso" };
+const STATE_TITLES: Record<string, string> = { mrr: "Receita recorrente (MRR)", clientes_ativos: "Clientes ativos", faturas_atraso: "Clientes com faturas em atraso" };
+
+// Ícones (SVG, sem emoji) — herdam a cor via currentColor
+const Icon = {
+  target: (s = 15) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /></svg>),
+  database: (s = 15) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5" /><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" /></svg>),
+  refresh: (s = 14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>),
+  edit: (s = 14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>),
+  plus: (s = 14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>),
+};
 // Formatadores à prova de undefined/null (dado parcial ou cache antigo não quebra a tela)
 const brl = (v: number | null | undefined) => { const n = Number(v ?? 0); return n >= 1_000_000 ? `R$ ${(n / 1_000_000).toFixed(1).replace(".", ",")}M` : n >= 1_000 ? `R$ ${Math.round(n / 1_000)}k` : `R$ ${Math.round(n)}`; };
 const brlFull = (v: number | null | undefined) => Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -236,14 +245,14 @@ function computeMeta(id: string, d: Data, metas: Record<string, number>): MetaIn
 
 const METRIC_TITLE = (id: string) => STATE_TITLES[id] ?? CATALOG.find((d) => d.id === id)?.titulo ?? id;
 
-function MetaBar({ info }: { info: MetaInfo }) {
+function MetaBar({ info, dark }: { info: MetaInfo; dark?: boolean }) {
   return (
     <div style={{ marginTop: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10.5, marginBottom: 3 }}>
-        <span style={{ color: C.muted }}>meta {info.fmt}</span>
+        <span style={{ color: dark ? "#94a3b8" : C.muted }}>meta {info.fmt}</span>
         <span style={{ color: info.color, fontWeight: 600 }}>{info.arrow} {info.status}</span>
       </div>
-      <div style={{ height: 5, borderRadius: 3, background: C.track, overflow: "hidden" }}><div style={{ width: `${info.frac * 100}%`, height: "100%", background: info.color }} /></div>
+      <div style={{ height: 5, borderRadius: 3, background: dark ? "rgba(255,255,255,0.12)" : C.track, overflow: "hidden" }}><div style={{ width: `${info.frac * 100}%`, height: "100%", background: info.color }} /></div>
     </div>
   );
 }
@@ -532,7 +541,7 @@ function SqlModal({ inicial, tabelas, onSalvar, onFechar }: { inicial?: SqlQuery
         <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 18px", borderBottom: `1px solid ${C.border}`, flexWrap: "wrap" }}>
           <button onClick={exec} disabled={running} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 14px", borderRadius: 7, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>{running ? "Executando..." : "Testar (Ctrl+Enter)"}</button>
           <span style={{ fontSize: 11.5, color: C.muted }}>Apenas leitura (SELECT).</span>
-          <Link href="/admin/dashboard/banco" target="_blank" style={{ fontSize: 11.5, color: C.accent, textDecoration: "none" }}>⛁ Explorar tabelas e campos ↗</Link>
+          <Link href="/admin/dashboard/banco" target="_blank" style={{ fontSize: 11.5, color: C.accent, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>{Icon.database(13)} Explorar tabelas e campos</Link>
           {res && <span style={{ fontSize: 11.5, color: C.muted, marginLeft: "auto" }}>{res.rows.length} linhas</span>}
         </div>
         <div style={{ flex: 1, overflow: "auto", padding: 8, minHeight: 120 }}>
@@ -569,47 +578,78 @@ function ConfirmRefresh({ onConfirm, onCancel, loading }: { onConfirm: () => voi
   );
 }
 
-// Painel de metas: define o alvo de cada métrica (salvo no navegador)
-function MetasModal({ data, metas, onSave, onClose }: { data: Data; metas: Record<string, number>; onSave: (m: Record<string, number>) => void; onClose: () => void }) {
-  const [draft, setDraft] = useState<Record<string, string>>(() => {
-    const o: Record<string, string> = {};
-    for (const id of Object.keys(META_SPEC)) o[id] = metas[id] != null ? String(metas[id]) : "";
-    return o;
-  });
-  function save() {
-    const out: Record<string, number> = {};
-    for (const [id, val] of Object.entries(draft)) { const v = parseFloat(val.replace(",", ".")); if (!isNaN(v) && v > 0) out[id] = v; }
-    onSave(out);
-  }
+// Metas em dois níveis: 1) ver/organizar as existentes  2) criar/editar uma
+function MetasModal({ data, metas, onChange, onClose }: { data: Data; metas: Record<string, number>; onChange: (m: Record<string, number>) => void; onClose: () => void }) {
+  const definidas = Object.keys(metas).filter((id) => META_SPEC[id]);
+  const [view, setView] = useState<"list" | "form">(definidas.length ? "list" : "form");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [metric, setMetric] = useState<string>("");
+  const [valor, setValor] = useState("");
+
+  function startNew() { setEditId(null); setMetric(""); setValor(""); setView("form"); }
+  function startEdit(id: string) { setEditId(id); setMetric(id); setValor(String(metas[id])); setView("form"); }
+  function remove(id: string) { const m = { ...metas }; delete m[id]; onChange(m); }
+  function salvarForm() { const v = parseFloat(valor.replace(",", ".")); if (!metric || isNaN(v) || v <= 0) return; onChange({ ...metas, [metric]: v }); setView("list"); }
+  const disponiveis = Object.keys(META_SPEC).filter((id) => !metas[id] || id === editId);
+  const spec = metric ? META_SPEC[metric] : null;
+
   return (
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 105 }}>
-      <div style={{ width: "min(94vw, 640px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ width: "min(94vw, 620px)", maxHeight: "88vh", background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
-          <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>🎯 Metas</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 2 }}>defina o alvo de cada métrica · salvo no navegador, sem custo · deixe em branco pra remover</div></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {view === "form" && definidas.length > 0 && <button onClick={() => setView("list")} title="Voltar" style={{ border: "none", background: "transparent", fontSize: 17, color: C.muted, cursor: "pointer", lineHeight: 1 }}>←</button>}
+            <span style={{ color: C.accent, display: "inline-flex" }}>{Icon.target(16)}</span>
+            <div><div style={{ fontSize: 14, fontWeight: 600, color: C.big }}>{view === "list" ? "Metas" : editId ? "Editar meta" : "Nova meta"}</div><div style={{ fontSize: 11.5, color: C.muted, marginTop: 1 }}>{view === "list" ? "acompanhe e organize seus alvos" : "escolha a métrica e defina o alvo"}</div></div>
+          </div>
           <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 18, color: C.muted, cursor: "pointer" }}>×</button>
         </div>
-        <div style={{ flex: 1, overflow: "auto", padding: "6px 18px" }}>
-          {Object.entries(META_SPEC).map(([id, spec]) => {
-            const cur = kpiCurrent(id, data);
-            const dirTxt = spec.direcao === "maior" ? "quanto maior, melhor" : "quanto menor, melhor";
-            return (
-              <div key={id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: `1px solid ${C.track}` }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 600, color: C.title }}>{METRIC_TITLE(id)}</div>
-                  <div style={{ fontSize: 10.5, color: C.muted, marginTop: 1 }}>{dirTxt} · agora {cur == null ? "sem dados" : fmtMeta(spec.tipo, cur)}</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, position: "relative" }}>
-                  <input value={draft[id]} onChange={(e) => setDraft({ ...draft, [id]: e.target.value })} placeholder="alvo" inputMode="decimal"
-                    style={{ width: 96, fontSize: 12.5, padding: "6px 9px", borderRadius: 7, border: `1px solid ${C.border}`, outline: "none", color: C.title, textAlign: "right", fontVariantNumeric: "tabular-nums" }} />
-                  <span style={{ fontSize: 11, color: C.muted, width: 28 }}>{metaUnidade(spec.tipo)}</span>
-                </div>
+
+        {view === "list" ? (
+          <>
+            <div style={{ flex: 1, overflow: "auto", padding: "10px 18px" }}>
+              {definidas.length === 0 ? <div style={{ fontSize: 12.5, color: C.muted, padding: "24px 0", textAlign: "center" }}>Nenhuma meta ainda. Crie a primeira pra acompanhar o progresso.</div>
+                : definidas.map((id) => {
+                  const k = resolveKpi(id, data); const mi = computeMeta(id, data, metas);
+                  return (
+                    <div key={id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderBottom: `1px solid ${C.track}` }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: C.title }}>{METRIC_TITLE(id)}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>agora <b style={{ color: C.title }}>{k?.valor ?? "sem dados"}</b> · alvo {fmtMeta(META_SPEC[id].tipo, metas[id])}</div>
+                        {mi && <div style={{ marginTop: 4, maxWidth: 260 }}><MetaBar info={mi} /></div>}
+                      </div>
+                      <button onClick={() => startEdit(id)} title="Editar" style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{Icon.edit(13)}</button>
+                      <button onClick={() => remove(id)} title="Remover" style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.down, cursor: "pointer", fontSize: 15 }}>×</button>
+                    </div>
+                  );
+                })}
+            </div>
+            <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}` }}>
+              <button onClick={startNew} style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>{Icon.plus(13)} Nova meta</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ flex: 1, overflow: "auto", padding: "16px 18px" }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>Métrica</label>
+              <select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={!!editId} style={{ width: "100%", marginTop: 6, padding: "9px 10px", fontSize: 13, borderRadius: 8, border: `1px solid ${C.border}`, background: "#fff", color: C.title, outline: "none" }}>
+                <option value="" disabled>Escolha a métrica</option>
+                {disponiveis.map((id) => <option key={id} value={id}>{METRIC_TITLE(id)}</option>)}
+              </select>
+              {spec && <div style={{ fontSize: 11.5, color: C.muted, marginTop: 8 }}>{spec.direcao === "maior" ? "Quanto maior, melhor." : "Quanto menor, melhor."} Agora: <b style={{ color: C.title }}>{kpiCurrent(metric, data) == null ? "sem dados" : fmtMeta(spec.tipo, kpiCurrent(metric, data)!)}</b></div>}
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, display: "block", marginTop: 16 }}>Alvo</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="ex: 200000" inputMode="decimal" onKeyDown={(e) => e.key === "Enter" && salvarForm()}
+                  style={{ flex: 1, fontSize: 13.5, padding: "9px 11px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", color: C.title, fontVariantNumeric: "tabular-nums" }} />
+                <span style={{ fontSize: 12, color: C.muted, minWidth: 30 }}>{spec ? metaUnidade(spec.tipo) : ""}</span>
               </div>
-            );
-          })}
-        </div>
-        <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}` }}>
-          <button onClick={save} style={{ width: "100%", fontSize: 13, fontWeight: 600, padding: "9px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Salvar metas</button>
-        </div>
+            </div>
+            <div style={{ padding: "12px 18px", borderTop: `1px solid ${C.border}`, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              {definidas.length > 0 && <button onClick={() => setView("list")} style={{ fontSize: 12.5, fontWeight: 600, padding: "9px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer" }}>Cancelar</button>}
+              <button onClick={salvarForm} disabled={!metric || !valor} style={{ fontSize: 13, fontWeight: 600, padding: "9px 18px", borderRadius: 8, border: "none", background: !metric || !valor ? C.accentSoft : C.accent, color: "#fff", cursor: !metric || !valor ? "default" : "pointer" }}>Salvar meta</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -617,30 +657,34 @@ function MetasModal({ data, metas, onSave, onClose }: { data: Data; metas: Recor
 
 // Ticker estilo bolsa: desliza devagar mostrando o estado das métricas e metas
 function Ticker({ data, metas }: { data: Data; metas: Record<string, number> }) {
-  const ids = Array.from(new Set([...STATE_IDS, ...Object.keys(metas)]));
-  const itens = ids.map((id) => {
-    const cur = kpiCurrent(id, data);
+  // Lista ampla (estado + todas as métricas com valor) pra a faixa ter largura
+  // suficiente e o loop ser contínuo, sem buraco.
+  const ids = Array.from(new Set([...STATE_IDS, ...Object.keys(META_SPEC)]));
+  const base = ids.map((id) => {
     const k = resolveKpi(id, data);
-    const valor = k?.valor ?? (cur == null ? "—" : String(cur));
     const mi = computeMeta(id, data, metas);
-    return { id, titulo: METRIC_TITLE(id), valor, mi };
-  }).filter((x) => x.valor !== "—");
-  if (itens.length === 0) return null;
-  const linha = (dupe: boolean) => (
-    <div aria-hidden={dupe} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+    return { id, titulo: METRIC_TITLE(id), valor: k?.valor ?? "", mi };
+  }).filter((x) => x.valor && x.valor !== "sem dados");
+  if (base.length === 0) return null;
+  // Repete a sequência até ter itens suficientes pra uma cópia cobrir a tela
+  const itens: typeof base = [];
+  while (itens.length < Math.max(base.length, 14)) itens.push(...base);
+  const seq = (copia: number) => (
+    <div aria-hidden={copia > 0} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
       {itens.map((it, idx) => (
-        <span key={(dupe ? "d" : "") + it.id + idx} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0 22px", borderRight: `1px solid ${C.border}` }}>
+        <span key={copia + "-" + idx} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0 24px", borderRight: `1px solid ${C.border}`, whiteSpace: "nowrap" }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4 }}>{it.titulo}</span>
           <span style={{ fontSize: 12, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums" }}>{it.valor}</span>
-          {it.mi && <span style={{ fontSize: 11, fontWeight: 600, color: it.mi.color }}>{it.mi.arrow} {it.mi.status}</span>}
+          {it.mi && <span style={{ fontSize: 11, fontWeight: 600, color: it.mi.color, display: "inline-flex", alignItems: "center", gap: 2 }}>{it.mi.arrow} {it.mi.status}</span>}
         </span>
       ))}
     </div>
   );
+  // Duas cópias idênticas + animação de 0 a -50% = rolagem contínua sem emenda
   return (
     <div style={{ overflow: "hidden", borderBottom: `1px solid ${C.border}`, background: "#fbfbfc", marginLeft: -40, marginRight: -40, padding: "9px 0" }}>
-      <div className="ticker-track" style={{ display: "flex", width: "max-content", animation: "ticker 60s linear infinite" }}>
-        {linha(false)}{linha(true)}
+      <div className="ticker-track" style={{ display: "flex", width: "max-content", animation: "ticker 80s linear infinite" }}>
+        {seq(0)}{seq(1)}
       </div>
     </div>
   );
@@ -739,7 +783,7 @@ function DrillModal({ tipo, titulo, filters, onClose }: { tipo: string; titulo: 
 // Dropdown de seleção de métrica (usado para Adicionar e Substituir)
 function MetricMenu({ activeIds, titulo, onPick }: { activeIds: string[]; titulo: string; onPick: (id: string) => void }) {
   return (
-    <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.12)", padding: 8, width: 300, maxHeight: 360, overflow: "auto" }}>
+    <div data-popover style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.12)", padding: 8, width: 300, maxHeight: 360, overflow: "auto" }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: C.title, padding: "2px 9px 8px" }}>{titulo}</div>
       {(["principal", "complementar"] as const).map((grupo) => {
         const itens = CATALOG.filter((d) => (d.grupo ?? "principal") === grupo);
@@ -775,7 +819,7 @@ function ChartOptsPanel({ tipos, viz, opts, onViz, onOpts, onClose }: { tipos: s
   const linha = viz === "line" || viz === "area";
   const nomeTipo: Record<string, string> = { area: "Área", line: "Linha", bar: "Barra", table: "Tabela" };
   return (
-    <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.14)", padding: 12, width: 230 }}>
+    <div data-popover onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.14)", padding: 12, width: 230 }}>
       {row("Tipo", tipos.map((t) => seg(viz === t, () => onViz(t), nomeTipo[t] ?? t, t)))}
       {linha && <>
         {row("Formato da linha", ([["suave", "curva"], ["linear", "reta"], ["degrau", "degrau"]] as const).map(([v, l]) => seg((opts.formato ?? "suave") === v, () => onOpts({ ...opts, formato: v }), l, v)))}
@@ -794,7 +838,7 @@ function ChartOptsPanel({ tipos, viz, opts, onViz, onOpts, onClose }: { tipos: s
 // Painel de séries do gráfico Comparativo
 function CompPanel({ sel, onToggle, onClose }: { sel: string[]; onToggle: (key: string) => void; onClose: () => void }) {
   return (
-    <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.14)", padding: 10, width: 200 }}>
+    <div data-popover onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 40, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(16,24,40,0.14)", padding: 10, width: 200 }}>
       <div style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.4, padding: "2px 4px 7px" }}>Séries pra comparar</div>
       {COMP_SERIES.map((s) => {
         const on = sel.includes(s.key);
@@ -811,14 +855,26 @@ function CompPanel({ sel, onToggle, onClose }: { sel: string[]; onToggle: (key: 
   );
 }
 
-// Faixa reservada de estado atual: cartões elevados (sombra), sem bordas coloridas.
+// Dot verde pulsando = dados vivos / tempo real
+function LiveDot() {
+  return (
+    <span style={{ position: "relative", display: "inline-flex", width: 8, height: 8 }}>
+      <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#22c55e", opacity: 0.55, animation: "livepulse 1.8s ease-out infinite" }} />
+      <span style={{ position: "relative", width: 8, height: 8, borderRadius: "50%", background: "#16a34a" }} />
+    </span>
+  );
+}
+
+// Faixa reservada de estado atual: identidade própria por uma superfície escura
+// e sólida (sem borda, sem sombra), destacando que é o estado vivo da operação.
 function StateBand({ data, metas, onDrill }: { data: Data; metas: Record<string, number>; onDrill: (tipo: string, titulo: string) => void }) {
   return (
     <div style={{ marginTop: 18 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 11 }}>
-        Estado atual da operação <span style={{ fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>· não depende do período</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 11 }}>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7 }}>Estado atual da operação</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, fontWeight: 600, color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 20, padding: "2px 9px 2px 7px" }}><LiveDot /> tempo real</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14 }}>
         {STATE_IDS.map((id) => {
           const k = resolveKpi(id, data); if (!k) return null;
           const titulo = STATE_TITLES[id] ?? id;
@@ -827,16 +883,17 @@ function StateBand({ data, metas, onDrill }: { data: Data; metas: Record<string,
           const click = drill ? () => onDrill(drill, titulo) : undefined;
           return (
             <div key={id} onClick={click}
-              onMouseEnter={(e) => { if (click) e.currentTarget.style.boxShadow = "0 2px 4px rgba(16,24,40,0.06), 0 10px 24px rgba(16,24,40,0.10)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = C.shadow; }}
-              style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", boxShadow: C.shadow, position: "relative", cursor: click ? "pointer" : "default", transition: "box-shadow 0.15s" }}>
+              onMouseEnter={(e) => { if (click) e.currentTarget.style.background = "#0f172a"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#1e293b"; }}
+              style={{ background: "#1e293b", borderRadius: 14, padding: "18px 20px", position: "relative", cursor: click ? "pointer" : "default", transition: "background 0.15s", overflow: "hidden" }}>
+              <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "#22c55e", opacity: 0.85 }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: C.title, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{titulo}</span>
-                {drill && <span style={{ fontSize: 10, color: C.muted, flexShrink: 0 }}>ver clientes ↗</span>}
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#cbd5e1", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{titulo}</span>
+                {drill && <span style={{ fontSize: 10, color: "#94a3b8", flexShrink: 0 }}>ver clientes ↗</span>}
               </div>
-              <div style={{ fontSize: 34, fontWeight: 700, color: C.big, fontVariantNumeric: "tabular-nums", lineHeight: 1.05, marginTop: 12 }}>{k.valor}</div>
-              <div style={{ fontSize: 12, color: C.answer, marginTop: 10, lineHeight: 1.35 }}>{k.resposta}</div>
-              {mi && <MetaBar info={mi} />}
+              <div style={{ fontSize: 34, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums", lineHeight: 1.05, marginTop: 12 }}>{k.valor}</div>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 10, lineHeight: 1.35 }}>{k.resposta}</div>
+              {mi && <MetaBar info={mi} dark />}
             </div>
           );
         })}
@@ -913,6 +970,17 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
   const persistComp = (c: Record<string, string[]>) => { try { localStorage.setItem(LS_COMP, JSON.stringify(c)); } catch {} setCompSeries(c); };
   const persistGran = (g: Record<string, string>) => { try { localStorage.setItem("grid-gran-v1", JSON.stringify(g)); } catch {} setGran(g); };
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(([e]) => setGridW(e.contentRect.width)); ro.observe(el); setGridW(el.getBoundingClientRect().width); return () => ro.disconnect(); }, [mounted]);
+  // Fecha qualquer popover ao clicar fora (e garante um aberto por vez)
+  useEffect(() => {
+    if (!showAdd && optsFor === null && replaceFor === null) return;
+    const h = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("[data-popover]") || t.closest("[data-popover-trigger]")) return;
+      setShowAdd(false); setOptsFor(null); setReplaceFor(null);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [showAdd, optsFor, replaceFor]);
 
   const persistLayout = useCallback((l: LayoutItem[]) => { try { localStorage.setItem(LS_LAYOUT, JSON.stringify(l)); } catch {} setLayout(l); }, []);
   const persistViz = useCallback((z: Record<string, string>) => { try { localStorage.setItem(LS_VIZ, JSON.stringify(z)); } catch {} setViz(z); }, []);
@@ -963,6 +1031,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
     <div style={{ background: C.page, minHeight: "calc(100vh - 73px)", color: C.big, marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", marginTop: -32, marginBottom: -32, padding: "0 40px 40px" }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}
         @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+        @keyframes livepulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(2.4);opacity:0}100%{opacity:0}}
         .ticker-track:hover{animation-play-state:paused}
         .react-grid-item.react-grid-placeholder{background:${C.accentSoft};opacity:.5;border-radius:10px}
         .react-grid-item>.react-resizable-handle{opacity:${edit ? 0.6 : 0}}
@@ -978,6 +1047,12 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
           {[{ l: "Hoje", d: 1 }, { l: "7d", d: 7 }, { l: "30d", d: 30 }, { l: "90d", d: 90 }].map(({ l, d }) => (
             <button key={d} onClick={() => setPreset(d)} style={{ fontSize: 12.5, padding: "6px 10px", borderRadius: 7, cursor: "pointer", border: `1px solid ${activePreset === d ? C.accent : C.border}`, background: activePreset === d ? "#eef1f5" : "#fff", color: C.title, fontWeight: activePreset === d ? 600 : 400 }}>{l}</button>
           ))}
+          {/* Intervalo personalizado */}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: `1px solid ${activePreset == null ? C.accent : C.border}`, borderRadius: 7, padding: "3px 7px", background: activePreset == null ? "#eef1f5" : "#fff" }}>
+            <input type="date" value={filters.start} max={filters.end} onChange={(e) => e.target.value && navigate({ start: e.target.value })} style={{ fontSize: 12, border: "none", outline: "none", background: "transparent", color: C.title, width: 112 }} />
+            <span style={{ color: C.muted, fontSize: 11 }}>até</span>
+            <input type="date" value={filters.end} min={filters.start} onChange={(e) => e.target.value && navigate({ end: e.target.value })} style={{ fontSize: 12, border: "none", outline: "none", background: "transparent", color: C.title, width: 112 }} />
+          </span>
           {filterOptions.sources.length > 0 && (
             <select value={filters.source ?? ""} onChange={(e) => navigate({ source: e.target.value || null })} style={selStyle}><option value="">Origem: todas</option>{filterOptions.sources.map((s) => <option key={s} value={s}>{s}</option>)}</select>
           )}
@@ -985,11 +1060,38 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
             <select value={filters.landingVariant ?? ""} onChange={(e) => navigate({ lv: e.target.value || null })} style={selStyle}><option value="">Landing: todas</option>{filterOptions.landingVariants.map((x) => <option key={x} value={x}>{x}</option>)}</select>
           )}
           <span style={{ width: 1, height: 20, background: C.border, margin: "0 2px" }} />
-          <button onClick={() => setMetasModal(true)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, cursor: "pointer", border: `1px solid ${C.border}`, background: "#fff", color: C.title }}>🎯 Metas</button>
-          <button onClick={() => setConfirmRefresh(true)} disabled={refreshing} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px solid ${C.accent}`, background: C.accent, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", animation: refreshing ? "spin 0.8s linear infinite" : "none" }}>↻</span>{refreshing ? "..." : "Atualizar"}</button>
-          <button onClick={() => setEdit(!edit)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, cursor: "pointer", border: `1px solid ${edit ? C.accent : C.border}`, background: edit ? "#eef1f5" : "#fff", color: C.title }}>{edit ? "✓ Concluir edição" : "✎ Personalizar"}</button>
+          <button onClick={() => setMetasModal(true)} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, cursor: "pointer", border: `1px solid ${C.border}`, background: "#fff", color: C.title, display: "inline-flex", alignItems: "center", gap: 6 }}>{Icon.target(14)} Metas</button>
+          <button onClick={() => setConfirmRefresh(true)} disabled={refreshing} style={{ fontSize: 12.5, fontWeight: 600, padding: "6px 12px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-flex", animation: refreshing ? "spin 0.8s linear infinite" : "none" }}>{Icon.refresh(14)}</span>{refreshing ? "..." : "Atualizar"}</button>
+          <button onClick={() => setEdit(!edit)} style={{ fontSize: 13, fontWeight: 700, padding: "7px 16px", borderRadius: 7, cursor: "pointer", border: "none", background: edit ? "#0f172a" : C.accent, color: "#fff", display: "inline-flex", alignItems: "center", gap: 6, boxShadow: "0 1px 2px rgba(16,24,40,0.12)" }}>{edit ? "✓ Concluir edição" : <>{Icon.edit(14)} Personalizar</>}</button>
         </div>
       </div>
+
+      {/* Barra de edição (logo abaixo do Personalizar, perto das ações) */}
+      {edit && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 14, padding: "12px 14px", background: "#f8fafc", border: `1px solid ${C.border}`, borderRadius: 12 }}>
+          <div style={groupStyle}>
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 2 }}>Adicionar</span>
+            <div style={{ position: "relative" }}>
+              <button data-popover-trigger onClick={() => { setShowAdd(!showAdd); setReplaceFor(null); setOptsFor(null); }} style={{ fontSize: 12.5, fontWeight: 600, padding: "5px 11px", borderRadius: 7, border: `1px solid ${C.accent}`, background: "#fff", color: C.accent, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>{Icon.plus(12)} Métrica</button>
+              {showAdd && !replaceFor && <MetricMenu activeIds={activeBaseIds} titulo="Adicionar métrica ao painel" onPick={addWidget} />}
+            </div>
+            <button onClick={() => setSqlModal("new")} style={{ fontSize: 12.5, fontWeight: 600, padding: "5px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>{Icon.plus(12)} Métrica personalizada</button>
+          </div>
+
+          <div style={groupStyle}>
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 2 }}>Layouts</span>
+            <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome do layout" onKeyDown={(e) => e.key === "Enter" && salvarView()} style={{ ...selStyle, width: 130, padding: "5px 9px" }} />
+            <button onClick={salvarView} style={{ fontSize: 12.5, fontWeight: 600, padding: "5px 11px", borderRadius: 7, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Salvar</button>
+            {views.length > 0 && (
+              <select onChange={(e) => { if (e.target.value) carregarView(e.target.value); }} defaultValue="" style={{ ...selStyle, padding: "5px 9px" }}><option value="" disabled>Carregar</option>{views.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}</select>
+            )}
+            <button onClick={() => persistLayout(DEFAULT_LAYOUT)} style={{ fontSize: 12, padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.muted, cursor: "pointer" }}>Resetar</button>
+          </div>
+
+          <Link href="/admin/dashboard/banco" style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 14px", borderRadius: 9, border: `1px solid ${C.accent}`, background: "#eef1f5", color: C.accent, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7 }}>{Icon.database(15)} Explorar banco de dados</Link>
+          <span style={{ fontSize: 11.5, color: C.muted }}>arraste pelo título · redimensione pelo canto</span>
+        </div>
+      )}
 
       {/* Ticker estilo bolsa (desliza devagar) */}
       <Ticker data={data2} metas={metas} />
@@ -999,33 +1101,6 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
 
       {/* Painel resumo das metas definidas */}
       <MetasBand data={data2} metas={metas} onEdit={() => setMetasModal(true)} />
-
-      {/* Barra de edição: grupos com hierarquia (Adicionar · Visões · Banco) */}
-      {edit && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 14 }}>
-          <div style={groupStyle}>
-            <span style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 2 }}>Adicionar</span>
-            <div style={{ position: "relative" }}>
-              <button onClick={() => { setShowAdd(!showAdd); setReplaceFor(null); }} style={{ fontSize: 12.5, fontWeight: 600, padding: "5px 11px", borderRadius: 7, border: `1px solid ${C.accent}`, background: "#fff", color: C.accent, cursor: "pointer" }}>＋ Métrica</button>
-              {showAdd && !replaceFor && <MetricMenu activeIds={activeBaseIds} titulo="Adicionar métrica ao painel" onPick={addWidget} />}
-            </div>
-            <button onClick={() => setSqlModal("new")} style={{ fontSize: 12.5, fontWeight: 600, padding: "5px 11px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.title, cursor: "pointer" }}>＋ Métrica personalizada</button>
-          </div>
-
-          <div style={groupStyle}>
-            <span style={{ fontSize: 9.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 2 }}>Visões</span>
-            <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da visão" onKeyDown={(e) => e.key === "Enter" && salvarView()} style={{ ...selStyle, width: 130, padding: "5px 9px" }} />
-            <button onClick={salvarView} style={{ fontSize: 12.5, fontWeight: 600, padding: "5px 11px", borderRadius: 7, border: "none", background: C.accent, color: "#fff", cursor: "pointer" }}>Salvar</button>
-            {views.length > 0 && (
-              <select onChange={(e) => { if (e.target.value) carregarView(e.target.value); }} defaultValue="" style={{ ...selStyle, padding: "5px 9px" }}><option value="" disabled>Carregar</option>{views.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}</select>
-            )}
-            <button onClick={() => persistLayout(DEFAULT_LAYOUT)} style={{ fontSize: 12, padding: "5px 10px", borderRadius: 7, border: `1px solid ${C.border}`, background: "#fff", color: C.muted, cursor: "pointer" }}>Resetar</button>
-          </div>
-
-          <Link href="/admin/dashboard/banco" style={{ fontSize: 12.5, fontWeight: 600, padding: "9px 13px", borderRadius: 9, border: `1px solid ${C.border}`, background: "#fafbfc", color: C.title, textDecoration: "none" }}>⛁ Explorar banco</Link>
-          <span style={{ fontSize: 11.5, color: C.muted }}>arraste pelo título · redimensione pelo canto inferior direito</span>
-        </div>
-      )}
 
       {/* Movimentação no período (grid personalizável) */}
       <div style={{ fontSize: 10.5, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.7, marginTop: 26, marginBottom: 2 }}>
@@ -1066,13 +1141,13 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                       ))}
                       {def?.viz && RICH_CHARTS.has(bid) && (
                         <div style={{ position: "relative" }}>
-                          <button onClick={(e) => { e.stopPropagation(); setOptsFor(optsFor === item.i ? null : item.i); }} title="Opções do gráfico" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: optsFor === item.i ? C.accent : "#eef1f5", color: optsFor === item.i ? "#fff" : C.muted }}>⚙</button>
+                          <button data-popover-trigger onClick={(e) => { e.stopPropagation(); setShowAdd(false); setReplaceFor(null); setOptsFor(optsFor === item.i ? null : item.i); }} title="Opções do gráfico" style={{ fontSize: 11, fontWeight: 600, padding: "0 7px", height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: optsFor === item.i ? C.accent : "#eef1f5", color: optsFor === item.i ? "#fff" : C.muted }}>estilo</button>
                           {optsFor === item.i && <ChartOptsPanel tipos={def.viz} viz={curViz} opts={chartOpts[item.i] ?? {}} onViz={(v) => persistViz({ ...viz, [item.i]: v })} onOpts={(o) => persistChartOpts({ ...chartOpts, [item.i]: o })} onClose={() => setOptsFor(null)} />}
                         </div>
                       )}
                       {bid === "comparativo" && (
                         <div style={{ position: "relative" }}>
-                          <button onClick={(e) => { e.stopPropagation(); setOptsFor(optsFor === item.i ? null : item.i); }} title="Séries" style={{ fontSize: 11, fontWeight: 600, padding: "0 8px", height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: optsFor === item.i ? C.accent : "#eef1f5", color: optsFor === item.i ? "#fff" : C.muted }}>séries</button>
+                          <button data-popover-trigger onClick={(e) => { e.stopPropagation(); setShowAdd(false); setReplaceFor(null); setOptsFor(optsFor === item.i ? null : item.i); }} title="Séries" style={{ fontSize: 11, fontWeight: 600, padding: "0 8px", height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: optsFor === item.i ? C.accent : "#eef1f5", color: optsFor === item.i ? "#fff" : C.muted }}>séries</button>
                           {optsFor === item.i && <CompPanel sel={compSeries[item.i] ?? ["leads", "page_views"]} onToggle={(key) => { const cur = compSeries[item.i] ?? ["leads", "page_views"]; const next = cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]; persistComp({ ...compSeries, [item.i]: next }); }} onClose={() => setOptsFor(null)} />}
                         </div>
                       )}
@@ -1081,7 +1156,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
                       ))}
                       {!isSql && <button onClick={(e) => { e.stopPropagation(); duplicateWidget(item.i); }} title="Duplicar" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#eef1f5", color: C.muted }}>⧉</button>}
                       {!isSql && <div style={{ position: "relative" }}>
-                        <button onClick={(e) => { e.stopPropagation(); setReplaceFor(replaceFor === item.i ? null : item.i); setShowAdd(false); }} title="Substituir" style={{ fontSize: 12, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: replaceFor === item.i ? C.accent : "#eef1f5", color: replaceFor === item.i ? "#fff" : C.muted }}>⇄</button>
+                        <button data-popover-trigger onClick={(e) => { e.stopPropagation(); setShowAdd(false); setOptsFor(null); setReplaceFor(replaceFor === item.i ? null : item.i); }} title="Substituir métrica" style={{ fontSize: 11, fontWeight: 600, padding: "0 7px", height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: replaceFor === item.i ? C.accent : "#eef1f5", color: replaceFor === item.i ? "#fff" : C.muted }}>trocar</button>
                         {replaceFor === item.i && <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0 }}><MetricMenu activeIds={activeBaseIds} titulo="Substituir por" onPick={(nb) => replaceWidget(item.i, nb)} /></div>}
                       </div>}
                       <button onClick={(e) => { e.stopPropagation(); removeWidget(item.i); }} title="Remover" style={{ fontSize: 14, width: 22, height: 20, borderRadius: 5, cursor: "pointer", border: "none", background: "#fde8e8", color: C.down }}>×</button>
@@ -1097,7 +1172,7 @@ export default function DashboardGrid({ filters, dataStamp, filterOptions, ...da
         </ResponsiveGridLayout>
       </div>
 
-      {metasModal && <MetasModal data={data2} metas={metas} onSave={(m) => { persistMetas(m); setMetasModal(false); }} onClose={() => setMetasModal(false)} />}
+      {metasModal && <MetasModal data={data2} metas={metas} onChange={persistMetas} onClose={() => setMetasModal(false)} />}
       {sqlModal && <SqlModal inicial={sqlModal === "new" ? undefined : sqlModal} tabelas={[]} onSalvar={saveSql} onFechar={() => setSqlModal(null)} />}
       {drill && <DrillModal tipo={drill.tipo} titulo={drill.titulo} filters={filters} onClose={() => setDrill(null)} />}
       {confirmRefresh && <ConfirmRefresh loading={refreshing} onConfirm={doRefresh} onCancel={() => setConfirmRefresh(false)} />}
